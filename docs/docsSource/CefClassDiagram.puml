@@ -1,0 +1,55 @@
+@startuml
+title CEF Class Diagram
+
+abstract CmdBase
+abstract DebugPortDriver
+
+class AppMain << Singleton >>
+class Logging << Singleton >>
+class BspHwShim<< Singleton >>
+class CmdDebugPort << Singleton >>
+class CommandGenerator << Singleton >>
+class LinuxSPDriver << (M, Tomato) >> #pink
+class LinuxOS << (M, Tomato) >> #pink
+class HalSPDriver << (M, Tomato) >> #aqua
+class BSP << (M, Tomato) >> #aqua
+
+class AppMain {
++ ForeverLoop
+}
+
+class CmdDebugPort {
++ Init
+}
+
+class DebugPortTransportLayer {
++ Init
+}
+
+LinuxOS *-- AppMain
+BSP *-- AppMain
+
+
+AppMain::Forever *-- CommandExecutor
+
+
+CommandGenerator *-- CmdBase
+CmdBase <|-- Commands
+
+CmdExternalCommandProxy -[dashed]-> CommandGenerator : uses 
+CmdExternalCommandProxy -[dashed]-> CommandExecutor: uses
+
+
+CmdExternalCommandProxy *-- CmdDebugPort
+Logging *-- CmdDebugPort
+CmdDebugPort::Init --> DebugPortTransportLayer : creates
+CmdDebugPort *-- DebugPortTransportLayer
+DebugPortTransportLayer::Init --> DebugPortDriver : creates
+DebugPortTransportLayer *-- DebugPortDriver
+
+DebugPortDriver <|-- SerialPortDriverSimImpl
+SerialPortDriverSimImpl *-- LinuxSPDriver
+DebugPortDriver <|-- SerialPortDriverHwImpl
+SerialPortDriverHwImpl*-- BspHwShim
+BspHwShim*-- HalSPDriver
+@enduml
