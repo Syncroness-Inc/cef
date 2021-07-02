@@ -11,4 +11,5 @@ Command::Command(void) noexcept
                 :m_myVar(0)
 {
 
+abc;
 }
