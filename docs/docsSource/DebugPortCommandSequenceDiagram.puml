@@ -1,0 +1,51 @@
+@startuml
+title Debug Port Command Sequence Diagram
+group Poll until successful
+    CmdExternalCommandProxy -> DebugPort : getCmdReqPacket
+    DebugPort  --> CmdExternalCommandProxy : cmdReqPacket
+end
+
+activate CmdExternalCommandProxy 
+CmdExternalCommandProxy -> CmdExternalCommandProxy  : Extract Opcode
+
+CmdExternalCommandProxy -> CommandGenerator : allocateCmd(Opcode)
+CommandGenerator -> CommandGenerator  : new(m_cmdMem) CmdPing
+CommandGenerator --> CmdExternalCommandProxy : pCmd
+
+
+CmdExternalCommandProxy -> CmdExternalCommandProxy : pCmd::importCefCmd()
+CmdExternalCommandProxy -> CommandExecutor : scheduleCmd(pCmd)
+CommandExecutor --> CmdExternalCommandProxy : true
+
+rnote over CommandExecutor
+ Round Robin Scheduling
+ until CmdPing's turn
+endnote
+
+CommandExecutor -> CmdPing : execute()
+CmdPing -> CmdPing : execute
+rnote over CommandExecutor
+ There may be multiple loops through the 
+ scheduling loop for CmdPing to finish
+endnote
+CmdPing --> CommandExecutor : finished
+CommandExecutor -> CommandExecutor : deSchedule CmdPing \n(remove from round robin queue)
+
+CommandExecutor -> CmdExternalCommandProxy : child cmd finished, return to parent
+CmdExternalCommandProxy -> CmdExternalCommandProxy : pCmd::exportCefCmd()
+CmdExternalCommandProxy -> DebugPort : sendCmdResp()
+DebugPort -> DebugPort : cmd send in progress
+
+group Poll until successful
+    CmdExternalCommandProxy -> DebugPort : poll until cmd resp sent
+    DebugPort --> CmdExternalCommandProxy : resp sent
+end
+
+CmdExternalCommandProxy --> CommandGenerator  : releaseCmd()
+
+rnote right of CmdExternalCommandProxy 
+ Only one Debug Cmd can be processed at a time
+ Ready to start processing next command 
+endnote
+deactivate CmdExternalCommandProxy
+@enduml
