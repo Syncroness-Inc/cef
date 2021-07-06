@@ -1,4 +1,4 @@
-# Common Engineering Framework Architecture
+# Common Embedded Framework Architecture
 
 The Common Engineering Framework (CEF) is intended to be:
 
