@@ -34,7 +34,7 @@ The AppMain object is instantiated within either the Linux OS or the microcontro
 
 ##### CommandExecutor
 
-On the simulator, the CEF runs as a single thread within a Linux executable.  On the HW, the CEF also runs within a single thread within the bare metal superloop.  In both cases, the AppMain object acts as a lightweight, round robin scheduler that avoids multiple threads or preemption in accordance with the architecture goals.  Commands are added to the executable list to be executed.
+On the simulator, the CEF runs as a single thread within a Linux executable.  On the HW, the CEF also runs within a single thread within the bare metal super loop.  In both cases, the AppMain object acts as a lightweight, round robin scheduler that avoids multiple threads or preemption in accordance with the architecture goals.  Commands are added to the executable list to be executed.
 
 Commands have the following attributes:
 
@@ -79,6 +79,6 @@ The logging system provides a way to do "printf" style debug/status.  To save co
 The DebugPort system has the following attributes:
 
 * Packet based (rather than serial stream)
-* Easily accomodates different physical layers (i.e. serial, USB, ethernet...)
+* Easily accommodates different physical layers (i.e. serial, USB, ethernet...)
 * Initial serial implementation does not support ack/nack or retry
 * Arbitrates among ES requestors for priority for transmit priority
