@@ -34,7 +34,7 @@ CEF main is responsible for allocating memory for the communication layer to sen
 
 Debug Port Packets (528 bytes) – The debug port packet is the communication between CEF and the user debug console.  The packet consists of header info, payload, and checksum.  Only one command can be handled at a time.  Once a command is received the debug port will drop any data received by the user until it fills the request or times out.
 
-##### Deubg Header Packet
+##### Debug Header Packet
 
 Debug header packet is 12 bytes to indicate the following.
 
