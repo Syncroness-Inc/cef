@@ -14,7 +14,7 @@ The communication layers job is to handle all incoming and outgoing communicatio
 
 * Receive
 
-  * CEF only fulfills one command request at a time.  When CEF is not in currently fulfilling a command request CEF communication layer must enable receiving to be able receive next command request form console user debug.  Receiving will be done on interrupts in order to stay non-blocking.
+  * CEF only fulfills one command request at a time.  When CEF is not in currently fulfilling a command request CEF communication layer must enable receiving to be able receive next command request from console user debug.  Receiving will be done on interrupts in order to stay non-blocking.
   * CEF command layer is responsible for decoding the debug port packet, it is CEF main responsbility to poll the command layer in order to see if a command has been recieved.
 * Transmit
 
