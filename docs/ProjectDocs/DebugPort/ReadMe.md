@@ -1,4 +1,4 @@
-# Contains documents related to documentation of the entire project
+# Contains documents related to debug port module
 
 Examples of documents in this directory:
 
