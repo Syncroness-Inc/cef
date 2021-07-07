@@ -14,7 +14,6 @@ The top level directory contains the following sub-directories:
   * Documents related to the command handling system
   * may contain both python and embedded software aspects
 * PythonUtilities
-* ContinuousIntegration
 
 Each sub-directory should contain
 

@@ -46,4 +46,4 @@ In no particular order, the following rules make up the CEF Coding Amendments:
 21. Getters/Setters are strongly encouraged rather than direct member access of class public variables except where it is too cumbersome.
 22. Static variables should be commented with extra care, but no special naming convention of static variables shall be used (to ease maintenance)
 23. As it is anticipated copyright headers will need to be replaced with customer specific header files, the doxygen keyword "copyright" shall be used in conjunction with a consistent copyright header to facilitate simpler header replacement (ideally with search and replace, likely with a python script)
-24. Header files shall place the gating unique code at the beginning (before the copyright) and last lines of the header files.
+24. The copyright header shall be the first line in all header files.  The first word on the second line of the header file shall start with the doxygen command "\copyright".  This not only aids doxygen, but simplifies a tool to replace all copyright headers in the system.
