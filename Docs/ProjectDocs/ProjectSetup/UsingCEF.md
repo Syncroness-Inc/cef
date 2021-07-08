@@ -1,8 +1,8 @@
 # Using CEF in your project
 
-CEF is not used on its own, instead being pulled in to embedded projects as a module or library. To maintain some syncronization between the CEF repository and projects that use it, some additional git commands are used to maintain it as a subtree. This method pulls the CEF repository into the project under a subdirectory of the user's choosing. This results in a project with TWO remotes instead of the typical single remote: one for the project itself and one tracking the CEF repository. 
+CEF is not used on its own, instead being pulled in to embedded projects as a module or library. To maintain some syncronization between the CEF repository and projects that use it, some additional git commands are used to maintain it as a subtree. This method pulls the CEF repository into the project under a subdirectory of the user's choosing. This results in a project with TWO remotes instead of the typical single remote: one for the project itself and one tracking the CEF repository. However, your project is still treated as a single repository. With typical git commands any changes made locally to the CEF source will only be pushed to your project repository, allowing for project-specific customizations to CEF.
 
-## Initial setup
+## Repository setup
 
 From within your project repository/folder, execute the following git commands:
 
@@ -12,7 +12,7 @@ git fetch cef
 git read-tree --prefix=Path/In/Project -u cef/master
 ```
 
-## Getting upstream updates
+### Getting upstream updates
 
 When changes occur to the base CEF repository, such as bugfixes, they can be pulled into your project with the following:
 
