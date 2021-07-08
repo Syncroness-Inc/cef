@@ -1,8 +1,31 @@
-# Using CEF in your project
+# Setting up your project
+
+Currently build operations are handled by the vendor IDE for the microcontroller you are using for your project. These IDEs are pre-packaged with the necessary toolchains, allow for detailed peripheral and pin configuration, and handle automatic file generation for makefiles, linker scripts, assembly preprocessor instructions, etc. that match the MCU or development board chosen.
+
+*NOTE*: The following instructions cover STMicro and NXP projects, but the instructions will be similar for other Eclipse-based IDEs
+
+## STM32CubeIDE setup
+
+When creating a new project, choose a new STM32 Project from the File->New menu. A new window will pop up for selecting a target. After doing so and clicking Next, a new popup will prompt for a project name. Within this window be sure to select C++ as the Targeted Language. Click Finish after this.
+
+![Stm32Setup](./DocsSource/Stm32Setup.png)
+
+After the project has been created, rename the Core->Src->main.c to main.cpp. The MCU can now be customized with the Device Configurator within the IDE and the corresponding initialization code auto-generated. 
+
+## NXP setup
+
+From File->New select New C/C++ Project, which will bring up a target selection window. After choosing a target and clicking Next, the next window prompts for a project name. Within this window be sure to select C++ Project under the Project Type pane.
+
+![NxpSetup](./DocsSource/NxpSetup.png)
+
+After project creation the MCU's pins, peripherals, and clocks can be customized within the IDE and corresponding code auto-generated.
+
+---
+# Integrating CEF into your project
 
 CEF is not used on its own, instead being pulled in to embedded projects as a module or library. To maintain some syncronization between the CEF repository and projects that use it, some additional git commands are used to maintain it as a subtree. This method pulls the CEF repository into the project under a subdirectory of the user's choosing. This results in a project with TWO remotes instead of the typical single remote: one for the project itself and one tracking the CEF repository. However, your project is still treated as a single repository. With typical git commands any changes made locally to the CEF source will only be pushed to your project repository, allowing for project-specific customizations to CEF.
 
-## Repository setup
+## Repository configuration
 
 From within your project repository/folder, execute the following git commands:
 
