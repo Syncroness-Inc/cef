@@ -23,27 +23,24 @@ From File->New select New C/C++ Project, which will bring up a target selection 
 After project creation the MCU's pins, peripherals, and clocks can be customized within the IDE and corresponding code auto-generated.
 
 ---
-# Integrating CEF into your project
+# Normal Syncroness project development - integrating CEF into a project
 
-CEF is not used on its own, instead being pulled in to embedded projects as a module or library. To maintain some syncronization between the CEF repository and projects that use it, some additional git commands are used to maintain it as a subtree. This method pulls the CEF repository into the project under a subdirectory of the user's choosing. This results in a project with TWO remotes instead of the typical single remote: one for the project itself and one tracking the CEF repository. However, your project is still treated as a single repository. With typical git commands any changes made locally to the CEF source will only be pushed to your project repository, allowing for project-specific customizations to CEF.
-
-## Repository configuration
-
-From within your project repository/folder, execute the following git commands:
-
+CEF is not used on its own, instead being pulled in to embedded projects as a module or library. For normal project work, simply clone the CEF repository locally and copy the resulting directory into your project's directory tree:
 ```
-git remote add cef http://bitbucket.syncroness.com:7990/scm/cef/cef.git
-git fetch cef
-git read-tree --prefix=Path/In/Project -u cef/master
+git clone http://bitbucket.syncroness.com:7990/scm/cef/cef.git
 ```
 
-### Getting upstream updates
+## Syncroness Internal CEF development - repository configuration
 
-When changes occur to the base CEF repository, such as bugfixes, they can be pulled into your project with the following:
+For actual CEF development, a target platform is desired for debug and test purposes - for this, the CEF repository is added to a parent repository as a submodule where CEF development can continue within an embedded context. From within a target (STM, NXP, etc) project repository/folder, the following commands will add CEF as a submodule and switch to a branch for further development
 
 ```
-git fetch cef
-git merge -X subtree=Path/In/Project --squash cef/master
+git submodule add cef http://bitbucket.syncroness.com:7990/scm/cef/cef.git Cef
+git add .
+git commit -m "adding submodule"
+git push
+cd Cef
+git checkout  <cef_development_branch_name>
 ```
 
 ## Configuring builds
