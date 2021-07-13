@@ -4,6 +4,8 @@ The CEF Python Utility is a set of tools with a command line interface for devel
 
 The Utility is run by executing a startup Python script with the '-i' option. This instantiates all necessary components and then leaves the Python interpreter running with them in memory for the user to interact with in a command-line environment.
 
+![PythonClassDiagram](DocsSource/PythonUtilities.png)
+
 ## Debug Port
 
 The Utility has a communications structure for talking to the CEF target's debug port. 
