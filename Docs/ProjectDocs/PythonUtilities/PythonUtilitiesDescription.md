@@ -1,7 +1,51 @@
 # CEF Python Utility
 
-The Python Utility provides the developer with a console interface for interacting with a CEF-structured target. At its core is a serial debug port for sending/receiving commands and logging messages. It also provides an extensible test framework for exercising components of the sytem in a command-based manner. Finally it will include functionality for interacting with the Continuous Integration system.
+The CEF Python Utility is a set of tools with a command line interface for developing CEF projects. It includes functionality to send commands to the debug port and receive responses and logging messages. It also contains an extensible framework for creating test objects that interact with the CEF target. This can be used for debugging or creating unit/integration tests. It will also include functionality for interfacing with Continuous Integration for setting up routine testing and building. 
 
-### Target communication
+The Utility is run by executing a startup Python script with the '-i' option. This instantiates all necessary components and then leaves the Python interpreter running with them in memory for the user to interact with in a command-line environment.
 
-On launch the user is placed in a console environment. From here the user can interact with the target (hardware or simulator) via commands. For this, the Utility implements a serial port for communication with the embedded CEF debug port, with logic for parsing CEF packets and routing them to appropriate handlers (i.e. commands and log messages). 
+## Debug Port
+
+The Utility has a communications structure for talking to the CEF target's debug port. 
+
+### Router
+
+At a top level is a class responsible for routing packets based on their content, whether commands or logging messages. 
+
+#### Logging
+
+Logging messages received from the router are decoded by dictionary lookup. This saves space by storing long strings off the target. The logging object includes a file I/O handler to write messages to disk after decoding.
+
+### Transport
+
+Used by the DebugPort is an object for handling transport-layer logic including building outgoing packets and framing incoming ones. This also includes checksum calculation. Packet structure is defined by a contract file which includes definitions for packet types, known commands, and field sizes. This contract file is kept in sync with the CEF repository to maintain consistent packet schema between CEF and the Python Utility.
+
+#### Framing
+
+The transport layer includes a read loop on an independent thread that is constantly scanning incoming bytes. When header information is encountered then an expected number of data bytes is read followed by a checksum. Once the full frame is received and validated it is handed to the router based on packet type.
+
+#### Checksum
+
+The checksum is a simple error-detecting (but not error-correcting) scheme. All of the bytes of the packet's data, including header data, are summed and the resulting value is appended to the packet. After receipt and framing, the receiver performs the same calculation and compares it to the received checksum. If the values do not match then the frame is considered invalid.
+
+### Driver
+
+The next layer is a hardware abstraction layer for the port's driver, with methods for sending and receiving byte streams. This allows for different implementations of the physical layer (UART, ethernet, etc.)
+
+## Test Framework
+
+The Utility includes a test framework - a collection of objects which make use of the DebugPort to exercise different components of the target.
+
+### TestBase
+
+The framework starts with a TestBase object which has a DebugPort object as a member. The TestBase object is not directly instantiated, instead derived objects are which inherit from it. The Utility includes a Diag object already, while additional test objects are meant to be project-specific and defined by the user during development.
+
+### Diag
+
+Included in the Utility is a diagnostics test object derived from TestBase, with a ping() method which sends a command to the target and awaits a response within a timeout period. 
+
+## Continuous Integration
+
+**NOTE:** This is planned for future release
+
+The Utility will include functionality to interact with the project's continuous integration setup to allow setting up automated unit testing, nightly and release builds, Doxygen generation, and other devops activites
