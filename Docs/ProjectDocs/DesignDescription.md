@@ -12,7 +12,7 @@ Below is an overview of the Common Engineering Framework key components
 
 **Note the legend in the diagram to help illustrate what aspects of a design are provided by the framework, and where customer specific work needs to be included.**
 
-![EmbeddedSwFrameworkDefinition](./docsSource/EmbeddedSwFrameworkDefinition.png)
+![EmbeddedSwFrameworkDefinition](./DocsSource/EmbeddedSwFrameworkDefinition.png)
 
 The framework is designed to have replaceable components, as well as to be extended.  For example, the "Non Blocking Debug Port" could be implemented as a Serial Port, USB, Ethernet, or whatever other protocol that the user application may require.  Adding an RTOS can extend the framework to support a non-blocking driver.
 
@@ -24,7 +24,7 @@ CIV (Continuous Integration and Verification) supports executing a Pytest framew
 
 The following class diagram below describes the overall architecture for the CEF.  CEF-simulator-specific classes or modules appear in red, HW-specific in light blue, and common classes and modules appear in light yellow.  This helps to illustrate that the bulk of the CEF code is common to both the simulator and the HW build.  This diagram is followed by sections that detail the classes and interactions between them.
 
-![CefClassDiagram](./docsSource/CefClassDiagram.png)
+![CefClassDiagram](./DocsSource/CefClassDiagram.png)
 
 #### Component Descriptions
 
@@ -68,7 +68,7 @@ Via the DebugPort, python can invoke most commands in the system.  This provides
 8. CmdExternalCommandProxy exports the response field of the command to the "CEF Request Command" and sends the response back to python via the DebugPort.
 9. Once CmdExternalCommandProxy receives acknowledgement that the CEF Command has been successfully sent to Python, the child command is released back to the CommandGenerator.  Waiting to release the child command until the CEF command has been successfully sent ensures that only one CEF command is active in the system at a time.
 
-![DebugPortCommandSequenceDiagram](./docsSource/DebugPortCommandSequenceDiagram.png)
+![DebugPortCommandSequenceDiagram](./DocsSource/DebugPortCommandSequenceDiagram.png)
 
 ##### Logging
 

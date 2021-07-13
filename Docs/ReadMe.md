@@ -21,4 +21,4 @@ Each sub-directory should contain
 * sub directory DocsSource that contain the .md file graphical files, as well as the files to generate the graphical files (i.e. the "source" files)
 * Optionally, further documentation related sub-directories
 
-It is anticipated the documentation directory structure will change over time.  When changes occur, please take care to update the readme files appropriately.
+It is anticipated the documentation directory structure will change over time.  When changes occur, please take care to update the readme files appropriately. 
