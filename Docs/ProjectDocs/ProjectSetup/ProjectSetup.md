@@ -45,13 +45,16 @@ cd Cef
 git checkout  <cef_development_branch_name>
 ```
 
-If you are starting from an existing platform, the above steps should already have been performed and CEF is already set up as a submodule - you can confirm this by examining the presence and content of the '.gitmodules' file in the project, which should include a reference to the CEF repository.
+If you are starting from an existing platform, the above steps should already have been performed and CEF is already set up as a submodule - you can confirm this by examining the presence and content of the '.gitmodules' file in the project, which should include a reference to the CEF repository. The following command will clone the project repository and the included CEF submodule:
+```
+git clone --recurse-submodules <repository_url>
+```
 
 Once the submodule is set up, workflow is as follows: when committing changes to CEF, you should be within its subdirectory tree when performing git commands. Git will recognize that you are within the submodule instead of the parent/container project, and commits will go to the CEF repository (make sure you are on a branch, do not commit to CEF's origin/master). If you are making edits to the parent project you have set up, git commands can be performed anywhere within its directory above the submodule as normal. Note that these commits will not commit CEF changes to your project - you must continue to maintain two repository workflows when doing CEF development.
 
 ## Configuring builds
 
-Once CEF is added to your embedded project it must also be added to the include paths for compiling and linking. Currently this must be done through the vendor IDE for your project, which auto-generates makefiles for build configurations.
+Once CEF is added to your embedded project it must also be added to the include paths for compiling and linking, along with subdirectories. Currently this must be done through the vendor IDE for your project, which auto-generates makefiles for build configurations.
 
 ### STM32
 
