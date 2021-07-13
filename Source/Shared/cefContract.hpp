@@ -25,10 +25,11 @@ extern "C" {
 
 
 /**
- * Contains definitions for shared structures between Embedded SW and Python Utilitie
+ * Contains definitions for shared structures between Embedded SW and Python Utilities.
  * 	For now, there MUST be a python file that exactly matches this file.
  * 	Eventually, one file source can be used generate either a python or .hpp file from one source
- * 	via a python generation tool
+ * 	via a python generation tool.  For now, any changes in this file must be
+ * 	added to the python file as well.  Try to keep the python and c files in roughly the same order.
  */
 
 
@@ -151,7 +152,7 @@ typedef struct
  *		See command implementation files for variable documentation
  *
  * The ping command is also used for basic command protocol checkout, so known values
- * outlined below are passed between python and embedded software.
+ * outlined below are shared between python and embedded software.
  */
 #define CMD_PING_UINT8_REQUEST_EXPECTED_VALUE  0xA3
 #define CMD_PING_UINT16_REQUEST_EXPECTED_VALUE 0x93A3
@@ -160,7 +161,7 @@ typedef struct
 
 typedef struct
 {
-	cefCommandHeader_t m_header;				// Must be 1st entry in structure, 64 bit aligned
+	cefCommandHeader_t m_header;				// Must be 1st entry in structure, guaranteed to be 64 bit aligned
 
 	uint8_t		m_uint8Value;					// 8  bit aligned
 	uint8_t		m_padding1;						// 16 bit aligned

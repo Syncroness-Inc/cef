@@ -25,9 +25,9 @@ extern "C" {
 
 /**
  * Contains macros or static functions for use in the Common Embedded Framework.
- * The contents of this file are intended to included a include a "grab bag" of
+ * The contents of this file are intended to include a "grab bag" of
  * simple utilities that are used commonly in the code.  If the utility is complex,
- * then a dedicated file should be used for that purpose.
+ * then a dedicated file/object should be used for that purpose.
  */
 
 //! Gets the max of two numbers

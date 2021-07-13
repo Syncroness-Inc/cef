@@ -32,10 +32,10 @@ extern "C" {
  * in most files in the system.
  *
  * In addition having all the files included in one location has proved helpful in debugging
- * other projects on simulator vs. hardware issues, as well as code bloat.
+ * other projects on simulator vs. hardware issues, as well as debugging code bloat.
  *
  * Each hw specific project must provide a hwPlatformMappings.hpp file.  This file should be
- * located in the "shim" directory as this is where all project specific cef dependency
+ * located in the "shim" directory as this is where all project specific cef hw dependency
  * information is contained (rather than having to search for files all over the directory structure).
  */
 

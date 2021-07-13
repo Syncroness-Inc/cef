@@ -19,7 +19,7 @@ written permission of Syncroness.
 
 /**
  * Implementation of CommandPing Methods
- * See note in CommandPing.h for use model of the ping command
+ * See notes in CommandPing.h for the use model of the ping command
  */
 
 bool CommandPing::execute(void* p_childCommand)
@@ -94,13 +94,16 @@ errorCode_t CommandPing::importFromCefCommand(void* p_cefCommand)
 
 	if (p_cefCommand == nullptr)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "importFromCefCommand called with nullptr");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "p_cefCommand is a nullptr");
 		return errorCode_PointerIsNullptr;
 	}
 
 	cefCommand_t* p_cef = (cefCommand_t*)p_cefCommand;
+
+	// From the CEF Command's header parameters, update Command Base parameters
 	importFromCefCommandBase(&(p_cef->m_header), (uint32_t)sizeof(cefCommand_t));
 
+	// Update all the Ping request parameters from the CEF Command request parameters
 	m_request.m_testValue = p_cef->m_testValue;
 	m_request.m_offsetToAddToResponse = p_cef->m_offsetToAddToResponse;
 	m_request.m_uint8Value = p_cef->m_uint8Value;
@@ -124,8 +127,11 @@ errorCode_t CommandPing::exportToCefCommand(void* p_cefCommand)
 	}
 
 	cefCommand_t* p_cef = (cefCommand_t*)p_cefCommand;
+
+	// From the Command Base, update the CEF Command's header parameters
 	exportToCefCommandBase(&(p_cef->m_header), sizeof(cefCommand_t));
 
+	// Update the CEF Command response parameters from the Ping response parameters
 	p_cef->m_testValue   = m_response.m_testValue;
 	p_cef->m_uint8Value  = m_response.m_uint8Value;
 	p_cef->m_uint16Value = m_response.m_uint16Value;

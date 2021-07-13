@@ -60,6 +60,9 @@ class CommandBase
 
 			//! Commands initiated by Python Utilities (which have own unique sequence number)
 			commandInitiatiorIdPythonUtilities,
+
+			//! Illegal command initiator IDs rather than report an error possibly during initialization of system
+			commandInitiatorIdOutOfRangeInitiatorId,
         };
 
 

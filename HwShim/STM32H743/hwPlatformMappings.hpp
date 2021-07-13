@@ -27,15 +27,15 @@ extern "C" {
  * Contains information unique to the specific tool chain of the build target.
  * Different tool chains have different tool include files, so this is the one place
  * in the CEF that build specific files are included.  This technique avoids having each
- * file pull in specific include files (which may not be correct as other files may have already
- * pulled in the include file), as well as having the #ifdef __SIMULATOR__ #else #endif chain
- * in most files in the system.
+ * file pull in specific include files (which creates maintenance/challenge when moving
+ * between different hardware build chains), as well as having
+ * the #ifdef __SIMULATOR__ #else #endif chain in most files in the system.
  *
  * In addition having all the files included in one location has proved helpful in debugging
- * other projects on simulator vs. hardware issues, as well as code bloat.
+ * other projects on simulator vs hardware issues, as well as debugging code bloat.
  *
  * This file is included in the cefMappings.hpp file, which is in turn included in most files.
- * Only tool chain (that i.e. compiler supplied files) should be included here...No HAL or
+ * Only tool chain files (that i.e. compiler supplied files) should be included here...No HAL or
  * application specific files should be included.
  */
 
@@ -47,7 +47,7 @@ extern "C" {
 #include <stdio.h>
 
 
-//#define RUNTIME_ASSERT(COND)  TBD if this is needed, and need to be cautios on how much memory it uses
+//#define RUNTIME_ASSERT(COND)  TBD if this is needed, and need to be cautious on how much memory it uses
 
 // Some tool chains require special handling of static_assert
 #define STATIC_ASSERT(COND,MSG) static_assert((COND), #MSG);
