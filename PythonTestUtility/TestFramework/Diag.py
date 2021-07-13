@@ -1,8 +1,8 @@
 # TBD HEADER
 
-from .Base import Base
+from TestBase import TestBase
 
-class Diag(Base):
+class Diag(TestBase):
     """
     
     """
