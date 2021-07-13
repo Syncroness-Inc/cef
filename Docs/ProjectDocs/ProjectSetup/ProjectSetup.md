@@ -32,7 +32,9 @@ git clone http://bitbucket.syncroness.com:7990/scm/cef/cef.git
 
 ## Syncroness Internal CEF development - repository configuration
 
-For actual CEF development, a target platform is desired for debug and test purposes - for this, the CEF repository is added to a parent repository as a submodule where CEF development can continue within an embedded context. From within a target (STM, NXP, etc) project repository/folder, the following commands will add CEF as a submodule and switch to a branch for further development
+For actual CEF development, a target platform is desired for debug and test purposes - for this, the CEF repository is added to a parent repository as a submodule where CEF development can continue within an embedded context.
+
+If you are setting up a new project from scratch the following commands will add CEF as a submodule and switch to a branch for further development. The commands should be executed from a top-level directory in the new project's repository/folder so that the submodule is added at an appropriate position in the directory tree. 
 
 ```
 git submodule add cef http://bitbucket.syncroness.com:7990/scm/cef/cef.git Cef
@@ -42,6 +44,10 @@ git push
 cd Cef
 git checkout  <cef_development_branch_name>
 ```
+
+If you are starting from an existing platform, the above steps should already have been performed and CEF is already set up as a submodule - you can confirm this by examining the presence and content of the '.gitmodules' file in the project, which should include a reference to the CEF repository.
+
+Once the submodule is set up, workflow is as follows: when committing changes to CEF, you should be within its subdirectory tree when performing git commands. Git will recognize that you are within the submodule instead of the parent/container project, and commits will go to the CEF repository (make sure you are on a branch, do not commit to CEF's origin/master). If you are making edits to the parent project you have set up, git commands can be performed anywhere within its directory above the submodule as normal. Note that these commits will not commit CEF changes to your project - you must continue to maintain two repository workflows when doing CEF development.
 
 ## Configuring builds
 
@@ -55,6 +61,6 @@ In STM32CubeIDE, right-click on the Cef directory in the Project Explorer's file
 
 ### NXP/McuXpresso
 
-Right-click on the project itsel in the Project Explorer pane and select Properties. Expand the C/C++ Build category and select Settings. Within the Tool Settings tab choose the MCU C++ Compiler->Includes selection and click the icon to add an include path, then enter the path to the CEF directory.
+Right-click on the project itself in the Project Explorer pane and select Properties. Expand the C/C++ Build category and select Settings. Within the Tool Settings tab choose the MCU C++ Compiler->Includes selection and click the icon to add an include path, then enter the path to the CEF directory.
 
 ![NxpInclude](./DocSource/../DocsSource/NxpXpressoInclude.png)
