@@ -1,3 +1,5 @@
+# HEADER
+
 import ctypes
 from enum import Enum, auto
 
@@ -32,6 +34,17 @@ class cefCommandHeader(ctypes.Structure):
         ('m_commandErrorCode', ctypes.c_uint32),
         ('m_commandNumBytes', ctypes.c_uint32),
         ('m_padding1', ctypes.c_uint32)
+    ]
+
+
+class cefCommandDebugPortHeader(ctypes.Structure):
+    _fields_ = [
+        ('m_framingSignature', ctypes.c_uint32),
+        ('m_packetPayloadChecksum', ctypes.c_uint32),
+        ('m_payloadSize', ctypes.c_uint32),
+        ('m_packetType', ctypes.c_uint8),
+        ('m_reserve', ctypes.c_uint8),
+        ('m_packetHeaderChecksum', ctypes.c_uint16)
     ]
 
 
