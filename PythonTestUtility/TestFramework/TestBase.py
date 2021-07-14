@@ -10,9 +10,7 @@ class TestBaseException(Exception):
 
 
 class TestBase:
-    """
-    Base class for the CEF Test Framework
-    """    
+    """Base class for the CEF Test Framework"""
 
     def __init__(self):
         self.debugPort = DebugPort()

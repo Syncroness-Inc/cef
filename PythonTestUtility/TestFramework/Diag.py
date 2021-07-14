@@ -16,7 +16,3 @@ class Diag(TestBase):
         # if timeout return -1
         # if ping response return response time
         pass
-
-    def getInfo(self):
-        pass
-    
