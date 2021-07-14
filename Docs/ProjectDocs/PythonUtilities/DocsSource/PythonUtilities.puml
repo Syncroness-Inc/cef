@@ -5,7 +5,7 @@ class CefContract
 class SerialPortDriverImpl
 abstract TestBase
 class Diag
-class DebugPort
+class DebugPortRouter
 class TransportLayer
 class Logging << Singleton >>
 abstract DebugPortDriver
@@ -13,8 +13,8 @@ abstract DebugPortDriver
 TestBase : send()
 TestBase : receive()
 
-DebugPort : send()
-DebugPort : receive()
+DebugPortRouter : send()
+DebugPortRouter : receive()
 
 Diag : ping()
 
@@ -24,10 +24,10 @@ TransportLayer : read()
 DebugPortDriver : sendBytes()
 DebugPortDriver : readNextByte()
 
-TestBase *- DebugPort
+TestBase *- DebugPortRouter
 TestBase <-- Diag
-DebugPort *- TransportLayer
-DebugPort *-- Logging
+DebugPortRouter *- TransportLayer
+DebugPortRouter *-- Logging
 TransportLayer -> DebugPortDriver
 TransportLayer --> CefContract
 DebugPortDriver -> SerialPortDriverImpl

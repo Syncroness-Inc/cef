@@ -6,13 +6,9 @@ The Utility is run by executing a startup Python script with the '-i' option. Th
 
 ![PythonClassDiagram](DocsSource/PythonUtilities.png)
 
-## Debug Port
+## Debug Port Router
 
-The Utility has a communications structure for talking to the CEF target's debug port. 
-
-### Router
-
-At a top level is a class responsible for routing packets based on their content, whether commands or logging messages. 
+The Utility has a communications structure for talking to the CEF target's debug port and is responsible for routing packets based on their content, whether commands or logging messages. 
 
 #### Logging
 
@@ -40,11 +36,11 @@ The Utility includes a test framework - a collection of objects which make use o
 
 ### TestBase
 
-The framework starts with a TestBase object which has a DebugPort object as a member. The TestBase object is not directly instantiated, instead derived objects are which inherit from it. The Utility includes a Diag object already, while additional test objects are meant to be project-specific and defined by the user during development.
+The framework includes an 'abstract' TestBase object from which the user will define derived classes for exercising different components/subsystems of the target project. The TestBase class has a DebugPortRouter as a member, equipping derived classes with target communication.
 
 ### Diag
 
-Included in the Utility is a diagnostics test object derived from TestBase, with a ping() method which sends a command to the target and awaits a response within a timeout period. 
+Included in the Utility is a barebones diagnostics test object derived from TestBase. The Diag object contains a ping() method for testing DebugPort communicatons, which sends a command to the target and awaits a response within a timeout period. 
 
 ## Continuous Integration
 
