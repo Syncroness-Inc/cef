@@ -163,7 +163,7 @@ typedef struct
  */
 typedef struct
 {
-	uint32_t 	m_framingSignature;			//34 bit aligned
+	uint32_t 	m_framingSignature;			//32 bit aligned
 	uint32_t 	m_packetChecksum;			//Checksum over the payload only, 64 bit aligned
 	uint32_t 	m_payloadSize;				//Payload size in bytes, 32 bit aligned
 	/**
