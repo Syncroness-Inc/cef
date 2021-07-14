@@ -155,7 +155,27 @@ typedef struct
 	uint32_t m_padding1;						// 64 bit aligned
 } cefCommandHeader_t;
 
-
+/**
+ * CEF Command Debug Port Header
+ * Each Command Request, Command Response, and Debug Packet has a common debug header associated with it.
+ * The CEF Command Debug Header must be an increment of 1 byte "reserve" so that when the CEF command debug header
+ * is used within a structure, the next variable in the structure can rely upon being 64 bit aligned.
+ */
+typedef struct
+{
+	uint32_t 	m_framingSignature;			//34 bit aligned
+	uint32_t 	m_packetChecksum;			//Checksum over the payload only, 64 bit aligned
+	uint32_t 	m_payloadSize;				//Payload size in bytes, 32 bit aligned
+	/**
+	 * The types of packets are
+	 * * Command Request
+	 * * Command Response
+	 * * Debug Packet
+	 */
+	uint8_t 	m_packetType;				//40 bit aligned
+	uint8_t 	m_reserve;					//48 bit aligned
+	uint16_t 	m_packetHeaderChecksum;		//checksum over the header only, 62 but aligned
+} cefCommandDebugPortHeader_t;
 
 /**
  * CommandPing
