@@ -35,9 +35,8 @@ class CommandPing : public CommandBase
 {
 	public:
 		//! Constructor
-		CommandPing(commandInitiatorId_t commandInitiatorId = commandInitiatorIdDefault,
-					commandSequenceNumber_t commandSequenceNumber = 0) :
-			CommandBase(commandOpCodePing, commandInitiatorId, commandSequenceNumber)
+		CommandPing() :
+			CommandBase(commandOpCodePing)
 			{ }
 
 		//! See base class for method description

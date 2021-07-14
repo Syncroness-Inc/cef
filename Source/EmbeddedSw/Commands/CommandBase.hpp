@@ -29,51 +29,17 @@ written permission of Syncroness.
 class CommandBase
 {
     public:
-		// ID of initiator/creator of the command
-		typedef uint8_t commandInitiatorId_t;
-
-		// Rolling Sequence number of the command
-		typedef uint16_t commandSequenceNumber_t;
-
-
         //! Constructor.
-        CommandBase(commandOpCode_t commandOpCode,
-        			commandInitiatorId_t commandInitiatorId = commandInitiatorIdDefault,
-					commandSequenceNumber_t commandSequenceNumber = 0) :
+        CommandBase(commandOpCode_t commandOpCode) :
             m_commandOpCode(commandOpCode),
             m_commandState(commandStateCommandEntry),
 			m_commandErrorCode(errorCode_OK),
 			mp_parentCommand(nullptr)
 			{
-        		commandInitiatorInit(commandInitiatorId, commandSequenceNumber);
+    			m_commandSequenceNumber = m_rollingCommandSequenceNumber++;
 			}
 
-        /**
-         * To aid in debug, a rolling sequence number is assigned for each command.
-         * To further aid debug the an ID can be assigned who initiated a command.
-         */
-        enum
-        {
-            //! Initiated internal to the embedded software (this is the default, generic ID)
-        	//! Illegal command initiator IDs default to commandInitiatorIdDefault rather than report an error.
-            commandInitiatorIdDefault,
-
-			//! Commands initiated by Python Utilities (which have own unique sequence number)
-			commandInitiatiorIdPythonUtilities,
-
-			//! Illegal command initiator IDs rather than report an error possibly during initialization of system
-			commandInitiatorIdOutOfRangeInitiatorId,
-        };
-
-
-        /**
-         * Constructor helper function to setup sequence number and commandInitiator Id
-         *
-         * @param commandInitiatorId	Initiator ID.  If illegal ID detected, then defaults to commandInitiatorIdDefault
-         * @param commandSequenceNumber Depending on the InitiatorID, this parameter may be ignored.
-         */
-        void commandInitiatorInit(commandInitiatorId_t commandInitiatorId, commandSequenceNumber_t commandSequenceNumber);
-
+        typedef uint16_t commandSequenceNumber_t;
 
         /**
          * Execute method.  Must be implemented by the derived class.
@@ -183,10 +149,7 @@ class CommandBase
         //! Current command state
         commandState_t m_commandState;
 
-        // ID of initiator/creator of the command
-        commandInitiatorId_t m_commandInitiatorId;
-
-        // Rolling Sequence number of the command
+        // Rolling Sequence number of the command (to aid debug)
         commandSequenceNumber_t m_commandSequenceNumber;
 
         // For internally generated commands, a new sequence number is generated for each new command
