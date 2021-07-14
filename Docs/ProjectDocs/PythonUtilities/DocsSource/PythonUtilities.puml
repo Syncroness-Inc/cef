@@ -1,0 +1,36 @@
+@startuml
+title CEF Python Utilities 
+
+class CefContract
+class SerialPortDriverImpl
+abstract TestBase
+class Diag
+class DebugPortRouter
+class TransportLayer
+class Logging << Singleton >>
+abstract DebugPortDriver
+
+TestBase : send()
+TestBase : receive()
+
+DebugPortRouter : send()
+DebugPortRouter : receive()
+
+Diag : ping()
+
+TransportLayer : buildPacket()
+TransportLayer : read()
+
+DebugPortDriver : sendBytes()
+DebugPortDriver : readNextByte()
+
+TestBase *- DebugPortRouter
+TestBase <-- Diag
+DebugPortRouter *- TransportLayer
+DebugPortRouter *-- Logging
+TransportLayer -> DebugPortDriver
+TransportLayer --> CefContract
+DebugPortDriver -> SerialPortDriverImpl
+
+
+@enduml
