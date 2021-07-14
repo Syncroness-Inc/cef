@@ -164,7 +164,7 @@ typedef struct
 typedef struct
 {
 	uint32_t 	m_framingSignature;			//32 bit aligned
-	uint32_t 	m_packetPayloadChecksum;			//Checksum over the payload only, 64 bit aligned
+	uint32_t 	m_packetPayloadChecksum;	//Checksum over the payload only, 64 bit aligned
 	uint32_t 	m_payloadSize;				//Payload size in bytes, 32 bit aligned
 	/**
 	 * The types of packets are
@@ -174,7 +174,7 @@ typedef struct
 	 */
 	uint8_t 	m_packetType;				//40 bit aligned
 	uint8_t 	m_reserve;					//48 bit aligned
-	uint16_t 	m_packetHeaderChecksum;		//checksum over the header only, 64 but aligned
+	uint16_t 	m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
 
 /**
