@@ -116,11 +116,23 @@ class cefCommandHeader(ctypes.Structure):
     ]
 
 
+
+# CEF Command Debug Port Header
+# Each Command Request, Command Response, and Logging Packet has a common debug header associated with it.
+# The CEF Command Debug Header must guarantee to end on a 64 bit alignment as other structures that follow
+# this header rely on it ending on a 64 bit alignment.
+
 class cefCommandDebugPortHeader(ctypes.Structure):
     _fields_ = [
         ('m_framingSignature', ctypes.c_uint32),
         ('m_packetPayloadChecksum', ctypes.c_uint32),
         ('m_payloadSize', ctypes.c_uint32),
+
+        # The types of packets are
+        # # Command Request
+        # # Command Response
+        # # Logging Packet
+
         ('m_packetType', ctypes.c_uint8),
         ('m_reserve', ctypes.c_uint8),
         ('m_packetHeaderChecksum', ctypes.c_uint16)
