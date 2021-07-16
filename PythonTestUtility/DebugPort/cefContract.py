@@ -19,7 +19,7 @@ from enum import Enum, auto
 
 
 # Contains definitions for shared structures between Embedded SW and Python Utilities.
-# 	For now, there MUST be a python file that exactly matches this file.
+# 	For now, there MUST be a C++ header file that exactly matches this file.
 # 	Eventually, one file source can be used generate either a python or .hpp file from one source
 # 	via a python generation tool.  For now, any changes in this file must be
 # 	added to the python file as well.  Try to keep the python and c files in roughly the same order.
@@ -114,7 +114,6 @@ class cefCommandHeader(ctypes.Structure):
         ('m_commandNumBytes', ctypes.c_uint32),
         ('m_padding1', ctypes.c_uint32)
     ]
-
 
 
 # CEF Command Debug Port Header
