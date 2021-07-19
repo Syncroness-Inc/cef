@@ -18,6 +18,7 @@
 from DebugPortDriver import DebugPortDriver
 import serial
 import serial.tools.list_ports
+import struct
 
 
 class DebugSerialPort(DebugPortDriver):
@@ -70,4 +71,6 @@ class DebugSerialPort(DebugPortDriver):
 if __name__ == '__main__':
     s = DebugSerialPort('/dev/tty3', baudRate=9600)
     s.open()
-    s.send(bytes("TEST\n", 'utf-8'))
+    msg = bytes("TEST", 'utf-8')
+    packet = struct.pack("@4s", msg)
+    s.send(packet)
