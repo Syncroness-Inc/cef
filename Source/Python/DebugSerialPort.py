@@ -22,7 +22,10 @@ from DebugPortDriver import DebugPortDriver
 
 
 class DebugSerialPort(DebugPortDriver):
-    """! Concrete implementation of the DebugPortDriver using serial port semantics """
+    """ 
+    Concrete implementation of the DebugPortDriver using serial port semantics.
+    The device/port must be provided. 
+    """
 
     def __init__(self, port, baudRate=19200, timeout=1):
         self.__port = port
@@ -44,13 +47,17 @@ class DebugSerialPort(DebugPortDriver):
 
     @staticmethod
     def getAvailablePorts():
-        """! Print the system's available serial ports"""
+        """ 
+        Print the system's available serial ports 
+        """
         ports = serial.tools.list_ports.comports()
         for p in ports:
             print(p.device)
 
     def open(self):
-        """! Instantiate a serial port and open with desired baudrate and timeout in seconds """
+        """ 
+        Instantiate a serial port and open with desired baudrate and timeout in seconds 
+        """
         try:
             self.__serialPort = serial.Serial(port=self.__port, baudrate=self.__baudRate, timeout=self.__timeout)
         except (serial.SerialException):
@@ -58,20 +65,24 @@ class DebugSerialPort(DebugPortDriver):
             raise
 
     def close(self):
-        """! Close the serial port immediately """
+        """ 
+        Close the serial port immediately 
+        """
         self.__serialPort.close()
 
     def send(self, data: bytes) -> int:
-        """! Writes the packet to the serial port
-            @param data: bytearray to be written
-            @return bytesWritten: number of bytes successfully written
+        """ 
+        Writes the packet to the serial port
+        @param data: bytearray to be written
+        @return bytesWritten: number of bytes successfully written
         """
         bytesWritten = self.__serialPort.write(data)
         return bytesWritten
 
     def receive(self) -> bytes:
-        """! Read a single byte from the serial port. Throws an excpetion if timeout occurs
-            @return readByte: the byte successfully read from the port
+        """ 
+        Read a single byte from the serial port. Throws an excpetion if timeout occurs
+        @return readByte: the byte successfully read from the port
         """
         readByte = self.__serialPort.read()
         if not readByte:

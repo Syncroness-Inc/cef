@@ -18,8 +18,10 @@
 from abc import ABC, abstractmethod
 
 class DebugPortDriver(ABC):
-    """! Abstract class for DebugPort communication interfaces"""
-    
+    """ 
+    Abstract class for DebugPort communication interfaces
+    """
+
     def __init__(self):
         pass
 

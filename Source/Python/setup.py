@@ -14,8 +14,9 @@
 #written permission of Syncroness.
 ################################################################## #
 
-"""! A setuptools based module for CEF Python Utility
-    Usage: pip3 install .
+""" 
+A setuptools based module for CEF Python Utility
+usage: pip3 install .
 """
 
 from setuptools import setup, find_packages
