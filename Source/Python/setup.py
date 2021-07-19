@@ -14,12 +14,14 @@
 #written permission of Syncroness.
 ################################################################## #
 
-"""! A setuptools based module for CEF Python Utility"""
+"""! A setuptools based module for CEF Python Utility
+    Usage: pip3 install .
+"""
 
 from setuptools import setup, find_packages
 
 setup(
-    name='cef_python_test_utility',
+    name='cef_python',
     version='0.0.1',
     description='CEF Python Test Utility',
     url='http://bitbucket.syncroness.com:7990/projects/CEF/repos/cef/browse',
