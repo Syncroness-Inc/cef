@@ -22,22 +22,22 @@ PACKET_HEADER_SIZE_BYTES = 16
 PAYLOAD_MAX_SIZE_BYTES = 512
 
 
-def send():
+def send(packet):
     pass
 
 def buildPacket(payload, packetType):
     # Check the payload for valid byte length and calculate checksum
     payloadSize = len(payload)
-    print("Payload size {}".format(payloadSize))
     assert payloadSize <= PAYLOAD_MAX_SIZE_BYTES
-    payloadChecksum = _calculateChecksum(payload)
+    payloadChecksum = calculateChecksum(payload)
 
     # Create a structure with deferred field size since it is variable
     class CefPayload(ctypes.Structure):
         pass
 
-    CefPayload._fields_ = [('bytes', ctypes.c_uint8 * payloadSize)]
+    CefPayload._fields_ = [('bytes', ctypes.c_byte * payloadSize)]
     packetPayload  = CefPayload()
+    ctypes.memmove(packetPayload.bytes, payload, payloadSize)
 
     class CefPacket(ctypes.Structure):
         _pack_ = 32
@@ -48,16 +48,17 @@ def buildPacket(payload, packetType):
 
     # Construct the packet header
     packetHeader = cefContract.cefCommandDebugPortHeader()
-    packetHeader.m_framingSignature = 0
+    packetHeader.m_framingSignature = 0xFFFFFFFF
     packetHeader.m_packetPayloadChecksum = payloadChecksum
     packetHeader.m_payloadSize = payloadSize
     packetHeader.m_packetType = packetType
-    packetHeader.m_reserve = 0
+    packetHeader.m_reserve = 0xAA
     packetHeader.m_packetHeaderChecksum = 0
 
     # Calculate header checksum
-    tmpChecksum = _calculateChecksum(packetHeader)
-    packetHeader.m_packetHeaderChecksum = tmpChecksum
+    tmpChecksum = calculateChecksum(bytes(packetHeader))
+    # ctypes.memmove(packetHeader.m_packetHeaderChecksum, tmpChecksum)
+    packetHeader.m_packetHeaderChecksum = 0xFF
 
     # Now combine header and payload into full packet
     packet = CefPacket()
@@ -66,18 +67,24 @@ def buildPacket(payload, packetType):
 
     return packet, packetHeader, packetPayload
 
-def _calculateChecksum(data):
-    return 0
+def calculateChecksum(data):
+    byteData = bytes(data)
+    s = 0
+    for i in byteData:
+        binary = bin(i)
+        for b in binary:
+            if b == '1':
+                s += 1
+    print("CHECKSUM: {}".format(s))
+    return s
 
 
 if __name__ == '__main__':
-    payload = b'\x00' * 512
-    payload = "TEST STRING"
+    payload = b'\x11' * 512
+    # payload = bytes("TEST STRING", 'utf-8')
     packet, header, payload = buildPacket(payload, 0x00)
-    print(packet.header.m_framingSignature)
     print(ctypes.sizeof(packet))
-
     import serial
-    s = serial.Serial('/dev/ttyS0', timeout=1)
-    s.open()
-    s.write(packet)
+    s = serial.Serial(port='/dev/tty3', baudrate=9600, timeout=1)
+    s.write(str(bytes(packet)).encode('utf-8'))
+    print(bytes(header))
