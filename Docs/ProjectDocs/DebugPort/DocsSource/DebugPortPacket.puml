@@ -1,19 +1,21 @@
 @startditaa -E
 Debug Port Packet           (528 Bytes)
 +---------------------------------------+
-| Debug Port Packet Header  (12 Bytes)  |
+| Debug Port Packet Header  (16 Bytes)  |
 | +-----------------------------------+ |
 | | -Framing Signature       -4 Bytes | |
+| +-----------------------------------+ |
+| | -Debug Packet CHecksum   -4 Bytes | |
 | +-----------------------------------+ |
 | | -Payload Size Info       -4 Bytes | |
 | +-----------------------------------+ |
 | | -Packet Type             -1 Byte  | |
 | +-----------------------------------+ |
-| | -Reserve                 -3 Bytes | |
+| | -Reserve                 -1 Bytes | |
+| +-----------------------------------+ |
+| | -Packet Header Checksum  -2 Bytes | |
 | +-----------------------------------+ |
 +---------------------------------------+
 | Debug Packet Payload      (512 Bytes) |
-+---------------------------------------+
-| Checksum                  (4 Bytes)   |
 +---------------------------------------+
 @endditaa
