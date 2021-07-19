@@ -122,6 +122,7 @@ class cefCommandHeader(ctypes.Structure):
 # this header rely on it ending on a 64 bit alignment.
 
 class cefCommandDebugPortHeader(ctypes.Structure):
+    _pack_ = 32
     _fields_ = [
         ('m_framingSignature', ctypes.c_uint32),
         ('m_packetPayloadChecksum', ctypes.c_uint32),
