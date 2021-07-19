@@ -14,8 +14,13 @@
 #written permission of Syncroness.
 ################################################################## #
 
+
+import sys
+from os.path import dirname, abspath
 import ctypes
-import cefContract
+
+sys.path.append(dirname(dirname(abspath(__file__))))
+from Shared import cefContract
 
 
 PACKET_HEADER_SIZE_BYTES = 16
