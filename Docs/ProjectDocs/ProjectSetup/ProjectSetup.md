@@ -10,9 +10,11 @@ When creating a new project, choose a new STM32 Project from the File->New menu.
 
 ![Stm32Setup](./DocsSource/Stm32Setup.png)
 
-**NOTE: After the project has been created, rename the Core->Src->main.c to main.cpp**
+**NOTE: After the project has been created, rename the Core->Src->main.c to main.cpp.**
 
 The MCU can now be customized with the Device Configurator within the IDE and the corresponding initialization code auto-generated. 
+
+**NOTE: If you re-configure the device the IDE will put the auto-generated code in a new main.c file. You will have to reconcile this with your existing main.cpp file.**
 
 ## NXP setup
 
