@@ -14,27 +14,19 @@
 #written permission of Syncroness.
 ################################################################## #
 
+"""! A setuptools based module for CEF Python Utility"""
 
-from abc import ABC, abstractmethod
+from setuptools import setup, find_packages
 
-class DebugPortDriver(ABC):
-    """! Abstract class for DebugPort communication interfaces"""
-    
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def open(self):
-        pass
-
-    @abstractmethod
-    def close(self):
-        pass
-
-    @abstractmethod
-    def send(self):
-        pass
-
-    @abstractmethod
-    def receive(self):
-        pass
+setup(
+    name='cef_python_test_utility',
+    version='0.0.1',
+    description='CEF Python Test Utility',
+    url='http://bitbucket.syncroness.com:7990/projects/CEF/repos/cef/browse',
+    author='Syncroness, Inc',
+    author_email='clight@syncroness.com',
+    packages=find_packages(),
+    install_requires=[
+        'pyserial',
+    ],
+)

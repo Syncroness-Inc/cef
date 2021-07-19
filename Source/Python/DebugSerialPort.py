@@ -15,18 +15,19 @@
 ################################################################## #
 
 
-from DebugPortDriver import DebugPortDriver
 import serial
 import serial.tools.list_ports
-import struct
+
+from DebugPortDriver import DebugPortDriver
 
 
 class DebugSerialPort(DebugPortDriver):
-    def __init__(self, port=None, baudRate=19200, timeout=1):
+    """! Concrete implementation of the DebugPortDriver using serial port semantics """
+
+    def __init__(self, port, baudRate=19200, timeout=1):
         self.__port = port
         self.__baudRate = baudRate
         self.__timeout = timeout
-
         self.__serialPort = None
 
     @property
@@ -43,11 +44,13 @@ class DebugSerialPort(DebugPortDriver):
 
     @staticmethod
     def getAvailablePorts():
+        """! Print the system's available serial ports"""
         ports = serial.tools.list_ports.comports()
         for p in ports:
             print(p.device)
 
     def open(self):
+        """! Instantiate a serial port and open with desired baudrate and timeout in seconds """
         try:
             self.__serialPort = serial.Serial(port=self.__port, baudrate=self.__baudRate, timeout=self.__timeout)
         except (serial.SerialException):
@@ -55,22 +58,22 @@ class DebugSerialPort(DebugPortDriver):
             raise
 
     def close(self):
+        """! Close the serial port immediately """
         self.__serialPort.close()
 
-    def send(self, packet: bytes) -> int:
-        bytesWritten = self.__serialPort.write(packet)
+    def send(self, data: bytes) -> int:
+        """! Writes the packet to the serial port
+            @param data: bytearray to be written
+            @return bytesWritten: number of bytes successfully written
+        """
+        bytesWritten = self.__serialPort.write(data)
         return bytesWritten
 
     def receive(self) -> bytes:
+        """! Read a single byte from the serial port. Throws an excpetion if timeout occurs
+            @return readByte: the byte successfully read from the port
+        """
         readByte = self.__serialPort.read()
         if not readByte:
             raise Exception("DebugSerialPort._readByte(): timeout on read")
         return readByte
-
-
-if __name__ == '__main__':
-    s = DebugSerialPort('/dev/tty3', baudRate=9600)
-    s.open()
-    msg = bytes("TEST", 'utf-8')
-    packet = struct.pack("@4s", msg)
-    s.send(packet)
