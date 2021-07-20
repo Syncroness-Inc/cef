@@ -27,7 +27,7 @@ class DebugSerialPort(DebugPortDriver):
     The device/port must be provided. 
     """
 
-    def __init__(self, port, baudRate=19200, timeout=1):
+    def __init__(self, port, baudRate=19200, timeout=None):
         self.__port = port
         self.__baudRate = baudRate
         self.__timeout = timeout
@@ -85,6 +85,6 @@ class DebugSerialPort(DebugPortDriver):
         @return readByte: the byte successfully read from the port
         """
         readByte = self.__serialPort.read()
-        if not readByte:
-            raise Exception("DebugSerialPort._readByte(): timeout on read")
+        # if not readByte:
+        #     raise Exception("DebugSerialPort._readByte(): timeout on read")
         return readByte

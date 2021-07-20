@@ -18,13 +18,33 @@
 import sys
 from os.path import dirname, abspath
 import ctypes
+from threading import Thread
 
 sys.path.append(dirname(dirname(abspath(__file__))))
 from Shared import cefContract
+from DebugPortDriver import DebugPortDriver
 
 
 PACKET_HEADER_SIZE_BYTES = 16
 PAYLOAD_MAX_SIZE_BYTES = 512
+
+
+class Transport:
+    """
+    Object for packetizing outgoing commands and framing incoming
+    data
+    """
+    def __init__(self, debugPortInterface: DebugPortDriver):
+        self.__debugPort = debugPortInterface
+        self.__readThread = Thread(target=self.readLoop)
+        self.__readThread.start()
+        self.__readBuffer = []
+
+    def readLoop(self):
+        while(True):
+            byte = self.__debugPort.receive()
+            print(byte)
+        
 
 
 def send(packet):
@@ -93,3 +113,9 @@ if __name__ == '__main__':
     s = serial.Serial(port='/dev/tty3', baudrate=9600, timeout=1)
     s.write(str(bytes(packet)).encode('utf-8'))
     print(bytes(header))
+
+    from DebugSerialPort import DebugSerialPort
+    p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
+    p.open()
+
+    t = Transport(p)
