@@ -14,9 +14,6 @@
 #written permission of Syncroness.
 ################################################################## #
 
-import ctypes
-from enum import Enum, auto
-
 """
 Contains definitions for shared structures between Embedded SW and Python Utilities.
 For now, there MUST be a C++ header file that exactly matches this file.
@@ -25,19 +22,23 @@ via a python generation tool.  For now, any changes in this file must be
 added to the python file as well.  Try to keep the python and c files in roughly the same order.
 """
 
+import ctypes
+from enum import Enum, auto
+
 
 #####################################################################################################################
 ######  ERROR CODES                                                                                            ######
 #####################################################################################################################
-"""
-Error codes.  Each error code "should" only be used one time in order to aid debug.
-All error codes should begin with "errorCode_" and should be entered sequentially.
-By design, error codes are generic, and not module specific..
-Each error code is explicitly assigned the next available error code to aid debug (for when just the error code number is reported)
-A comment is discouraged for each error code to ease maintenance;
-instead, refer to the references in source code for the cause of the error.
-"""
+
 class errorCode(Enum):
+    """
+    Error codes.  Each error code "should" only be used one time in order to aid debug.
+    All error codes should begin with "errorCode_" and should be entered sequentially.
+    By design, error codes are generic, and not module specific..
+    Each error code is explicitly assigned the next available error code to aid debug (for when just the error code number is reported)
+    A comment is discouraged for each error code to ease maintenance;
+    instead, refer to the references in source code for the cause of the error.
+    """
     errorCode_OK                                                                = 0
     errorCode_LogFatalReturn                                                    = 1
     errorCode_PointerIsNullptr                                                  = 2
@@ -55,14 +56,15 @@ class errorCode(Enum):
 #####################################################################################################################/
 ######  COMMAND OPCODES                                                                                        ######/
 #####################################################################################################################/
-"""
-Command OpCodes (Operation Code) supported by the Embedded Software
-OpCodes are not grouped by sub-module by design to simplify entry as well as for error checking the enum.
-Each command type must be explicitly declared to aid debug (aids lookup when debugging when only have the opCode value)
-A comment is discouraged for each command type to ease maintenance; refer to the references in source code
-for information about the command.
-"""
+
 class commandOpCode(Enum):
+    """
+    Command OpCodes (Operation Code) supported by the Embedded Software
+    OpCodes are not grouped by sub-module by design to simplify entry as well as for error checking the enum.
+    Each command type must be explicitly declared to aid debug (aids lookup when debugging when only have the opCode value)
+    A comment is discouraged for each command type to ease maintenance; refer to the references in source code
+    for information about the command.
+    """
     commandOpCodeNone           = 0
     commandOpCodePing           = 1
 
@@ -92,16 +94,16 @@ See the importFromCefCommand() and exportToCefCommand() functions for each comma
 """
 
 
-"""
-CEF Command Header
-Each Request and Receive command has a common header associated with it.
-The CEF Command Header must be an increment of 8 bytes so that when the CEF command header
-is used within a structure, the next variable in the structure can rely upon being 64 bit aligned.
-
-Having both the request and the response structures have a common header, then the implementation of the command packets
-can optionally share the same memory buffer for receiving/sending commands to the debug port in memory constrained systems.
-"""
 class cefCommandHeader(ctypes.Structure):
+    """
+    CEF Command Header
+    Each Request and Receive command has a common header associated with it.
+    The CEF Command Header must be an increment of 8 bytes so that when the CEF command header
+    is used within a structure, the next variable in the structure can rely upon being 64 bit aligned.
+
+    Having both the request and the response structures have a common header, then the implementation of the command packets
+    can optionally share the same memory buffer for receiving/sending commands to the debug port in memory constrained systems.
+    """
     _fields_ = [
         ('m_commandOpCode', ctypes.c_uint16),
 
@@ -119,13 +121,13 @@ class cefCommandHeader(ctypes.Structure):
     ]
 
 
-"""
-CEF Command Debug Port Header
-Each Command Request, Command Response, and Logging Packet has a common debug header associated with it.
-The CEF Command Debug Header must guarantee to end on a 64 bit alignment as other structures that follow
-this header rely on it ending on a 64 bit alignment.
-"""
 class cefCommandDebugPortHeader(ctypes.Structure):
+    """
+    CEF Command Debug Port Header
+    Each Command Request, Command Response, and Logging Packet has a common debug header associated with it.
+    The CEF Command Debug Header must guarantee to end on a 64 bit alignment as other structures that follow
+    this header rely on it ending on a 64 bit alignment.
+    """
     _fields_ = [
         ('m_framingSignature', ctypes.c_uint32),
         ('m_packetPayloadChecksum', ctypes.c_uint32),
@@ -143,11 +145,7 @@ class cefCommandDebugPortHeader(ctypes.Structure):
 
 
 """
-CommandPing
-    See command implementation files for variable documentation
-
-The ping command is also used for basic command protocol checkout, so known values
-outlined below are shared between python and embedded software.
+CommandPing constants
 """
 CMD_PING_UINT8_REQUEST_EXPECTED_VALUE   = 0xA3
 CMD_PING_UINT16_REQUEST_EXPECTED_VALUE  = 0x93A3
@@ -156,6 +154,13 @@ CMD_PING_UINT64_REQUEST_EXPECTED_VALUE  = 0x936217995202A373
 
 
 class cefCommandPingRequest(ctypes.Structure):
+    """
+    CommandPing
+        See command implementation files for variable documentation
+
+    The ping command is also used for basic command protocol checkout, so known values
+    outlined below are shared between python and embedded software.
+    """
     _fields_ = [
         ('m_header', cefCommandHeader),
 
@@ -171,6 +176,13 @@ class cefCommandPingRequest(ctypes.Structure):
 
 
 class cefCommandPingResponse(ctypes.Structure):
+    """
+    CommandPing
+        See command implementation files for variable documentation
+
+    The ping command is also used for basic command protocol checkout, so known values
+    outlined below are shared between python and embedded software.
+    """
     _fields_ = [
         ('m_header', cefCommandHeader),
 
