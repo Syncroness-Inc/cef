@@ -17,9 +17,9 @@
 """
 Contains definitions for shared structures between Embedded SW and Python Utilities.
 For now, there MUST be a C++ header file that exactly matches this file.
-Eventually, one file source can be used generate either a python or .hpp file from one source
-via a python generation tool.  For now, any changes in this file must be
-added to the python file as well.  Try to keep the python and c files in roughly the same order.
+Eventually there may be a single source file from which the other is auto-generated (e.g. by 
+python script). For now, any changes in this file must be added to the C++ file as well.  
+Try to keep the python and c files in roughly the same order.
 """
 
 import ctypes
