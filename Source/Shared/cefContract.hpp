@@ -128,6 +128,19 @@ typedef uint16_t commandOpCode_t;
 #pragma pack(push, 1)
 
 /**
+ * Debug Port Framing Signature
+ * *This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
+ * *Every Byte MUST be unique
+ */
+#define DEBUG_PACKET_UINT32_FRAMING_SIGNATURE 0x43454653
+
+/**
+ * Debug Port Packet Size
+ * *Max number of bytes in a debug port packet
+ */
+#define DEBUG_PORT_MAX_PACKET_SIZE_BYTES 528
+
+/**
  * CEF Command Header
  * Each Request and Receive command has a common header associated with it.
  * The CEF Command Header must be an increment of 8 bytes so that when the CEF command header
