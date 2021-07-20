@@ -27,7 +27,7 @@ After project creation the MCU's pins, peripherals, and clocks can be customized
 
 CEF is not used on its own, instead being pulled in to embedded projects as a module or library. For normal project work, simply clone the CEF repository locally and copy the resulting directory into your project's directory tree:
 ```
-git clone http://bitbucket.syncroness.com:7990/scm/cef/cef.git
+git clone --recurse-submodules http://bitbucket.syncroness.com:7990/scm/cef/cef.git
 ```
 
 ## Syncroness Internal CEF development - repository configuration
