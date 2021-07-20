@@ -47,9 +47,15 @@ cd Cef
 git checkout  <cef_development_branch_name>
 ```
 
+**Note: When creating branches in Jira, it is useful to create two branches (one for CEF and one for the target/Stm32/Nxp) and modify the branch name as an indication (example: feature/CEF-1-CEFSTM32-featuredescription and feature/CEF-1-CEFSw-featuredescription)**
+
 If you are starting from an existing platform, the above steps should already have been performed and CEF is already set up as a submodule - you can confirm this by examining the presence and content of the '.gitmodules' file in the project, which should include a reference to the CEF repository. The following command will clone the project repository and the included CEF submodule:
 ```
-git clone --recurse-submodules <repository_url>
+git clone --recurse-submodules <container_repository_url> # Example: git clone --recure-submodules http://bitbucket.syncrones.com:7990/scm/cef/cefstm32.git
+cd path/to/container
+git checkout -b <container_project_work_branch> # This is the branch you've created for new work in your parent/container repository
+cd path/to/submodule
+git checkout -b <cef_development_branch_name> # This is the branch you've created for new work in the CEF repository
 ```
 
 Once the submodule is set up, workflow is as follows: when committing changes to CEF, you should be within its subdirectory tree when performing git commands. Git will recognize that you are within the submodule instead of the parent/container project, and commits will go to the CEF repository (make sure you are on a branch, do not commit to CEF's origin/master). If you are making edits to the parent project you have set up, git commands can be performed anywhere within its directory above the submodule as normal. Note that these commits will not commit CEF changes to your project - you must continue to maintain two repository workflows when doing CEF development.
