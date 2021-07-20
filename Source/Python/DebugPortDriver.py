@@ -19,7 +19,10 @@ from abc import ABC, abstractmethod
 
 class DebugPortDriver(ABC):
     """ 
-    Abstract class for DebugPort communication interfaces
+    Abstract class for DebugPort communication interfaces. This serves
+    as the generic template for any physical interface implementation
+    (UART, ethernet, etc.). The nature of the data (single bytes, packets, etc)
+    is left to the child classes to implement.
     """
 
     def __init__(self):
@@ -27,16 +30,28 @@ class DebugPortDriver(ABC):
 
     @abstractmethod
     def open(self):
+        """
+        Start/enable the interface
+        """
         pass
 
     @abstractmethod
     def close(self):
+        """
+        Close/disable the interface
+        """
         pass
 
     @abstractmethod
     def send(self):
+        """
+        Transmit/write data out
+        """
         pass
 
     @abstractmethod
     def receive(self):
+        """
+        Read data in
+        """
         pass
