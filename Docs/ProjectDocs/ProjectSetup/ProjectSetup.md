@@ -54,7 +54,7 @@ If you are starting from an existing platform, the above steps should already ha
 git clone --recurse-submodules <container_repository_url> # Example: git clone --recure-submodules http://bitbucket.syncrones.com:7990/scm/cef/cefstm32.git
 cd path/to/container
 git checkout -b <container_project_work_branch> # This is the branch you've created for new work in your parent/container repository
-cd path/to/submodule
+cd path/to/submodule # Example: cd Core/Cef
 git checkout -b <cef_development_branch_name> # This is the branch you've created for new work in the CEF repository
 ```
 
