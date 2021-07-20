@@ -27,7 +27,7 @@ written permission of Syncroness.
  * when malloc is allowed to be used.
  *
  * The ring buffer is stored as an array, with one extra element that is empty per the design
- * pattern of SPSC queues.
+ * pattern of SPSC (Single Producers Single Consumer) queues.
  */
 
 
@@ -135,8 +135,7 @@ class RingBufferOfVoidPointers
 
 		/**
 		 * The storage size of the array needs to be increased by 1 over the template value N to
-		 * account for the extra storage element in the array.
-		 *
+		 * account for the one extra storage element in the array that is used to simplify the implementation.
 		 */
 		const uint32_t m_numElements;
 

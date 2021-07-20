@@ -22,12 +22,7 @@ written permission of Syncroness.
  * The constructor allocates enough memory for the command pool (on the proper alignment) given
  * the number of commands and the maximum command size.
  *
- * A linked list is then used to manage a "queue" of "command memory" that can be allocated.
- *
- * In order to use the linked list pointers inherent in all commands (and thereby avoid needing
- * to consume more memory as well as avoiding a maintenance issue of sizing a queue properly) all the memory
- * pool item must have a base class of CommandBase.  For robustness, whenever memory is returned to the pool,
- * a "placement new" of CommandBase is re-applied just in case the memory was corrupted after it was checked out.
+ * A ring buffer is used to manage a "queue" of "chunks of command memory" that can be allocated/freed.
  */
 
 #include "cefMappings.hpp"
@@ -62,7 +57,7 @@ class CommandPool
 		// requirement for structures as well.
 		static const uint32_t m_commandPoolAlignmentSizeInBytes = sizeof(void*);
 
-		//!
+		//! Ring Buffer of pointers to "chunks of memory" that can be allocated for command memory
 		RingBufferOfVoidPointers m_ringBufferOfCommandMemory;
 
 		//! Maximum command size in bytes that can be allocated from this pool
