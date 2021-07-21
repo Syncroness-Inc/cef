@@ -22,30 +22,40 @@ written permission of Syncroness.
  * fail at run time instead (not ideal, but the least bad option).
  */
 
-#include "ShimBase.hpp"
-#include "Cef/HwShim/STM32H743/ShimSTM.hpp"
-#include "cefContract.hpp"
+#include "SerialPortDriverHwImpl.hpp"
+#include "Cef/HwShim/ShimBase.hpp"
 
-//Instance of STM shim
-static ShimSTM instance;
-
-ShimBase& ShimBase::getInstance()
+void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 {
-	return instance;
+	ShimBase::getInstance().startInteruptSend(sendBuffer, packetSize);
 }
 
-void ShimBase::rxCallback()
+
+void SerialPortDriverHwImpl::startRecieve(void* recieveBuffer,  int recieveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
 {
-	printf("error");
+	m_recieveBufferSize = recieveSize;
+	m_recieveBuffer = recieveBuffer;
+	m_currentBufferOffset = 0;
+	recieveNextByte();
 }
 
-void ShimBase::startInteruptSend(void*sendBuffer, int bufferSize)
+
+void SerialPortDriverHwImpl::stopRecieve()
 {
 	printf("ERROR");
 }
-
-void ShimBase::startInteruptRecieve(void* recieveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
+void SerialPortDriverHwImpl::recievedByte()
 {
-	printf("ERROR");
+	//TODO - header
+	m_currentBufferOffset++;
+	recieveNextByte();
+}
+void SerialPortDriverHwImpl::recieveNextByte()
+{
+	if(m_recieveBuffer != nullptr && m_currentBufferOffset <= m_recieveBufferSize)
+	{
+		ShimBase::getInstance().startInteruptRecieve((m_recieveBuffer + m_currentBufferOffset), this, &SerialPortDriverHwImpl::recievedByte);
+	}
+
 }
 

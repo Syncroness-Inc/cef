@@ -14,33 +14,39 @@ with any information storage or retrieval system, without the prior
 written permission of Syncroness.
 ****************************************************************** */
 /* Header guard */
-#ifndef __SHIM_STM_H
-#define __SHIM_STM_H
-
-#include "Cef/HwShim/ShimBase.h"
-
+#ifndef __SERIAL_PORT_DRIVER_HW_IMPL_H
+#define __SERIAL_PORT_DRIVER_HW_IMPL_H
+#include <stdio.h>
+#include "Cef/HwShim/DebugPortDriver.hpp"
 /**
- * STM Shim class
+ * Base Class for DebugPortDriver
  */
-class ShimSTM : public ShimBase {
-public:
+
+class SerialPortDriverHwImpl : public DebugPortDriver {
+protected:
 	//! Constructor.
-	ShimSTM():ShimBase() {}
+	SerialPortDriverHwImpl():DebugPortDriver()
+	{}
 
-	/**
-	 * Start receive interrupt driven data
-	 * Will receive one byte of data then callback function will be called and
-	 * receive will have to be called again to continue to receive data
-	 * @param write buffer + offset location to write to memory
-	 */
-   void startInteruptSend() override;
+
+public:
+
+   void sendData(void* sendBuffer, int packetSize) override;
    /**
-    * Set uart info for shim layer to use in uart commands
-    * @param Uart handler pointer
+    * Start receiving data
+    * @param recieve buffer location
+    * @param size of packet to recieve
     */
-   void startInteruptRecieve(uint8_t location) override;
- 
-};
+   void startRecieve(void* recieveBuffer,  int recieveSize) override;
+   /**
+    * Stops recieving data
+    * */
+   void stopRecieve() override;
 
+   void recievedByte();
+
+   void recieveNextByte();
+
+};
 
 #endif  // end header guard
