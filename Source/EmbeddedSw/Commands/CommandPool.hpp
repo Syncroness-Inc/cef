@@ -64,7 +64,7 @@ class CommandPool
 		uint32_t m_maxCommandSizeInBytes;
 
 		//! number of commands that can be allocated from this pool at one time
-		uint32_t m_numCommands;;
+		uint32_t m_numCommands;
 
 		//! pointer to the start of the memory allocated for this pool
 		uint8_t* mp_memoryPoolStart;
