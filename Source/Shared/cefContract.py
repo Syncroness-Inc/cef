@@ -93,6 +93,19 @@ See the importFromCefCommand() and exportToCefCommand() functions for each comma
     This is done rather than create a maintenance issue of essentially duplicating the documentation in two spots.
 """
 
+"""
+Debug Port Framing Signature
+  * This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
+  * Every Byte MUST be unique
+"""
+DEBUG_PACKET_UINT32_FRAMING_SIGNATURE = 0x43454653
+
+
+"""
+Debug Port Packet Size
+  * Max number of bytes in a debug port packet
+"""
+DEBUG_PORT_MAX_PACKET_SIZE_BYTES = 528
 
 class cefCommandHeader(ctypes.Structure):
     """
