@@ -85,14 +85,14 @@ static constexpr size_t debugCommandPoolMaxClassSizeInBytes = max_sizeof<
 		CommandPing
 		>();
 
-//! Number of commands in the debug command pool
-static const uint32_t numDebugCommandPoolEntries = 1;
-
-CommandPool CommandGenerator::m_debugCommandPool(debugCommandPoolMaxClassSizeInBytes, numDebugCommandPoolEntries);
+//! Number of commands in the debug command pool (be sure to add all pool counts into m_totalNumberOfCommandGeneratorCommands
+CommandPool CommandGenerator::m_debugCommandPool(debugCommandPoolMaxClassSizeInBytes,
+												 CommandGenerator::m_numDebugCommandPoolEntries);
 
 
 //******************************************** Application Command Pool **********************************************//
 // Add application specific command pool(s) here
+
 
 
 /*

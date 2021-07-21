@@ -68,7 +68,28 @@ class CommandGenerator
 		 */
 		void freeCommand(CommandBase* p_command);
 
+		/**
+		 * Get the total number of commands that could be allocated by the command generator
+		 * 		Note:  this method is used at compile time so it must be constexpr
+		 *
+		 * @return total number of allowed active commands in the system
+		 */
+		static constexpr uint32_t getTotalNumberOfCommandGeneratorCommands()
+		{
+			return m_totalNumberOfCommandGeneratorCommands;
+		}
+
+
 	private:
+		//! number of commands in the Debug Command Pool
+		static constexpr uint32_t m_numDebugCommandPoolEntries = 1;
+
+		//! Total number of commands that could be allocated by the CommandGenerator
+		static constexpr uint32_t m_totalNumberOfCommandGeneratorCommands = \
+				m_numDebugCommandPoolEntries;
+
+
+		//! Pool of commands to allocate debug commands from
 		static CommandPool m_debugCommandPool;
 
 };

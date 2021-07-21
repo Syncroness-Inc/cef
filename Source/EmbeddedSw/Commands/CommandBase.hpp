@@ -28,6 +28,7 @@ written permission of Syncroness.
 
 class CommandPool;  // forward declaration to avoid include dependency chain reaction
 
+
 class CommandBase
 {
     public:
@@ -139,6 +140,26 @@ class CommandBase
         	return mp_commandPool;
         }
 
+        /**
+         * Sets the parent command associated with this command
+         * 
+         * @param pointer to the parent command 
+         */
+        void setParentCommand(CommandBase* p_parentCommand)
+        {
+            mp_parentCommand = p_parentCommand;
+        }
+
+        /**
+         * Get the parent command associated with this command
+         * 
+         * @return pointer to the parent command 
+         */
+        CommandBase* getParentCommand()
+        {
+            return mp_parentCommand;
+        }
+
 
     protected:
         //! Command states
@@ -182,7 +203,7 @@ class CommandBase
         errorCode_t m_commandErrorCode;
 
         //! pointer to parent command (NULL if no parent command)
-        void* mp_parentCommand;
+        CommandBase* mp_parentCommand;
 
         //! pointer to CommandPool object.  This variable is needed if the command was allocated by
         //! the CommandGenerator in order to release the command back to the correct CommandPool
