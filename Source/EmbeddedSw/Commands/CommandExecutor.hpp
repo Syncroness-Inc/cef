@@ -14,8 +14,8 @@ with any information storage or retrieval system, without the prior
 written permission of Syncroness.
 ****************************************************************** */
 /* Header guard */
-#ifndef __CEF_COMMAND_EXECUTOR_H
-#define __CEF_COMMAND_EXECUTOR_H
+#ifndef __COMMAND_EXECUTOR_H
+#define __COMMAND_EXECUTOR_H
 
 
 #include "cefMappings.hpp"

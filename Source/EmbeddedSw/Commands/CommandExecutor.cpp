@@ -56,7 +56,7 @@ static constexpr uint32_t totalNumberOfActiveCommandsInTheSystem =
 		2;  /* Extra space for margin*/
 
 
-//! Singleton declaration of the CommandExecutor
+//! Singleton instantiation of CommandExecutor
 static CommandExecutor commandExecutorSingleton(totalNumberOfActiveCommandsInTheSystem);
 
 
