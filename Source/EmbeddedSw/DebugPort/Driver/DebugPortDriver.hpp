@@ -14,39 +14,38 @@ with any information storage or retrieval system, without the prior
 written permission of Syncroness.
 ****************************************************************** */
 /* Header guard */
-#ifndef __SERIAL_PORT_DRIVER_HW_IMPL_H
-#define __SERIAL_PORT_DRIVER_HW_IMPL_H
-#include <stdio.h>
-#include "Cef/HwShim/DebugPortDriver.hpp"
+#ifndef __DEBUG_PORT_DRIVER_H
+#define __DEBUG_PORT_DRIVER_H
+#include "Cef/Source/Shared/cefContract.hpp"
+
 /**
  * Base Class for DebugPortDriver
+ * Send Data/Receive Data/Stop Receive
  */
 
-class SerialPortDriverHwImpl : public DebugPortDriver {
+class DebugPortDriver {
 protected:
 	//! Constructor.
-	SerialPortDriverHwImpl():DebugPortDriver()
-	{}
-
+	DebugPortDriver() {}
 
 public:
-
-   void sendData(void* sendBuffer, int packetSize) override;
+   /**
+    * Start Send Data
+    * @param sendBuffer 
+    * @param packetSize 
+    */
+   virtual void sendData(void* sendBuffer, int packetSize);
    /**
     * Start receiving data
-    * @param recieve buffer location
-    * @param size of packet to recieve
+    * @param receive buffer location
+    * @param size of packet to receive
     */
-   void startRecieve(void* recieveBuffer,  int recieveSize) override;
+   virtual void startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
    /**
-    * Stops recieving data
+    * Stops receiving data
     * */
-   void stopRecieve() override;
-
-   void recievedByte();
-
-   void recieveNextByte();
-
+   virtual void stopReceive(void);
+ 
 };
 
 #endif  // end header guard

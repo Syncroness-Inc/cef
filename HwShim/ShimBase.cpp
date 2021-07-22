@@ -23,9 +23,9 @@ written permission of Syncroness.
  */
 
 #include "ShimBase.hpp"
-#include "Cef/HwShim/STM32H743/ShimSTM.hpp"
-#include "cefContract.hpp"
+#include "Cef/Source/EmbeddedSw/Logging/Logging.hpp"
 
+#include "Cef/HwShim/STM32H743/ShimSTM.hpp"
 //Instance of STM shim
 static ShimSTM instance;
 
@@ -36,16 +36,16 @@ ShimBase& ShimBase::getInstance()
 
 void ShimBase::rxCallback()
 {
-	printf("error");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::rxCallback() called, supposed to be implemented in derived class");
 }
 
 void ShimBase::startInteruptSend(void*sendBuffer, int bufferSize)
 {
-	printf("ERROR");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInteruptSend() called, supposed to be implemented in derived class");
 }
 
-void ShimBase::startInteruptRecieve(void* recieveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
+void ShimBase::startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
 {
-	printf("ERROR");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInteruptReceive() called, supposed to be implemented in derived class");
 }
 

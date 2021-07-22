@@ -25,41 +25,32 @@ written permission of Syncroness.
  * STM Shim class
  */
 class ShimSTM : public ShimBase {
-public:
+protected:
 	//! Constructor.
-	ShimSTM():ShimBase(),
-	m_myUartHandle(nullptr)
-	{}
+	ShimSTM():ShimBase() {}
 
-
+   /**
+    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
+    */
+   void rxCallback() override;
+   
+public:
 	/**
-	 * Unique Uart handler
-	 */
-	UART_HandleTypeDef* m_myUartHandle;
-
-	/**
-	 * Start receive interrupt driven data
-	 * Will receive one byte of data then callback function will be called and
-	 * receive will have to be called again to continue to receive data
-	 * @param write buffer + offset location to write to memory
+	 * Start send 
+	 * @param sendBuffer send buffer
+    * @param bufferSize number of bytes to be sent in the buffer
 	 */
    void startInteruptSend(void*sendBuffer, int bufferSize) override;
    /**
-    * Set uart info for shim layer to use in uart commands
-    * @param Uart handler pointer
+    * Start receive interrupt driven data
+	 * Will receive one byte of data then callback function will be called and
+	 * receive will have to be called again to continue to receive data
+    * @param receiveByte - location to store the received data
+    * @param callbackClass - class of callback function (the class that started the send)
+    * @param callback - callback function once the data byte has been received 
     */
-   void startInteruptRecieve(void* recieveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void)) override;
+   void startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void)) override;
 
-   void rxCallback() override;
-   /**
-    * Set uart info for shim layer to use in uart commands
-    * @param Uart handler pointer
-    */
-   void setUartHandle(UART_HandleTypeDef* myUartHandle);
-   /**
-    * @return returns if uart handler is nullptr
-    */
-   bool checkForUartHandle();
  
 };
 

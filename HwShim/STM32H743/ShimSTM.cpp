@@ -15,13 +15,17 @@ written permission of Syncroness.
 ****************************************************************** */
 
 
-
 #include "ShimSTM.hpp"
+#include "Inc/main.h"
 
 //Hal callback override will call shim::rxCallback
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	ShimBase::getInstance().rxCallback();
+	extern UART_HandleTypeDef huart3;
+	if(&huart3 == huart)
+	{
+		ShimBase::getInstance().rxCallback();
+	}
 }
 
 void ShimSTM::rxCallback()
@@ -31,35 +35,16 @@ void ShimSTM::rxCallback()
 
 void ShimSTM::startInteruptSend(void*sendBuffer, int bufferSize)
 {
-	if(checkForUartHandle())
-	{
-		HAL_UART_Transmit_IT(m_myUartHandle, (uint8_t *)sendBuffer, bufferSize);
-	}
+	extern UART_HandleTypeDef huart3;
+	HAL_UART_Transmit_IT(&huart3, (uint8_t *)sendBuffer, bufferSize);
 }
 
-void ShimSTM::startInteruptRecieve(void* recieveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
+void ShimSTM::startInteruptReceive(void* recieveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
 {
-	if(checkForUartHandle())
-	{
-		m_callback = callback;
-		HAL_UART_Receive_IT(m_myUartHandle, ((uint8_t *)recieveByte), sizeof(uint8_t));
-	}
+	m_callbackClass = callbackClass;
+	m_callback = callback;
+	extern UART_HandleTypeDef huart3;
+	HAL_UART_Receive_IT(&huart3, ((uint8_t *)recieveByte), sizeof(uint8_t));
 }
-
-void ShimSTM::setUartHandle(UART_HandleTypeDef* myUartHandle)
-{
-	m_myUartHandle = myUartHandle;
-}
-
-bool ShimSTM::checkForUartHandle()
-{
-	if(m_myUartHandle == nullptr)
-	{
-		printf("ERROR NEED HANDLE\n");
-		return false;
-	}
-	return true;
-}
-
 
 

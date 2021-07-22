@@ -18,7 +18,7 @@ written permission of Syncroness.
 #define __SHIM_BASE_H
 #include <stdio.h>
 #include <functional>
-#include "Cef/HwShim/SerialPortDriverHwImpl.hpp"
+#include "Cef/Source/EmbeddedSw/DebugPort/Driver/Hardware/SerialPortDriverHwImpl.hpp"
 /**
  * Base Class for UART Shim
  */
@@ -29,8 +29,19 @@ protected:
 	ShimBase()
 	{}
 
+   /**
+    * Callback class instance for receive callback
+    */
+   SerialPortDriverHwImpl* m_callbackClass; 
+   /**
+    * Callback function for receive callback
+    */
 	void (SerialPortDriverHwImpl::* m_callback)(void);
-	SerialPortDriverHwImpl* m_callbackClass;
+
+   /**
+    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
+    */
+   virtual void rxCallback();
 public:
    /**
     * @return Returns the instance of Shim
@@ -38,23 +49,21 @@ public:
    static ShimBase& getInstance();
 
    /**
-    * Start send interrupt driven data
-    * Will send data in the write buffer one byte at a time
-    */
+	 * Start send 
+	 * @param sendBuffer send buffer
+    * @param bufferSize number of bytes to be sent in the buffer
+	 */
    virtual void startInteruptSend(void*sendBuffer, int bufferSize);
    /**
     * Start receive interrupt driven data
-    * Will receive one byte of data then callback function will be called and
-    * receive will have to be called again to continue to receive data
-    * @param write buffer + offset location to write to memory
+	 * Will receive one byte of data then callback function will be called and
+	 * receive will have to be called again to continue to receive data
+    * @param receiveByte - location to store the received data
+    * @param callbackClass - class of callback function (the class that started the send)
+    * @param callback - callback function once the data byte has been received 
     */
-   virtual void startInteruptRecieve(void* recieveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void));
-   /**
-    * Callback for each rx byte received
-    * Will increment the read buffer offset and start the interrupt receive 
-    * Read buffer will look for the framing signature and allocate buffer accordingly
-    */
-   virtual void rxCallback();
+   virtual void startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void));
+
  
 };
 

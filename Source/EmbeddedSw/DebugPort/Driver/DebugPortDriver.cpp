@@ -22,40 +22,24 @@ written permission of Syncroness.
  * fail at run time instead (not ideal, but the least bad option).
  */
 
-#include "SerialPortDriverHwImpl.hpp"
-#include "Cef/HwShim/ShimBase.hpp"
+#include "DebugPortDriver.hpp"
+#include "Cef/Source/EmbeddedSw/Logging/Logging.hpp"
 
-void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
+
+void DebugPortDriver::sendData(void* sendBuffer, int packetSize)
 {
-	ShimBase::getInstance().startInteruptSend(sendBuffer, packetSize);
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::sendData() called, supposed to be implemented in derived class");
 }
 
 
-void SerialPortDriverHwImpl::startRecieve(void* recieveBuffer,  int recieveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
+void DebugPortDriver::startReceive(void* receiveBuffer,  int receiveSize)
 {
-	m_recieveBufferSize = recieveSize;
-	m_recieveBuffer = recieveBuffer;
-	m_currentBufferOffset = 0;
-	recieveNextByte();
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::startReceive() called, supposed to be implemented in derived class");
 }
 
 
-void SerialPortDriverHwImpl::stopRecieve()
+void DebugPortDriver::stopReceive()
 {
-	printf("ERROR");
-}
-void SerialPortDriverHwImpl::recievedByte()
-{
-	//TODO - header
-	m_currentBufferOffset++;
-	recieveNextByte();
-}
-void SerialPortDriverHwImpl::recieveNextByte()
-{
-	if(m_recieveBuffer != nullptr && m_currentBufferOffset <= m_recieveBufferSize)
-	{
-		ShimBase::getInstance().startInteruptRecieve((m_recieveBuffer + m_currentBufferOffset), this, &SerialPortDriverHwImpl::recievedByte);
-	}
-
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::stopReceive() called, supposed to be implemented in derived class");
 }
 
