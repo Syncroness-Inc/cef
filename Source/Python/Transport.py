@@ -15,11 +15,10 @@
 ################################################################## #
 
 
-from os import stat
 import sys
 from os.path import dirname, abspath
 import ctypes
-import struct
+import copy
 from threading import Thread
 
 sys.path.append(dirname(dirname(abspath(__file__))))
@@ -39,6 +38,11 @@ class Transport:
     Object for packetizing outgoing commands and framing incoming
     data
     """
+
+    # Create a structure with deferred field size since it is variable
+    class CefPayload(ctypes.Structure):
+        pass
+
     def __init__(self, debugPortInterface: DebugPortDriver, endianness=BIG_ENDIAN):
         self.__debugPort = debugPortInterface
         self.__endianness = endianness
@@ -63,6 +67,7 @@ class Transport:
         while(True):
             # look for framing signature
             self.__signatureFound = False
+            self.__readBuffer = []
             while not self.__signatureFound:
                 i = 0
                 while i < 4:
@@ -74,25 +79,49 @@ class Transport:
                         # reset the read buffer and start over
                         self.__readBuffer = []
                         i = 0
-                print("FRAMING SIGNATURE FOUND")
                 self.__signatureFound = True
             
             # get the rest of the header bytes and populate the struct
             for i in range(PACKET_HEADER_SIZE_BYTES - 4):
                 byte = self.__debugPort.receive()
                 self.__readBuffer.append(byte)
-            print("HEADER FOUND, LEN: {} {}".format(len(self.__readBuffer),self.__readBuffer))
-                
+            print("HEADER FOUND, LEN:{}\n{}\n".format(len(self.__readBuffer),self.__readBuffer)) 
             packetHeader = cefContract.cefCommandDebugPortHeader()
             for f in packetHeader._fields_:
                 numBytes = ctypes.sizeof(f[1])
+                bitsLeft = 8*numBytes - 8
                 i = 0
                 for b in range(numBytes):
-                    i = i | (int.from_bytes(self.__readBuffer[0], self.__endianness) << (24 - (b*8)))
+                    i = i | (int.from_bytes(self.__readBuffer[0], self.__endianness) << (bitsLeft - (b*8)))
                     self.__readBuffer.pop(0)
                 setattr(packetHeader, f[0], i)
+                bitsLeft -= 8*numBytes
 
+            # calculate header checksum and compare to the received one
+            headerCopy = copy.deepcopy(packetHeader)
+            headerCopy.m_packetHeaderChecksum = 0
+            headerChecksum = calculateChecksum(bytes(headerCopy))
+            if headerChecksum != packetHeader.m_packetHeaderChecksum:
+                #TODO: raise an exception here
+                print("PACKET FRAMING CHECKSUM FAILURE: {} != {}".format(headerChecksum, packetHeader.m_packetHeaderChecksum))
 
+            # check payload size and receive the outstanding bytes
+            self.__readBuffer = []
+            for b in range(packetHeader.m_payloadSize):
+                self.__readBuffer.append(self.__debugPort.receive())
+
+            # calculate payload checksum and compare to the received one
+
+            # self.CefPayload._fields_ = [('bytes', ctypes.c_byte * packetHeader.m_payloadSize)]
+            # packetPayload  = self.CefPayload()
+            # ctypes.memmove(packetPayload.bytes, bytearray(self.__readBuffer), packetHeader.m_payloadSize)
+            payloadChecksum = calculateChecksum(b''.join(self.__readBuffer))
+            if payloadChecksum != packetHeader.m_packetPayloadChecksum:
+                #TODO: raise an exception here
+                print("PACKET FRAMING PAYLOAD CHECKSUM FAILURE")
+                pass
+
+            
 
 
 def framingSignatureToBytes(endianness=BIG_ENDIAN):
@@ -156,10 +185,9 @@ def buildPacket(payload, packetType):
 
     return packet, packetHeader, packetPayload
 
-def calculateChecksum(data):
-    byteData = bytes(data)
+def calculateChecksum(data: bytes) -> int:
     s = 0
-    for i in byteData:
+    for i in data:
         binary = bin(i)
         for b in binary:
             if b == '1':
