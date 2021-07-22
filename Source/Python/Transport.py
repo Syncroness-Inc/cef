@@ -15,9 +15,11 @@
 ################################################################## #
 
 
+from os import stat
 import sys
 from os.path import dirname, abspath
 import ctypes
+import struct
 from threading import Thread
 
 sys.path.append(dirname(dirname(abspath(__file__))))
@@ -28,23 +30,83 @@ from DebugPortDriver import DebugPortDriver
 PACKET_HEADER_SIZE_BYTES = 16
 PAYLOAD_MAX_SIZE_BYTES = 512
 
+BIG_ENDIAN = 'big'
+LITTLE_ENDIAN = 'little'
+
 
 class Transport:
     """
     Object for packetizing outgoing commands and framing incoming
     data
     """
-    def __init__(self, debugPortInterface: DebugPortDriver):
+    def __init__(self, debugPortInterface: DebugPortDriver, endianness=BIG_ENDIAN):
         self.__debugPort = debugPortInterface
+        self.__endianness = endianness
         self.__readThread = Thread(target=self.readLoop)
         self.__readThread.start()
         self.__readBuffer = []
+        self.__signatureFound = False
+
 
     def readLoop(self):
+        # Look for framing signature
+        # Get the rest of the header
+        # Validate header checksum
+        # Check payload size
+        # Get rest of payload bytes
+        # Validate payload checksum
+        # Check packet type
+        # Hand-off to router
+
+        #TODO: make this size-agnostic instead of 4-byte?
+        framingSignature = framingSignatureToBytes(self.__endianness)
         while(True):
-            byte = self.__debugPort.receive()
-            print(byte)
-        
+            # look for framing signature
+            self.__signatureFound = False
+            while not self.__signatureFound:
+                i = 0
+                while i < 4:
+                    byte = self.__debugPort.receive()
+                    if int.from_bytes(byte, self.__endianness) == framingSignature[i]:
+                        self.__readBuffer.append(byte)
+                        i += 1
+                    else:
+                        # reset the read buffer and start over
+                        self.__readBuffer = []
+                        i = 0
+                print("FRAMING SIGNATURE FOUND")
+                self.__signatureFound = True
+            
+            # get the rest of the header
+            for i in range(PACKET_HEADER_SIZE_BYTES - 4):
+                byte = self.__debugPort.receive()
+                self.__readBuffer.append(byte)
+            print("HEADER FOUND, LEN: {} {}".format(len(self.__readBuffer),self.__readBuffer))
+            headerBytes = struct.pack("@IIIBBH", *self.__readBuffer)
+            print(headerBytes)
+            # packetHeader = cefContract.cefCommandDebugPortHeader()
+            # bufferIndex = 0
+            # for f in packetHeader._fields_:
+            #     numBytes = ctypes.sizeof(f[1])
+            #     f = struct.pack()
+
+
+
+
+def framingSignatureToBytes(endianness=BIG_ENDIAN):
+    signature = []
+    #TODO: make this size-agnostic instead of 32-bit?
+    if endianness == LITTLE_ENDIAN:
+        signature.append(cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0x000000FF)
+        signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0x0000FF00) >> 8)
+        signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0x00FF0000) >> 16)
+        signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0xFF000000) >> 24)
+    else:
+        signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 24) & 0xFF)
+        signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 16) & 0xFF)
+        signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 8) & 0xFF)
+        signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 0) & 0xFF)
+    return signature    
 
 
 def send(packet):
@@ -73,11 +135,11 @@ def buildPacket(payload, packetType):
 
     # Construct the packet header
     packetHeader = cefContract.cefCommandDebugPortHeader()
-    packetHeader.m_framingSignature = 0xFFFFFFFF
+    packetHeader.m_framingSignature = cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE
     packetHeader.m_packetPayloadChecksum = payloadChecksum
     packetHeader.m_payloadSize = payloadSize
     packetHeader.m_packetType = packetType
-    packetHeader.m_reserve = 0xAA
+    packetHeader.m_reserve = 0x00
     packetHeader.m_packetHeaderChecksum = 0
 
     # Calculate header checksum
