@@ -77,18 +77,20 @@ class Transport:
                 print("FRAMING SIGNATURE FOUND")
                 self.__signatureFound = True
             
-            # get the rest of the header
+            # get the rest of the header bytes and populate the struct
             for i in range(PACKET_HEADER_SIZE_BYTES - 4):
                 byte = self.__debugPort.receive()
                 self.__readBuffer.append(byte)
             print("HEADER FOUND, LEN: {} {}".format(len(self.__readBuffer),self.__readBuffer))
-            headerBytes = struct.pack("@IIIBBH", *self.__readBuffer)
-            print(headerBytes)
-            # packetHeader = cefContract.cefCommandDebugPortHeader()
-            # bufferIndex = 0
-            # for f in packetHeader._fields_:
-            #     numBytes = ctypes.sizeof(f[1])
-            #     f = struct.pack()
+                
+            packetHeader = cefContract.cefCommandDebugPortHeader()
+            for f in packetHeader._fields_:
+                numBytes = ctypes.sizeof(f[1])
+                i = 0
+                for b in range(numBytes):
+                    i = i | (int.from_bytes(self.__readBuffer[0], self.__endianness) << (24 - (b*8)))
+                    self.__readBuffer.pop(0)
+                setattr(packetHeader, f[0], i)
 
 
 
