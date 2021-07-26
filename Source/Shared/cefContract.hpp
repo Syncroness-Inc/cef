@@ -196,7 +196,7 @@ typedef struct
  */
 enum
 {
-    debugPortErrorCodeNone                  = 0,	// Illegal command type, reserved
+    debugPortErrorCodeNone                  = 0,
 	debugPortErrorCodeParity 	   			= 1,
 	debugPortErrorCodeNoise					= 2,
 	debugPortErrorCodeFrame					= 3,
