@@ -26,6 +26,9 @@ written permission of Syncroness.
 #include "cefMappings.hpp"
 #include "cefContract.hpp"
 
+class CommandPool;  // forward declaration to avoid include dependency chain reaction
+
+
 class CommandBase
 {
     public:
@@ -34,7 +37,8 @@ class CommandBase
             m_commandOpCode(commandOpCode),
             m_commandState(commandStateCommandEntry),
 			m_commandErrorCode(errorCode_OK),
-			mp_parentCommand(nullptr)
+			mp_parentCommand(nullptr),
+            mp_commandPool(nullptr)
 			{
     			m_commandSequenceNumber = m_rollingCommandSequenceNumber++;
 			}
@@ -116,6 +120,46 @@ class CommandBase
          */
         errorCode_t getCommandErrorCode(){return m_commandErrorCode;}
 
+        /**
+         * Sets the command pool pointer associated with this command
+         *
+         * @return the command pool pointer associated with this command
+         */
+        void setCommandPool(CommandPool* p_commandPool)
+        {
+        	mp_commandPool = p_commandPool;
+        }
+
+        /**
+         * Gets the command pool pointer associated with this command
+         *
+         * @return command pool associated with this command
+         */
+        CommandPool* getCommandPool()
+        {
+        	return mp_commandPool;
+        }
+
+        /**
+         * Sets the parent command associated with this command
+         * 
+         * @param pointer to the parent command 
+         */
+        void setParentCommand(CommandBase* p_parentCommand)
+        {
+            mp_parentCommand = p_parentCommand;
+        }
+
+        /**
+         * Get the parent command associated with this command
+         * 
+         * @return pointer to the parent command 
+         */
+        CommandBase* getParentCommand()
+        {
+            return mp_parentCommand;
+        }
+
 
     protected:
         //! Command states
@@ -159,9 +203,12 @@ class CommandBase
         errorCode_t m_commandErrorCode;
 
         //! pointer to parent command (NULL if no parent command)
-        void* mp_parentCommand;
-};
+        CommandBase* mp_parentCommand;
 
+        //! pointer to CommandPool object.  This variable is needed if the command was allocated by
+        //! the CommandGenerator in order to release the command back to the correct CommandPool
+        CommandPool* mp_commandPool;
+};
 
 
 #endif  // end header guard
