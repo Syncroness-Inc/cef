@@ -60,6 +60,7 @@ class DebugSerialPort(DebugPortDriver):
         """
         try:
             self.__serialPort = serial.Serial(port=self.__port, baudrate=self.__baudRate, timeout=self.__timeout)
+            self.__serialPort.flush()
         except (serial.SerialException):
             print("DebugSerialPort.open(): error")
             raise
