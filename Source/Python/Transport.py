@@ -94,16 +94,18 @@ class Transport:
 
     def getNextPacket(self):
         """
-        Accessor for received and properly framed packets
+        Accessor for received packets
         @return: the first packet in the queue of received packets
         """
         if len(self.__packetQueue) > 0:
             return self.__packetQueue.pop(0)
+        else:
+            return None
 
-    def send(self, payload):
+    def send(self, payload: bytes):
         """
-        Transmitter for outgoing data command requests
-        @param payload: command request to be sent to the target
+        Transmitter for outgoing data
+        @param payload: data to be packetized and sent to the target
         """
         packet = self._buildPacket(payload)
         self.__debugPort.send(packet)
@@ -225,10 +227,38 @@ class Transport:
 
 
 if __name__ == '__main__':
-    # test code - open a port to the STM32 Nucleo board
     from DebugSerialPort import DebugSerialPort
     p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
     p.open()
     t = Transport(p)
 
-    
+    def buildCommand():
+        pingHeader = cefContract.cefCommandHeader()
+        pingHeader.m_commandOpCode = cefContract.commandOpCode.commandOpCodePing.value
+        pingHeader.m_commandSequenceNumber = 1
+        pingHeader.m_commandErrorCode = 0
+        pingHeader.m_commandNumBytes = 48
+
+        pingRequest = cefContract.cefCommandPingRequest()
+        pingRequest.m_header = pingHeader
+        pingRequest.m_uint8Value = 1
+        pingRequest.m_uint16Value = 2
+        pingRequest.m_uint32Value = 3
+        pingRequest.m_uint64Value = 4
+
+        class CefCommand(ctypes.Structure):
+            _fields_ = [('header', cefContract.cefCommandHeader), ('payload', cefContract.cefCommandPingRequest)]
+
+        command = CefCommand()
+        command.header = pingHeader
+        command.payload = pingRequest
+
+        return bytes(command)
+
+    c = buildCommand()
+    t.send(c)
+    response = None
+    while True:
+        resp = t.getNextPacket()
+        if resp is not None:
+            print(resp)
