@@ -27,11 +27,55 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		ShimBase::getInstance().rxCallback();
 	}
 }
+//Hal callback override uart error shim::errorCallback
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+	extern UART_HandleTypeDef huart3;
+	if(&huart3 == huart)
+	{
+		ShimBase::getInstance().errorCallback();
+	}
+}
 
 void ShimSTM::rxCallback()
 {
-	(m_callbackClass->*m_callback)();
+	if(mp_callbackClass != nullptr && mp_callback != nullptr)
+	{
+		(mp_callbackClass->*mp_callback)();
+	}
 }
+
+void ShimSTM::errorCallback()
+{
+	if(mp_errorCallbackClass != nullptr && mp_errorCallback != nullptr)
+	{
+		extern UART_HandleTypeDef huart3;
+		debugPortErrorCode_t cefError = debugPortErrorCodeUnknown;
+		uint32_t halErrorCode = HAL_UART_GetError(&huart3);
+		switch (halErrorCode)
+		{
+		case HAL_UART_ERROR_NONE :
+			cefError = debugPortErrorCodeNone;
+			break;
+		case HAL_UART_ERROR_PE :
+			cefError = debugPortErrorCodeParity;
+			break;
+		case HAL_UART_ERROR_NE :
+			cefError = debugPortErrorCodeNoise;
+			break;
+		case HAL_UART_ERROR_FE :
+			cefError = debugPortErrorCodeFrame;
+			break;
+		case HAL_UART_ERROR_ORE :
+			cefError = debugPortErrorCodeOverrun;
+			break;
+		default:
+			break;
+		}
+		(mp_errorCallbackClass->*mp_errorCallback)(cefError);
+	}
+}
+
 
 void ShimSTM::startInteruptSend(void*sendBuffer, int bufferSize)
 {
@@ -39,12 +83,24 @@ void ShimSTM::startInteruptSend(void*sendBuffer, int bufferSize)
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)sendBuffer, bufferSize);
 }
 
-void ShimSTM::startInteruptReceive(void* recieveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
+void ShimSTM::startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
 {
-	m_callbackClass = callbackClass;
-	m_callback = callback;
+	mp_callbackClass = callbackClass;
+	mp_callback = callback;
 	extern UART_HandleTypeDef huart3;
-	HAL_UART_Receive_IT(&huart3, ((uint8_t *)recieveByte), sizeof(uint8_t));
+	HAL_UART_Receive_IT(&huart3, ((uint8_t *)receiveByte), sizeof(uint8_t));
+}
+
+void ShimSTM::startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, debugPortErrorCode_t (SerialPortDriverHwImpl::* errorCallback)(debugPortErrorCode_t error))
+{
+	mp_errorCallbackClass = errorCallbackClass;
+	mp_errorCallback = errorCallback;
+}
+
+void ShimSTM::forceStopReceive(void)
+{
+	extern UART_HandleTypeDef huart3;
+	HAL_UART_AbortReceive (&huart3);
 }
 
 

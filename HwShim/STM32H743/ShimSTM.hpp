@@ -25,7 +25,7 @@ written permission of Syncroness.
  * STM Shim class
  */
 class ShimSTM : public ShimBase {
-protected:
+public:
 	//! Constructor.
 	ShimSTM():ShimBase() {}
 
@@ -33,8 +33,11 @@ protected:
     * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
     */
    void rxCallback() override;
-   
-public:
+   /**
+    * Error callback.  This will send callback to SerialPortDriverHwImpl inform Debug port
+    */
+   void errorCallback() override;
+
 	/**
 	 * Start send 
 	 * @param sendBuffer send buffer
@@ -51,7 +54,19 @@ public:
     */
    void startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void)) override;
 
- 
+   /**
+    * Callback for error during send/receive
+    * 
+    * @param errorCallbackClass - class of callback function for error info
+    * @param errorCallback - callback function for error info
+    */
+   void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, debugPortErrorCode_t (SerialPortDriverHwImpl::* errorCallback)(debugPortErrorCode_t error)) override;
+
+   /**
+    * Forces the stop of receive interrupt
+    */
+   void forceStopReceive(void) override;
+
 };
 
 

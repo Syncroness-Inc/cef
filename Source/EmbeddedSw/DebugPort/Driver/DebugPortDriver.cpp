@@ -43,3 +43,13 @@ void DebugPortDriver::stopReceive()
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::stopReceive() called, supposed to be implemented in derived class");
 }
 
+void DebugPortDriver::setErrorCallback(void)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::setErrorCallback() called, supposed to be implemented in derived class");
+}
+
+debugPortErrorCode_t DebugPortDriver::errorCallback(void)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::errorCallback() called, supposed to be implemented in derived class");
+}
+

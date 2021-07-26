@@ -191,6 +191,21 @@ typedef struct
 } cefCommandDebugPortHeader_t;
 
 /**
+ *  DEBUG PORT ERROR CODES 
+ *  Error Codes for send/receive debug port data
+ */
+enum
+{
+    debugPortErrorCodeNone                  = 0,	// Illegal command type, reserved
+	debugPortErrorCodeParity 	   			= 1,
+	debugPortErrorCodeNoise					= 2,
+	debugPortErrorCodeFrame					= 3,
+	debugPortErrorCodeOverrun				= 4,
+	debugPortErrorCodeUnknown				= 5,
+};
+typedef uint16_t debugPortErrorCode_t;
+
+/**
  * CommandPing
  *		See command implementation files for variable documentation
  *

@@ -18,6 +18,7 @@ written permission of Syncroness.
 #include "SerialPortDriverHwImpl.hpp"
 #include "Cef/HwShim/ShimBase.hpp"
 #include "Cef/Source/EmbeddedSw/DebugPort/FramingSignatureVerify.hpp"
+#include "Cef/Source/EmbeddedSw/Logging/Logging.hpp"
 
 void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 {
@@ -36,7 +37,7 @@ void SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
 
 void SerialPortDriverHwImpl::stopReceive()
 {
-	printf("ERROR");
+	ShimBase::getInstance().forceStopReceive();
 }
 void SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 {
@@ -45,17 +46,13 @@ void SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 	{
 		m_currentBufferOffset = FramingSignatureVerify::checkFramingSignatureByte(mp_receiveBuffer, m_currentBufferOffset);
 	}
-	else //If past framing signature incroment offset
+	else //If past framing signature increment offset
 	{
 		m_currentBufferOffset++;
 	}
 	//Set up receive next byte
 	receiveNextByte();
-	//TODO delete this is for testing
-	if(m_currentBufferOffset%10 == 0)
-	{
-		sendData(mp_receiveBuffer, m_currentBufferOffset);
-	}
+	//TODO we will have to stop receiving next byte once packet is done in Transport Layer
 }
 void SerialPortDriverHwImpl::receiveNextByte()
 {
@@ -64,5 +61,15 @@ void SerialPortDriverHwImpl::receiveNextByte()
 		ShimBase::getInstance().startInteruptReceive((mp_receiveBuffer + m_currentBufferOffset), this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
 	}
 
+}
+
+void SerialPortDriverHwImpl::setErrorCallback(void)
+{
+	ShimBase::getInstance().startErrorCallback(this, &SerialPortDriverHwImpl::errorCallback);
+}
+
+debugPortErrorCode_t SerialPortDriverHwImpl::errorCallback(debugPortErrorCode_t error)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Implement in CmdDebugPort");
 }
 

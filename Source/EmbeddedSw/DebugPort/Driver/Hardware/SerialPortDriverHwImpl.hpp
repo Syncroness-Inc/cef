@@ -55,7 +55,18 @@ public:
     * 2)incroment buffer offset as needed
     * 3)call receive next byte 
     */
-   void receivedByteDriverHwCallback();
+   void receivedByteDriverHwCallback(void);
+
+   /**
+    * Sets the callback to receive any errors
+    */
+   
+   void setErrorCallback(void);
+
+   /**
+    * Callback function for when error occurs for send/receive
+    */
+   debugPortErrorCode_t errorCallback(debugPortErrorCode_t error);
 
 private:
    /**

@@ -45,6 +45,14 @@ public:
     * Stops receiving data
     * */
    virtual void stopReceive(void);
+   /**
+    * Sets the callback to receive any errors
+    */
+   virtual void setErrorCallback(void);
+   /**
+    * Callback function for when error occurs for send/receive
+    */
+   virtual debugPortErrorCode_t errorCallback(void);
  
 };
 

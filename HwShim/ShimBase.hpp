@@ -26,27 +26,44 @@ written permission of Syncroness.
 class ShimBase { 
 protected:
 	//! Constructor.
-	ShimBase()
+	ShimBase():
+   mp_callbackClass(nullptr),
+   mp_callback(nullptr),
+   mp_errorCallbackClass(nullptr),
+   mp_errorCallback(nullptr)
 	{}
 
    /**
     * Callback class instance for receive callback
     */
-   SerialPortDriverHwImpl* m_callbackClass; 
+   SerialPortDriverHwImpl* mp_callbackClass; 
    /**
     * Callback function for receive callback
     */
-	void (SerialPortDriverHwImpl::* m_callback)(void);
-
+	void (SerialPortDriverHwImpl::* mp_callback)(void);
    /**
-    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
+    * Callback class instance for receive error callback
     */
-   virtual void rxCallback();
+   SerialPortDriverHwImpl* mp_errorCallbackClass; 
+   /**
+    * Callback function for receive error callback
+    */
+	debugPortErrorCode_t (SerialPortDriverHwImpl::* mp_errorCallback)(debugPortErrorCode_t);
+
 public:
    /**
     * @return Returns the instance of Shim
     */
    static ShimBase& getInstance();
+
+   /**
+    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
+    */
+   virtual void rxCallback();
+   /**
+    * Error callback.  This will send callback to SerialPortDriverHwImpl inform Debug port
+    */
+   virtual void errorCallback();
 
    /**
 	 * Start send 
@@ -63,6 +80,19 @@ public:
     * @param callback - callback function once the data byte has been received 
     */
    virtual void startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void));
+
+   /**
+    * Callback for error during send/receive
+    * 
+    * @param errorCallbackClass - class of callback function for error info
+    * @param errorCallback - callback function for error info
+    */
+   virtual void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, debugPortErrorCode_t (SerialPortDriverHwImpl::* errorCallback)(debugPortErrorCode_t error));
+
+   /**
+    * Forces the stop of receive interupt
+    */
+   virtual void forceStopReceive(void);
 
  
 };

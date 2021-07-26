@@ -27,16 +27,21 @@ written permission of Syncroness.
 
 #include "Cef/HwShim/STM32H743/ShimSTM.hpp"
 //Instance of STM shim
-static ShimSTM instance;
+static ShimSTM shimInstance;
 
 ShimBase& ShimBase::getInstance()
 {
-	return instance;
+	return shimInstance;
 }
 
-void ShimBase::rxCallback()
+void ShimBase::rxCallback(void)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::rxCallback() called, supposed to be implemented in derived class");
+}
+
+void ShimBase::errorCallback(void)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::errorCallback() called, supposed to be implemented in derived class");
 }
 
 void ShimBase::startInteruptSend(void*sendBuffer, int bufferSize)
@@ -49,3 +54,12 @@ void ShimBase::startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* c
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInteruptReceive() called, supposed to be implemented in derived class");
 }
 
+void ShimBase::forceStopReceive(void)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::forceStopReveive() called, supposed to be implemented in derived class");
+}
+
+void ShimBase::startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, debugPortErrorCode_t (SerialPortDriverHwImpl::* errorCallback)(debugPortErrorCode_t error))
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startErrorCallback() called, supposed to be implemented in derived class");
+}
