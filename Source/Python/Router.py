@@ -15,12 +15,16 @@
 ################################################################## #
 
 
+import sys
+from os.path import dirname, abspath
 import ctypes
 from threading import Thread
 
-from Source.Shared import cefContract
-from Source.Python.DebugPortDriver import DebugPortDriver
+sys.path.append(dirname(dirname(abspath(__file__))))
+from Shared import cefContract
+from DebugPortDriver import DebugPortDriver
 from Transport import Transport
+
 
 
 class Router:
@@ -32,8 +36,12 @@ class Router:
         self.__transport = Transport(debugPortInterface)
         self.__endianness = endianness
         self.__packetReadThread = Thread(target=self._readPackets)
+        self.sequenceNumber = 1
 
         self.__packetReadThread.start()
+
+    def send(self, command):
+        pass
 
     def _readPackets(self):
         while(True):
@@ -52,11 +60,18 @@ class Router:
 
 
 
+def buildCommand(opCode):
+    header = cefContract.cefCommandHeader()
+    header.m_commandOpCode = opCode
+
+
+
+
 if __name__ == '__main__':
     from DebugSerialPort import DebugSerialPort
     p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
     p.open()
-    t = Transport(p)
+    r = Router(p)
 
     def buildCommand():
         pingHeader = cefContract.cefCommandHeader()
@@ -82,7 +97,7 @@ if __name__ == '__main__':
         return bytes(command)
 
     c = buildCommand()
-    t.send(c)
+    r.send(c)
     response = None
     while True:
         resp = t.getNextPacket()
