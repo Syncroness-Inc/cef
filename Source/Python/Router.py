@@ -26,6 +26,25 @@ from DebugPortDriver import DebugPortDriver
 from Transport import Transport
 
 
+class Command:
+    pass
+
+class CommandPing(Command):
+    def __init__(self):
+        self.header = cefContract.cefCommandHeader()
+        self.header.m_commandOpCode = cefContract.commandOpCode.commandOpCodePing.value
+        self.header.m_commandSequenceNumber = 0 # this is populated at transmit-time
+        self.header.m_commandErrorCode = cefContract.errorCode.errorCode_OK.value
+        self.header.m_commandNumBytes = ctypes.sizeof(cefContract.cefCommandPingRequest)
+
+        self.request = cefContract.cefCommandPingRequest()
+        self.request.m_header = self.header
+        self.request.m_uint8Value = cefContract.CMD_PING_UINT8_REQUEST_EXPECTED_VALUE
+        self.request.m_uint16Value = cefContract.CMD_PING_UINT16_REQUEST_EXPECTED_VALUE
+        self.request.m_uint32Value = cefContract.CMD_PING_UINT32_REQUEST_EXPECTED_VALUE
+        self.request.m_uint64Value = cefContract.CMD_PING_UINT64_REQUEST_EXPECTED_VALUE
+
+
 
 class Router:
     """
@@ -41,7 +60,9 @@ class Router:
         self.__packetReadThread.start()
 
     def send(self, command):
-        pass
+        command.header.m_commandSequenceNumber = self.sequenceNumber
+        self.sequenceNumber += 1
+        self.__transport.send(command)
 
     def _readPackets(self):
         while(True):
@@ -59,47 +80,11 @@ class Router:
                     pass
 
 
-
-def buildCommand(opCode):
-    header = cefContract.cefCommandHeader()
-    header.m_commandOpCode = opCode
-
-
-
-
 if __name__ == '__main__':
     from DebugSerialPort import DebugSerialPort
     p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
     p.open()
     r = Router(p)
 
-    def buildCommand():
-        pingHeader = cefContract.cefCommandHeader()
-        pingHeader.m_commandOpCode = cefContract.commandOpCode.commandOpCodePing.value
-        pingHeader.m_commandSequenceNumber = 1
-        pingHeader.m_commandErrorCode = 0
-        pingHeader.m_commandNumBytes = 48
-
-        pingRequest = cefContract.cefCommandPingRequest()
-        pingRequest.m_header = pingHeader
-        pingRequest.m_uint8Value = 1
-        pingRequest.m_uint16Value = 2
-        pingRequest.m_uint32Value = 3
-        pingRequest.m_uint64Value = 4
-
-        class CefCommand(ctypes.Structure):
-            _fields_ = [('header', cefContract.cefCommandHeader), ('payload', cefContract.cefCommandPingRequest)]
-
-        command = CefCommand()
-        command.header = pingHeader
-        command.payload = pingRequest
-
-        return bytes(command)
-
-    c = buildCommand()
-    r.send(c)
-    response = None
-    while True:
-        resp = t.getNextPacket()
-        if resp is not None:
-            print(resp)
+    testPing = CommandPing()
+    r.send(testPing)
