@@ -82,11 +82,6 @@ void SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 		return;
 	}
 
-	if(m_currentBufferOffset % 10 == 0)
-	{
-		ShimBase::getInstance().startInterruptSend(mp_receiveBuffer, m_currentBufferOffset);
-	}
-
 	//Receive has not finished
 	//Check framing signature
 	if(m_currentBufferOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
