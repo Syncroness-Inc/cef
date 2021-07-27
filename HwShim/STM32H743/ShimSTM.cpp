@@ -56,7 +56,7 @@ void ShimSTM::errorCallback()
 		switch (halErrorCode)
 		{
 		case HAL_UART_ERROR_NONE :
-			cefError = derrorCode_ebugPortErrorCodeNone;
+			cefError = errorCode_debugPortErrorCodeNone;
 			break;
 		case HAL_UART_ERROR_PE :
 			cefError = errorCode_debugPortErrorCodeParity;
@@ -77,7 +77,7 @@ void ShimSTM::errorCallback()
 	}
 }
 
-void ShimSTM::startInteruptSend(void*sendBuffer, int bufferSize)
+void ShimSTM::startInterruptSend(void*sendBuffer, int bufferSize)
 {
 	extern UART_HandleTypeDef huart3;
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)sendBuffer, bufferSize);

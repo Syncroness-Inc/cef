@@ -29,18 +29,17 @@ AppMain& AppMain::instance()
 
 // These include files are just needed for testing.
 #include "main.h"
-#include "Cef/Source/EmbeddedSw/DebugPort/Driver/Hardware/SerialPortDriverHwImpl.hpp"
+#include "SerialPortDriverHwImpl.hpp"
+uint8_t receiveBuffer[528];
+SerialPortDriverHwImpl debugPortDriver;
+uint8_t testSend[23] = {'U','A','R','T',' ','S','t','a','r','t',' ','S','u','c','c','e','s','s','f','u','l','\r','\n'};
 static void tonyTesting()
 {
-	//TODO - Delete once debug port all working
+	debugPortDriver.startReceive(&receiveBuffer);
+
 	extern UART_HandleTypeDef huart3;
-	uint8_t testSend[23] = {'U','A','R','T',' ','S','t','a','r','t',' ','S','u','c','c','e','s','s','f','u','l','\r','\n'};
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)testSend, sizeof(testSend));
 
-
-	  SerialPortDriverHwImpl debugPortDriver;
-	  uint8_t send[528];
-	  debugPortDriver.startReceive(&send);
 }
 
 

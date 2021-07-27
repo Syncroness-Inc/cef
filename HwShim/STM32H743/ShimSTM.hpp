@@ -42,7 +42,7 @@ public:
 	/**
 	 * See base class for method documentation
 	 */
-   void startInteruptSend(void*sendBuffer, int bufferSize) override;
+   void startInterruptSend(void*sendBuffer, int bufferSize) override;
    /**
     * See base class for method documentation
     */

@@ -22,7 +22,7 @@ written permission of Syncroness.
 
 void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 {
-	ShimBase::getInstance().startInteruptSend(sendBuffer, packetSize);
+	ShimBase::getInstance().startInterruptSend(sendBuffer, packetSize);
 }
 
 void SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
@@ -80,6 +80,11 @@ void SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 		//Current buffer overran allocated buffer
 		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Received bytes exceeded expected and ALSO overrun buffer.");
 		return;
+	}
+
+	if(m_currentBufferOffset % 10 == 0)
+	{
+		ShimBase::getInstance().startInterruptSend(mp_receiveBuffer, m_currentBufferOffset);
 	}
 
 	//Receive has not finished

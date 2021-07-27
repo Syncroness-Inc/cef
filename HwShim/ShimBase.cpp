@@ -46,12 +46,12 @@ void ShimBase::errorCallback(void)
 
 void ShimBase::startInterruptSend(void*sendBuffer, int bufferSize)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInteruptSend() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptSend() called, supposed to be implemented in derived class");
 }
 
-void ShimBase::startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
+void ShimBase::startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInteruptReceive() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptReceive() called, supposed to be implemented in derived class");
 }
 
 void ShimBase::forceStopReceive(void)
