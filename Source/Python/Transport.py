@@ -15,14 +15,11 @@
 ################################################################## #
 
 
-import sys
-from os.path import dirname, abspath
 import ctypes
 import copy
 from threading import Thread
 
-sys.path.append(dirname(dirname(abspath(__file__))))
-from Shared import cefContract
+from Source.Shared import cefContract
 from DebugPortDriver import DebugPortDriver
 
 
@@ -35,9 +32,10 @@ PACKET_TYPE_LOG_BINARY = 3
 
 class Transport:
     """
-    Object for packetizing outgoing commands and framing incoming data. 
+    Object for packetizing outgoing commands and framing incoming data with bi-endian support.
     The class runs a separate thread for capturing all incoming data from the port.
     The debug port interface must be defined and supplied by the application.
+    Framed packets are placed in a queue for the application to retrieve from.
     """
 
     BIG_ENDIAN = 'big'
@@ -50,9 +48,10 @@ class Transport:
         self.__debugPort = debugPortInterface
         self.__endianness = endianness
         self.__readThread = Thread(target=self._readLoop)
-        self.__readThread.start()
         self.__readBuffer = []
         self.__packetQueue = []
+
+        self.__readThread.start()
 
     @staticmethod
     def calculateChecksum(data: bytes) -> int:
