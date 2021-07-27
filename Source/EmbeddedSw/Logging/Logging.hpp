@@ -104,8 +104,9 @@ class Logging
 
 #define LOG_FATAL(logModuleId, msg, ...) \
     /* First log the fact that something went badly */ \
-    LOG_MESSAGE("ERROR", logModuleId, msg, ##__VA_ARGS__)
+    LOG_MESSAGE("ERROR", logModuleId, msg, ##__VA_ARGS__) \
     /* For now, assert.  On real hardware, we may do something else */ \
+     while(1)
 #if 0
 	//!@todo Implement RUNTIME_ASSERT in cefMappings.h  ... will need to add continuation to line above
 	RUNTIME_ASSERT(false);
