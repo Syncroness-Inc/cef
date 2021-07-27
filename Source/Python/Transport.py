@@ -15,11 +15,14 @@
 ################################################################## #
 
 
+import sys
+from os.path import dirname, abspath
 import ctypes
 import copy
 from threading import Thread
 
-from Source.Shared import cefContract
+sys.path.append(dirname(dirname(abspath(__file__))))
+from Shared import cefContract
 from DebugPortDriver import DebugPortDriver
 
 
