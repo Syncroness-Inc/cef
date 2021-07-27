@@ -60,7 +60,7 @@ public:
     * @param callbackClass - class of callback function (the class that started the receive)
     * @param callback - callback function once the data byte has been received 
     */
-   virtual void startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void));
+   virtual void startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, bool (SerialPortDriverHwImpl::* callback)(void));
 
    /**
     * Callback for error during send/receive
@@ -84,17 +84,12 @@ protected:
    mp_errorCallback(nullptr)
 	{}
 
-   /**
-    * Callback class instance for receive callback
-    */
+
+   //! Callback class instance for receive callback
    SerialPortDriverHwImpl* mp_callbackClass; 
-   /**
-    * Callback function for receive callback
-    */
-	void (SerialPortDriverHwImpl::* mp_callback)(void);
-   /**
-    * Callback class instance for receive error callback
-    */
+   //! Callback function for receive callback
+	bool (SerialPortDriverHwImpl::* mp_callback)(void);
+   //! allback class instance for receive error callback
    SerialPortDriverHwImpl* mp_errorCallbackClass; 
    /**
     * Callback function for receive error callback

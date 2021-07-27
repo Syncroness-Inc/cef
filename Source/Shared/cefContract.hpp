@@ -147,6 +147,20 @@ typedef uint16_t commandOpCode_t;
 #define DEBUG_PORT_MAX_PACKET_SIZE_BYTES 528
 
 /**
+ *  Debug Port Packet Data Type - the debug port expect the following types of packets
+ * - command request
+ * - command response
+ * - logging data
+ */
+enum
+{
+    debugPacketType_commandRequest                          = 0,
+	debugPacketType_commandResponse 	   					= 1,
+    debugPacketType_loggingData                             = 2,
+};
+typedef uint16_t debugPacketDataType_t;
+
+/**
  * CEF Command Header
  * Each Request and Receive command has a common header associated with it.
  * The CEF Command Header must be an increment of 8 bytes so that when the CEF command header

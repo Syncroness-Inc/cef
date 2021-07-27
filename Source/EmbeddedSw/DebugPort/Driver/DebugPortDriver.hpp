@@ -39,8 +39,10 @@ public:
     * 
     * @param receive buffer location
     * @param size of packet to receive
+    * 
+    * @return returns true if all buffers/offsets are valid to be able to arm receive data
     */
-   virtual void startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
+   virtual bool startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
 
    /**
     * Stops receiving data. This will instantly stop the receive of data even in the middle of a packet.
@@ -54,6 +56,8 @@ public:
 
    /**
     * Callback function for when error occurs for send/receive
+    * 
+    * @return error code of the send or receive error
     */
    virtual errorCode_t errorCallback(void);
 

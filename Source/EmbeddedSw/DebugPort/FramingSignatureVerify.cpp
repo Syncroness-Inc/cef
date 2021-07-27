@@ -16,12 +16,20 @@ written permission of Syncroness.
 
 #include "FramingSignatureVerify.hpp"
 #include "cefContract.hpp"
+#include "Logging.hpp"
 
 
 uint8_t FramingSignatureVerify::getDefinedFramingSignatureByte(uint8_t byteOffset)
 {
 	uint32_t framingSignature = DEBUG_PACKET_UINT32_FRAMING_SIGNATURE;
-    return *((uint8_t *)&framingSignature + (sizeof(framingSignature) - 1) - byteOffset);
+	//WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
+	//regardless of endianness. Will refactor is time permits or a project runs into a problem 
+	if(byteOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
+	{
+		return *((uint8_t *)&framingSignature + (sizeof(framingSignature) - 1) - byteOffset);
+	}
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.");
+    return 0;  //0 is not in the framing signature
 }
 
 uint8_t FramingSignatureVerify::checkFramingSignatureByte(void* receiveBuffer, uint8_t byteOffset)
@@ -29,6 +37,7 @@ uint8_t FramingSignatureVerify::checkFramingSignatureByte(void* receiveBuffer, u
 		//Don't allow it to compare offset that does not contain the framing signature
 		if(byteOffset >= sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
 		{
+			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.");
 			return 0;
 		}
 		//UART last byte received

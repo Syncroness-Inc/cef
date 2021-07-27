@@ -31,6 +31,9 @@ private:
    /**
     * Retrieve a byte of data of the debug framing signature
     * 
+    * WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
+    * regardless of endianness. Will refactor is time permits or a project runs into a problem
+    * 
     * @param byte to get in framing signature
     * 
     * @return Returns one byte of framing signature based on offset value

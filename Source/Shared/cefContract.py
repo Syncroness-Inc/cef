@@ -113,6 +113,17 @@ Debug Port Packet Size
 """
 DEBUG_PORT_MAX_PACKET_SIZE_BYTES = 528
 
+class debugPacketDataType(Enum):
+    """
+    Debug Port Packet Data Type - the debug port expect the following types of packets
+    - command request
+    - command response
+    - logging data
+    """
+    debugPacketType_commandRequest                          = 0
+	debugPacketType_commandResponse 	   					= 1
+    debugPacketType_loggingData                             = 3
+
 class cefCommandHeader(ctypes.Structure):
     """
     CEF Command Header

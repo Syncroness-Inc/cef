@@ -22,6 +22,11 @@ written permission of Syncroness.
 /**
  * Serial Port Driver for Hardware.
  * It drives the non blocking serial receive and send for hardware impl
+ * 
+ * WARNING - For simplicity this class assumes we receive one byte on each interupt and 
+ * the hardware/HAL layer has some kind of a fifo that is able to handle 
+ * doing this without dropping data.  If data starts getting dropped and we miss packets
+ * this will have to be refactored.
  */
 class SerialPortDriverHwImpl : public DebugPortDriver {
 public:
@@ -35,19 +40,19 @@ public:
    /**
     * See base class for method documentation
     */
-   void sendData(void* sendBuffer, int packetSize) override;
+   void sendData(void* sendBuffer, int packetSize);
 
    /**
     * See base class for method documentation
     */
-   void startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES) override;
+   bool startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
 
    /**
     * Changes the number of bytes receive is expecting for packet to be finished.  The number of bytes received will
     * not be known until the packet header is received and decoded.  At this point the expected receive may change from
     * max to new amount.  
     * Rules
-    * - Receive size can not excded Max Bytes
+    * - Receive size can not exceed Max Bytes
     * - If receive size is less then or equal to m_currentBufferOffset receive will be stopped
     * 
     * @param newReceiveSize - new expected bytes to receive in packet
@@ -57,16 +62,23 @@ public:
    /**
     * See base class for method documentation
     * */
-   void stopReceive() override;
+   void stopReceive();
 
    /**
-    * Callback function for when a receive byte is received.
-    * To continue receiving it will
-    * 1)check for a framing signature 
-    * 2)incroment buffer offset as needed
-    * 3)call receive next byte 
+    * Callback function when a startReceive has been called and 
+    * receive has been successfully armed this callback will be called
+    * once one byte has been received.
+    * To continue receiving it will check and preform the following 
+    * 1) If the number of expected bytes have been received
+    * 2) If there is additional room in the buffer to receive a byte
+    * 3) Check for a framing signature if needed
+    * 4) Incroment buffer offset as needed
+    * 5) Call receive next byte 
+    * 
+    * @return returns true if receiving is not finished and was able to arm 
+    * receive to retrieve next byte of data
     */
-   void receivedByteDriverHwCallback(void);
+   bool receivedByteDriverHwCallback(void);
 
    /**
     * Sets the callback to receive any errors
@@ -82,23 +94,19 @@ public:
 
 private:
    /**
-    * Receive is one byte at at time.  After each byte is received receiveNextByte decide 
-    * if it is finished receiving and if not it will send command to let the hardware know
-    * it needs to receive another byte.   
+    * Sets on interupt driven receive 
+    * Arms to receive 1 byte of data
+    * Arm to receive that byte at the (m_receiveBuffer + m_currentBufferOffset)
+    * 
+    * @return - return true if buffers to allocate data are valid 
     */
-   void receiveNextByte();
+   bool armReceiveNextByte();
 
-   /**
-    * Number of bytes to receive
-    */
+   //! Number of bytes to receive
    int m_receiveBufferSize;
-   /**
-    * Current offset of the receive buffer
-    */
+   //! Current offset of the receive buffer
    int m_currentBufferOffset;
-   /**
-    * Pointer to receive buffer
-    */
+   //! Pointer to receive buffer
    void* mp_receiveBuffer;
 
 };

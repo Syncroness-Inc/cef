@@ -32,31 +32,31 @@ public:
    /**
     * See base class for method documentation
     */
-   void rxCallback() override;
+   void rxCallback();
 
    /**
     * See base class for method documentation
     */
-   void errorCallback() override;
+   void errorCallback();
 
 	/**
 	 * See base class for method documentation
 	 */
-   void startInterruptSend(void*sendBuffer, int bufferSize) override;
+   void startInterruptSend(void*sendBuffer, int bufferSize);
    /**
     * See base class for method documentation
     */
-   void startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void)) override;
+   void startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, bool (SerialPortDriverHwImpl::* callback)(void));
 
    /**
     * See base class for method documentation
     */
-   void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, void (SerialPortDriverHwImpl::* errorCallback)(errorCode_t error)) override;
+   void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, void (SerialPortDriverHwImpl::* errorCallback)(errorCode_t error));
 
    /**
     * Forces the stop of receive interrupt
     */
-   void forceStopReceive(void) override;
+   void forceStopReceive(void);
 
 };
 

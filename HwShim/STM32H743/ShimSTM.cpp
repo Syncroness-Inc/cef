@@ -83,7 +83,7 @@ void ShimSTM::startInterruptSend(void*sendBuffer, int bufferSize)
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)sendBuffer, bufferSize);
 }
 
-void ShimSTM::startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void))
+void ShimSTM::startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, bool (SerialPortDriverHwImpl::* callback)(void))
 {
 	mp_callbackClass = callbackClass;
 	mp_callback = callback;
