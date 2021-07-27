@@ -50,6 +50,12 @@ class errorCode(Enum):
     errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues                      = 8
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand                  = 9
     errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch           = 11
+    errorCode_debugPortErrorCodeNone                  						    = 12
+	errorCode_debugPortErrorCodeParity 	   									    = 13
+	errorCode_debugPortErrorCodeNoise										    = 14
+	errorCode_debugPortErrorCodeFrame										    = 15
+	errorCode_debugPortErrorCodeOverrun										    = 16
+	errorCode_debugPortErrorCodeUnknown										    = 17
     errorCode_NumApplicationErrorCodes                                          = auto()
 
 

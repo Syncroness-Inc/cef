@@ -63,6 +63,12 @@ enum
 	errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues			        = 8,
 	errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand		        = 9,
 	errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch 		= 11,
+	errorCode_debugPortErrorCodeNone                  						= 12,
+	errorCode_debugPortErrorCodeParity 	   									= 13,
+	errorCode_debugPortErrorCodeNoise										= 14,
+	errorCode_debugPortErrorCodeFrame										= 15,
+	errorCode_debugPortErrorCodeOverrun										= 16,
+	errorCode_debugPortErrorCodeUnknown										= 17,
 
 
 	errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
@@ -189,21 +195,6 @@ typedef struct
 	uint8_t 	m_reserve;					//48 bit aligned
 	uint16_t 	m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
-
-/**
- *  DEBUG PORT ERROR CODES 
- *  Error Codes for send/receive debug port data
- */
-enum
-{
-    debugPortErrorCodeNone                  = 0,
-	debugPortErrorCodeParity 	   			= 1,
-	debugPortErrorCodeNoise					= 2,
-	debugPortErrorCodeFrame					= 3,
-	debugPortErrorCodeOverrun				= 4,
-	debugPortErrorCodeUnknown				= 5,
-};
-typedef uint16_t debugPortErrorCode_t;
 
 /**
  * CommandPing

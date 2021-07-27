@@ -17,7 +17,8 @@ written permission of Syncroness.
 #ifndef __SERIAL_PORT_DRIVER_HW_IMPL_H
 #define __SERIAL_PORT_DRIVER_HW_IMPL_H
 #include <stdio.h>
-#include "Cef/Source/EmbeddedSw/DebugPort/Driver/DebugPortDriver.hpp"
+#include "DebugPortDriver.hpp"
+
 /**
  * Serial Port Driver for Hardware.
  * It drives the non blocking serial receive and send for hardware impl
@@ -32,19 +33,29 @@ public:
 	{}
 
    /**
-    * Start Send Data
-    * @param sendBuffer 
-    * @param packetSize 
+    * See base class for method documentation
     */
    void sendData(void* sendBuffer, int packetSize) override;
+
    /**
-    * Start receiving data
-    * @param receive buffer location
-    * @param size of packet to receive
+    * See base class for method documentation
     */
    void startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES) override;
+
    /**
-    * Stops receiving data
+    * Changes the number of bytes receive is expecting for packet to be finished.  The number of bytes received will
+    * not be known until the packet header is received and decoded.  At this point the expected receive may change from
+    * max to new amount.  
+    * Rules
+    * - Receive size can not excded Max Bytes
+    * - If receive size is less then or equal to m_currentBufferOffset receive will be stopped
+    * 
+    * @param newReceiveSize - new expected bytes to receive in packet
+    */
+   void editReceiveSize(int newReceiveSize);
+   
+   /**
+    * See base class for method documentation
     * */
    void stopReceive() override;
 
@@ -60,13 +71,14 @@ public:
    /**
     * Sets the callback to receive any errors
     */
-   
    void setErrorCallback(void);
 
    /**
-    * Callback function for when error occurs for send/receive
+    * Callback function for sending or receiveing error
+    * 
+    * @param error - current error
     */
-   debugPortErrorCode_t errorCallback(debugPortErrorCode_t error);
+   void errorCallback(errorCode_t error);
 
 private:
    /**

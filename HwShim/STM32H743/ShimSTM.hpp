@@ -17,7 +17,7 @@ written permission of Syncroness.
 #ifndef __SHIM_STM_H
 #define __SHIM_STM_H
 
-#include "Cef/HwShim/ShimBase.hpp"
+#include "ShimBase.hpp"
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal_uart.h"
 
@@ -30,37 +30,28 @@ public:
 	ShimSTM():ShimBase() {}
 
    /**
-    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
+    * See base class for method documentation
     */
    void rxCallback() override;
+
    /**
-    * Error callback.  This will send callback to SerialPortDriverHwImpl inform Debug port
+    * See base class for method documentation
     */
    void errorCallback() override;
 
 	/**
-	 * Start send 
-	 * @param sendBuffer send buffer
-    * @param bufferSize number of bytes to be sent in the buffer
+	 * See base class for method documentation
 	 */
    void startInteruptSend(void*sendBuffer, int bufferSize) override;
    /**
-    * Start receive interrupt driven data
-	 * Will receive one byte of data then callback function will be called and
-	 * receive will have to be called again to continue to receive data
-    * @param receiveByte - location to store the received data
-    * @param callbackClass - class of callback function (the class that started the send)
-    * @param callback - callback function once the data byte has been received 
+    * See base class for method documentation
     */
-   void startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void)) override;
+   void startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void)) override;
 
    /**
-    * Callback for error during send/receive
-    * 
-    * @param errorCallbackClass - class of callback function for error info
-    * @param errorCallback - callback function for error info
+    * See base class for method documentation
     */
-   void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, debugPortErrorCode_t (SerialPortDriverHwImpl::* errorCallback)(debugPortErrorCode_t error)) override;
+   void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, void (SerialPortDriverHwImpl::* errorCallback)(errorCode_t error)) override;
 
    /**
     * Forces the stop of receive interrupt

@@ -23,7 +23,7 @@ written permission of Syncroness.
  */
 
 #include "DebugPortDriver.hpp"
-#include "Cef/Source/EmbeddedSw/Logging/Logging.hpp"
+#include "Logging.hpp"
 
 
 void DebugPortDriver::sendData(void* sendBuffer, int packetSize)
@@ -31,12 +31,10 @@ void DebugPortDriver::sendData(void* sendBuffer, int packetSize)
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::sendData() called, supposed to be implemented in derived class");
 }
 
-
 void DebugPortDriver::startReceive(void* receiveBuffer,  int receiveSize)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::startReceive() called, supposed to be implemented in derived class");
 }
-
 
 void DebugPortDriver::stopReceive()
 {
@@ -48,7 +46,7 @@ void DebugPortDriver::setErrorCallback(void)
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::setErrorCallback() called, supposed to be implemented in derived class");
 }
 
-debugPortErrorCode_t DebugPortDriver::errorCallback(void)
+errorCode_t DebugPortDriver::errorCallback(void)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::errorCallback() called, supposed to be implemented in derived class");
 }

@@ -15,7 +15,7 @@ written permission of Syncroness.
 ****************************************************************** */
 
 #include "FramingSignatureVerify.hpp"
-#include "Cef/Source/Shared/cefContract.hpp"
+#include "cefContract.hpp"
 
 
 uint8_t FramingSignatureVerify::getDefinedFramingSignatureByte(uint8_t byteOffset)

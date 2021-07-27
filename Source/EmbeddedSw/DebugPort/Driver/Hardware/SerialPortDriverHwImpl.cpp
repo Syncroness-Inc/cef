@@ -16,15 +16,14 @@ written permission of Syncroness.
 
 
 #include "SerialPortDriverHwImpl.hpp"
-#include "Cef/HwShim/ShimBase.hpp"
-#include "Cef/Source/EmbeddedSw/DebugPort/FramingSignatureVerify.hpp"
-#include "Cef/Source/EmbeddedSw/Logging/Logging.hpp"
+#include "ShimBase.hpp"
+#include "FramingSignatureVerify.hpp"
+#include "Logging.hpp"
 
 void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 {
 	ShimBase::getInstance().startInteruptSend(sendBuffer, packetSize);
 }
-
 
 void SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
 {
@@ -34,13 +33,56 @@ void SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
 	receiveNextByte();
 }
 
+void SerialPortDriverHwImpl::editReceiveSize(int newReceiveSize)
+{
+	if(m_currentBufferOffset >= newReceiveSize)
+	{
+		stopReceive();
+	}
+	else if(newReceiveSize >= DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
+	{
+		m_receiveBufferSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES;
+	}
+	else
+	{
+		m_receiveBufferSize = newReceiveSize;
+	}
+
+}
 
 void SerialPortDriverHwImpl::stopReceive()
 {
 	ShimBase::getInstance().forceStopReceive();
 }
+
 void SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 {
+	//See if receive has finnished 
+	if(m_currentBufferOffset == m_receiveBufferSize)
+	{
+		//Router/TransportLayer job to know packet has been received
+		//Stop receiving data till startReceive is invoked again
+		return;
+	}
+	else if(m_currentBufferOffset > m_receiveBufferSize && m_currentBufferOffset < DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
+	{
+		//Router/TransportLayer job to know packet has been received
+		//Stop receiving data till startReceive is invoked again
+		//Current Buffer Offset should not be greater then the expected buffer size Log a problem
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Received bytes exceeded expected did not overrun buffer.");
+		return;
+	}
+	else if(m_currentBufferOffset >= DEBUG_PORT_MAX_PACKET_SIZE_BYTES) //current buffer 0-527, MAX_BUFFER 528 (= will overrun)
+	{
+		//Router/TransportLayer job to know packet has been received
+		//Stop receiving data till startReceive is invoked again
+		//Current Buffer Offset should not be greater then the expected buffer size Log a problem
+		//Current buffer overran allocated buffer
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Received bytes exceeded expected and ALSO overrun buffer.");
+		return;
+	}
+
+	//Receive has not finished
 	//Check framing signature
 	if(m_currentBufferOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
 	{
@@ -52,13 +94,13 @@ void SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 	}
 	//Set up receive next byte
 	receiveNextByte();
-	//TODO we will have to stop receiving next byte once packet is done in Transport Layer
 }
+
 void SerialPortDriverHwImpl::receiveNextByte()
 {
 	if(mp_receiveBuffer != nullptr && m_currentBufferOffset <= m_receiveBufferSize)
 	{
-		ShimBase::getInstance().startInteruptReceive((mp_receiveBuffer + m_currentBufferOffset), this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
+		ShimBase::getInstance().startInterruptReceive((mp_receiveBuffer + m_currentBufferOffset), this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
 	}
 
 }
@@ -68,7 +110,7 @@ void SerialPortDriverHwImpl::setErrorCallback(void)
 	ShimBase::getInstance().startErrorCallback(this, &SerialPortDriverHwImpl::errorCallback);
 }
 
-debugPortErrorCode_t SerialPortDriverHwImpl::errorCallback(debugPortErrorCode_t error)
+void SerialPortDriverHwImpl::errorCallback(errorCode_t error)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Implement in CmdDebugPort");
 }

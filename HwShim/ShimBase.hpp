@@ -18,12 +18,63 @@ written permission of Syncroness.
 #define __SHIM_BASE_H
 #include <stdio.h>
 #include <functional>
-#include "Cef/Source/EmbeddedSw/DebugPort/Driver/Hardware/SerialPortDriverHwImpl.hpp"
+#include "SerialPortDriverHwImpl.hpp"
 /**
  * Base Class for UART Shim
  */
 
 class ShimBase { 
+
+public:
+   /**
+    * Singelton Instance of Shim
+    * 
+    * @return Returns the instance of Shim
+    */
+   static ShimBase& getInstance();
+
+   /**
+    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
+    */
+   virtual void rxCallback();
+
+   /**
+    * Error callback.  This will send callback to SerialPortDriverHwImpl inform Debug port
+    */
+   virtual void errorCallback();
+
+   /**
+	 * Start send - will send number of bytes of buffer size starting at sendBuffer location 
+    * 
+	 * @param sendBuffer send buffer
+    * @param bufferSize number of bytes to be sent in the buffer
+	 */
+   virtual void startInterruptSend(void* sendBuffer, int bufferSize);
+
+   /**
+    * Start receive interrupt driven data
+	 * Will receive one byte of data then callback function will be called and
+	 * receive will have to be called again to continue to receive data
+    * 
+    * @param receiveByte - location to store the received data
+    * @param callbackClass - class of callback function (the class that started the receive)
+    * @param callback - callback function once the data byte has been received 
+    */
+   virtual void startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void));
+
+   /**
+    * Callback for error during send/receive
+    * 
+    * @param errorCallbackClass - class of callback function for error info
+    * @param errorCallback - callback function for error info
+    */
+   virtual void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, void (SerialPortDriverHwImpl::* errorCallback)(errorCode_t error));
+
+   /**
+    * Forces the stop of receive interupt
+    */
+   virtual void forceStopReceive(void);
+
 protected:
 	//! Constructor.
 	ShimBase():
@@ -47,54 +98,11 @@ protected:
    SerialPortDriverHwImpl* mp_errorCallbackClass; 
    /**
     * Callback function for receive error callback
-    */
-	debugPortErrorCode_t (SerialPortDriverHwImpl::* mp_errorCallback)(debugPortErrorCode_t);
-
-public:
-   /**
-    * @return Returns the instance of Shim
-    */
-   static ShimBase& getInstance();
-
-   /**
-    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
-    */
-   virtual void rxCallback();
-   /**
-    * Error callback.  This will send callback to SerialPortDriverHwImpl inform Debug port
-    */
-   virtual void errorCallback();
-
-   /**
-	 * Start send 
-	 * @param sendBuffer send buffer
-    * @param bufferSize number of bytes to be sent in the buffer
-	 */
-   virtual void startInteruptSend(void*sendBuffer, int bufferSize);
-   /**
-    * Start receive interrupt driven data
-	 * Will receive one byte of data then callback function will be called and
-	 * receive will have to be called again to continue to receive data
-    * @param receiveByte - location to store the received data
-    * @param callbackClass - class of callback function (the class that started the send)
-    * @param callback - callback function once the data byte has been received 
-    */
-   virtual void startInteruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, void (SerialPortDriverHwImpl::* callback)(void));
-
-   /**
-    * Callback for error during send/receive
     * 
-    * @param errorCallbackClass - class of callback function for error info
-    * @param errorCallback - callback function for error info
+    * @param - debug buffer error code for send or receive error
     */
-   virtual void startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, debugPortErrorCode_t (SerialPortDriverHwImpl::* errorCallback)(debugPortErrorCode_t error));
+	void (SerialPortDriverHwImpl::* mp_errorCallback)(errorCode_t);
 
-   /**
-    * Forces the stop of receive interupt
-    */
-   virtual void forceStopReceive(void);
-
- 
 };
 
 #endif  // end header guard

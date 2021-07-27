@@ -16,7 +16,7 @@ written permission of Syncroness.
 /* Header guard */
 #ifndef __DEBUG_PORT_DRIVER_H
 #define __DEBUG_PORT_DRIVER_H
-#include "Cef/Source/Shared/cefContract.hpp"
+#include "cefContract.hpp"
 
 /**
  * Base Class for DebugPortDriver
@@ -24,36 +24,43 @@ written permission of Syncroness.
  */
 
 class DebugPortDriver {
-protected:
-	//! Constructor.
-	DebugPortDriver() {}
 
 public:
    /**
-    * Start Send Data
-    * @param sendBuffer 
-    * @param packetSize 
+    * Start Send Debug Data transfer. Command response and logging are the two data that can be sent.
+    * 
+    * @param sendBuffer - Pointer to start of buffer to send
+    * @param packetSize - Number of Bytes to send
     */
    virtual void sendData(void* sendBuffer, int packetSize);
+   
    /**
-    * Start receiving data
+    * Start receiving data from Python utilities
+    * 
     * @param receive buffer location
     * @param size of packet to receive
     */
    virtual void startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
+
    /**
-    * Stops receiving data
+    * Stops receiving data. This will instantly stop the receive of data even in the middle of a packet.
     * */
    virtual void stopReceive(void);
+
    /**
     * Sets the callback to receive any errors
     */
    virtual void setErrorCallback(void);
+
    /**
     * Callback function for when error occurs for send/receive
     */
-   virtual debugPortErrorCode_t errorCallback(void);
- 
+   virtual errorCode_t errorCallback(void);
+
+protected:
+	//! Constructor.
+	DebugPortDriver() {}
+
 };
 
 #endif  // end header guard

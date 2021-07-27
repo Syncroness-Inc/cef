@@ -26,25 +26,30 @@ class FramingSignatureVerify {
 private:
 	//! Constructor.
 	FramingSignatureVerify() {}
+
  public:
    /**
+    * Retrieve a byte of data of the debug framing signature
+    * 
+    * @param byte to get in framing signature
+    * 
     * @return Returns one byte of framing signature based on offset value
     *  - for an example 0x00010203
     *  - Offset of 0 will return 0x00 and 1 will return 0x01
-    * @param byte to get in framing signature
     */
    static uint8_t getDefinedFramingSignatureByte(uint8_t byteOffset);
+
    /**
     * Checks one bye of the write buffers based on offset amount and compares it to the framing signature data
+    * 
+    * @param receiveBuffer pointer to the buffer to check
+    * @param byte to check in the framing signature 
+    * 
     * @return When the data is the same it will return the byteOffset + 1
     *  - When the data does not match the framing signature it will return 0
     *  - If byteOffset is greater than the framing signature size it will return 0
-    * @param receiveBuffer pointer to the buffer to check
-    * @param byte to check in the framing signature 
     */
    static uint8_t checkFramingSignatureByte(void* receiveBuffer, uint8_t byteOffset);
-   
- 
 };
 
 #endif  // end header guard
