@@ -58,8 +58,9 @@ void SerialPortDriverHwImpl::stopReceive()
 void SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 {
 	//See if receive has finnished 
-	if(m_currentBufferOffset == m_receiveBufferSize)
+	if(m_currentBufferOffset == m_receiveBufferSize-1)
 	{
+		ShimBase::getInstance().startInterruptSend(mp_receiveBuffer, m_currentBufferOffset);
 		//Router/TransportLayer job to know packet has been received
 		//Stop receiving data till startReceive is invoked again
 		return;
