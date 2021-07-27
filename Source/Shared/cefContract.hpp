@@ -137,6 +137,9 @@ typedef uint16_t commandOpCode_t;
  * Debug Port Framing Signature
  * *This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
  * *Every Byte MUST be unique
+ * 
+ * WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
+ * regardless of endianness. Will refactor is time permits or a project runs into a problem 
  */
 #define DEBUG_PACKET_UINT32_FRAMING_SIGNATURE 0x43454653
 

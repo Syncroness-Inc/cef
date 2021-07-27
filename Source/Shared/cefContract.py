@@ -103,6 +103,9 @@ See the importFromCefCommand() and exportToCefCommand() functions for each comma
 Debug Port Framing Signature
   * This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
   * Every Byte MUST be unique
+
+  WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
+  regardless of endianness. Will refactor is time permits or a project runs into a problem 
 """
 DEBUG_PACKET_UINT32_FRAMING_SIGNATURE = 0x43454653
 
@@ -123,6 +126,7 @@ class debugPacketDataType(Enum):
     debugPacketType_commandRequest                          = 0
 	debugPacketType_commandResponse 	   					= 1
     debugPacketType_loggingData                             = 3
+
 
 class cefCommandHeader(ctypes.Structure):
     """
