@@ -152,17 +152,13 @@ class Transport:
             print("HEADER FOUND, LEN:{}\n{}\n".format(len(self.__readBuffer),self.__readBuffer)) 
             packetHeader = cefContract.cefCommandDebugPortHeader()
 
-            # iterate over the expected fields and match up the received bytes
+            # populate header fields from the buffer
             for f in packetHeader._fields_:
-                numBytes = ctypes.sizeof(f[1]) # size in bytes of the field
-                bitsLeft = 8*numBytes - 8
-                i = 0
-                # grab the number of bytes for the field from the buffer
+                numBytes = ctypes.sizeof(f[1])
+                n = int.from_bytes(b''.join(self.__readBuffer[0:numBytes]), self.__endianness)
+                setattr(packetHeader, f[0], n)
                 for b in range(numBytes):
-                    i = i | (int.from_bytes(self.__readBuffer[0], self.__endianness) << (bitsLeft - (b*8)))
-                    self.__readBuffer.pop(0)
-                setattr(packetHeader, f[0], i) # populate the header field
-                bitsLeft -= 8*numBytes
+                    self.__readBuffer.pop(0) # remove the consumed bytes
 
             # 3. validate received header against received checksum
             headerCopy = copy.deepcopy(packetHeader)
