@@ -60,7 +60,7 @@ class DebugSerialPort(DebugPortDriver):
         """
         try:
             self.__serialPort = serial.Serial(port=self.__port, baudrate=self.__baudRate, timeout=self.__timeout)
-            self.__serialPort.flush()
+            self.__serialPort.flush() # clear any leftover buffer data on open so it doesn't get read on the next receive
         except (serial.SerialException):
             print("DebugSerialPort.open(): error")
             raise
