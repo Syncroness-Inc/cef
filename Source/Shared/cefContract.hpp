@@ -63,6 +63,8 @@ enum
 	errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues			        = 8,
 	errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand		        = 9,
 	errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch 		= 11,
+	errorCode_RequestedCefProxyCommandNotAllocatable				 		= 12,
+
 
 
 	errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
@@ -88,6 +90,8 @@ enum
 {
     commandOpCodeNone                              		= 0,	// Illegal command type, reserved
 	commandOpCodePing 	   						   		= 1,
+	commandOpCodeDebugPortRouter				   		= 2,
+	commandOpCodeCefCommandProxy						= 3,
 
     maxCommandOpCodeNumber, // Must be last, except for 'invalid'
     commandOpCodeInvalid                               = 0xFFFF,
@@ -135,12 +139,6 @@ typedef uint16_t commandOpCode_t;
 #define DEBUG_PACKET_UINT32_FRAMING_SIGNATURE 0x43454653
 
 /**
- * Debug Port Packet Size
- * *Max number of bytes in a debug port packet
- */
-#define DEBUG_PORT_MAX_PACKET_SIZE_BYTES 528
-
-/**
  * CEF Command Header
  * Each Request and Receive command has a common header associated with it.
  * The CEF Command Header must be an increment of 8 bytes so that when the CEF command header
@@ -164,7 +162,8 @@ typedef struct
 	uint16_t m_commandRequestResponseSequenceNumberPython;	// 32 bit aligned
 
 	uint32_t m_commandErrorCode;				// 64 bit aligned
-	uint32_t m_commandNumBytes;					// Used to confirm python/embedded SW in sync; 32 bit aligned
+	uint32_t m_commandNumBytes;					// Used to confirm python/embedded SW in sync on response structure; 32 bit aligned
+												// Includes both the cefCommandHeader_t and the command specific information
 	uint32_t m_padding1;						// 64 bit aligned
 } cefCommandHeader_t;
 
@@ -189,6 +188,35 @@ typedef struct
 	uint8_t 	m_reserve;					//48 bit aligned
 	uint16_t 	m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
+
+
+//! Maximum cef Command payload size in bytes
+#define DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES  512
+
+/**
+ * Maximum size that a CEF command can be
+ */
+typedef struct
+{
+	cefCommandHeader_t 				m_cefCommandHeader;
+	char     						m_cefCommandPayload[DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES];
+} cefCommandMaximum_t;
+
+
+/**
+ * Maxiumum size that a CEF command packet can be (including all layers of the debug port communications stack)
+ */
+typedef struct
+{
+	cefCommandDebugPortHeader_t		m_debugPortPacketHeader;			// Must be the first command in this structure
+	char							m_cefCommandPayload[sizeof(cefCommandMaximum_t)];
+} cefCommandPacketMaximum_t;
+
+/**
+ * Debug Port Packet Size
+ * *Max number of bytes in a debug port packet
+ */
+#define DEBUG_PORT_MAX_PACKET_SIZE_BYTES (sizeof(cefMaximumCommandPacket_t))
 
 /**
  * CommandPing
@@ -229,6 +257,37 @@ typedef struct
 	uint64_t	m_uint64Value;					// 64 bit aligned
 } cefCommandPingResponse_t;
 
+
+
+/*********************************************************************************************************************/
+/******  LOGGING                                                                                                ******/
+/*********************************************************************************************************************/
+
+/**
+ * Logging Structure.  For now, a display string is passed that python uses to display the variables.
+ * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
+ */
+#define LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS  128
+typedef struct
+{
+	// todo:  Add more variables when logging is fulling implemented (like Module Id, log level, function, line #...)
+
+	uint64_t	m_logVariable1;		// 64 bit aligned
+	uint64_t	m_logVariable2;		// 64 bit aligned
+	uint64_t	m_logVariable3;		// 64 bit aligned
+
+	//! The logging string to be printed to the screen (null terminated, unless at max length)
+	// MUST BE LAST CHARACTER IN STRUCTURE AS ALIGNMENT IS "UNKNOWN"
+	char		m_logString[LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS];
+} cefLogging_t;
+
+
+//! Logging Packet
+typedef struct
+{
+	cefCommandDebugPortHeader_t	m_debugPortPacketHeader;
+	cefLogging_t m_loggingInfo;
+} cefLoggingPacket_t;
 
 
 

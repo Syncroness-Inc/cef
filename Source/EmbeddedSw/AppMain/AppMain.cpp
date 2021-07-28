@@ -17,6 +17,8 @@ written permission of Syncroness.
 #include "AppMain.hpp"
 #include "Logging.hpp"
 #include "CommandExecutor.hpp"
+#include "CommandDebugPortRouter.hpp"
+#include "CommandCefCommandProxy.hpp"
 
 
 //! Singleton instantiation of AppMain
@@ -137,12 +139,80 @@ static void johnTesting()
     numEntries = rb.getCurrentNumberOfEntries();  // 8
 
     // test for CommandGenerator
-    CommandGenerator myCommandGenerator;
-    CommandBase* p_cgCommand = myCommandGenerator.allocateCommand(commandOpCodePing);
+    //CommandGenerator myCommandGenerator;
+    bool allocatableCommand = false;
+    CommandBase* p_cgCommand = CommandGenerator::instance().allocateCommand(commandOpCodePing, allocatableCommand);
     //p_cgCommand->execute(nullptr);  // make sure not nullptr before call; and didn't initialize, but if in ping command, good enough!
 
     CommandExecutor::instance().addCommandToQueue(p_cgCommand);  //(to be executed by main while loop)
     //CommandExecutor::instance().executeCommands(2);   // return value should be 1
+
+    //*************** Check out Logging in CommandDebugPortRouter
+    // Tests below assumes code has been hacked to only have 2 Log Buffers.
+    cefLogging_t* p_logTemp = (cefLogging_t*)0x1;
+    cefLogging_t* p_logTemp2 = (cefLogging_t*) 0x3;
+    cefLogging_t* p_logTemp3 = (cefLogging_t*) 0x4;
+    cefLoggingPacket_t* p_logPacket1 = (cefLoggingPacket_t*)0x5;
+    p_logTemp3 = p_logTemp2;
+
+    p_logPacket1 = CommandDebugPortRouter::instance().checkoutLogPacket();  // nullptr
+    p_logTemp = CommandDebugPortRouter::instance().checkoutLogBuffer();	// valid pointer
+    p_logTemp2= CommandDebugPortRouter::instance().checkoutLogBuffer();	// valid pointer
+    p_logTemp3= CommandDebugPortRouter::instance().checkoutLogBuffer();	// should be a nullptr
+    CommandDebugPortRouter::instance().returnLogBuffer(p_logTemp2); // should work
+    p_logPacket1 = CommandDebugPortRouter::instance().checkoutLogPacket();  // should work
+    CommandDebugPortRouter::instance().returnLogPacket(p_logPacket1);   // should work
+    CommandDebugPortRouter::instance().returnLogBuffer(p_logTemp); // should work
+    p_logPacket1 = CommandDebugPortRouter::instance().checkoutLogPacket();  // should work, 16 bytes higher address than p_logTemp because has header
+    CommandDebugPortRouter::instance().returnLogPacket(p_logPacket1);   // should work, inspect member variables to make sure numEntries what expect on two lists
+
+
+
+    //*************** Check out cefCommandBuffer in CommandDebugPortRouter
+    cefCommandPacketMaximum_t* p_cefPacket = (cefCommandPacketMaximum_t*)0x1;
+    cefCommandMaximum_t* p_cefCommand = (cefCommandMaximum_t*)0x2;
+    uint32_t numBytesInCommandResponse = 7;
+
+    //CommandDebugPortRouter::instance().returnCefReceiveCommandPacket(p_cefPacket); // log fatal
+
+    // confirm get nullptr back on all these functions  (or log fatal)
+    p_cefCommand = CommandDebugPortRouter::instance().checkoutCefCommandBuffer();
+    //CommandDebugPortRouter::instance().returnCefCommandBuffer(p_cefCommand, 8);  // logfatal
+
+    p_cefPacket = CommandDebugPortRouter::instance().checkoutCefTransmitCommandPacket(numBytesInCommandResponse);  // nullptr
+    //CommandDebugPortRouter::instance().returnCefTransmitCommandPacket(p_cefPacket);   //logfatal
+
+    // confirm normal flow works
+    // go to the point where can show get the request buffer for a 2nd time
+
+    p_cefPacket = CommandDebugPortRouter::instance().checkoutCefReceiveCommandPacket();
+    //p_cefPacket = CommandDebugPortRouter::instance().checkoutCefReceiveCommandPacket();  // nullptr
+    CommandDebugPortRouter::instance().returnCefReceiveCommandPacket(p_cefPacket);
+
+    p_cefCommand = CommandDebugPortRouter::instance().checkoutCefCommandBuffer();
+    CommandDebugPortRouter::instance().returnCefCommandBuffer(p_cefCommand, numBytesInCommandResponse);
+
+    p_cefPacket = CommandDebugPortRouter::instance().checkoutCefTransmitCommandPacket(numBytesInCommandResponse);
+    CommandDebugPortRouter::instance().returnCefTransmitCommandPacket(p_cefPacket);
+
+    p_cefPacket = CommandDebugPortRouter::instance().checkoutCefReceiveCommandPacket();
+
+
+    /*********** Check out CommandCefCommandProxy *************/
+    // this code relies upon the previous test code, and assumes checkoutCefReceiveCommandPacket has just been completed.
+
+    // Initialize it so we run the ping command (don't worry about internals of command...it will just return an error code)
+	cefCommandPingRequest_t* p_cefPing = (cefCommandPingRequest_t*)&(p_cefPacket->m_cefCommandPayload);
+	p_cefPing->m_header.m_commandErrorCode = 0;
+	p_cefPing->m_header.m_commandNumBytes = sizeof(cefCommandPingRequest_t);
+	p_cefPing->m_header.m_commandOpCode = commandOpCodePing;
+	p_cefPing->m_header.m_commandRequestResponseSequenceNumberPython = 777;
+	p_cefPing->m_header.m_padding1 = 333;
+
+    CommandDebugPortRouter::instance().returnCefReceiveCommandPacket(p_cefPacket);   // return it so it drives things to the right state
+    // when we start up the code, CommandCefCommandProxy should find a CEF ping command to work on
+    // and it should return a response to be transmitted to the CommandDebugPortRouter (look at singleton to see buffer state)
+
 
 #endif
 
@@ -152,6 +222,18 @@ static void johnTesting()
 void AppMain::initialize()
 {
 	//! Tony, call uart shim initialization from here
+
+	// Add the Singletons that are suppose to execute forever to the Executor Queue
+	CommandPing tempPing;
+	tempPing.execute(nullptr);
+	CommandBase* p_cmd = &tempPing;
+	p_cmd->execute(nullptr);
+
+	CommandExecutor::instance().addCommandToQueue(p_cmd);
+	//CommandExecutor::instance().addCommandToQueue(&tempPing);
+
+	//CommandExecutor::instance().addCommandToQueue(&CommandDebugPortRouter::instance());
+	//CommandExecutor::instance().addCommandToQueue(&CommandCefCommandProxy::instance());
 }
 
 void AppMain::runAppMain_noReturn()
@@ -160,10 +242,10 @@ void AppMain::runAppMain_noReturn()
 	initialize();
 
 	//! @toDo Remove this when have alternate means of testing
-	tonyTesting();
+	//tonyTesting();
 
 	//! @toDo Remove this when have alternate means of testing
-	johnTesting();
+	//johnTesting();
 
 	//! run the infinite while loop.  There is no return from this routine.
 	run();

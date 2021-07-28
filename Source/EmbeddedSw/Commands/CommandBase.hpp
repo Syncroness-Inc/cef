@@ -63,7 +63,7 @@ class CommandBase
          *
          * @return true if the command has finished its work, false if it still has more work to do.
          */
-        virtual bool execute(void* p_childCommand);
+        virtual bool execute(CommandBase* p_childCommand);
 
 
         /**
@@ -159,6 +159,28 @@ class CommandBase
         {
             return mp_parentCommand;
         }
+
+        /**
+         * Common routine that can be used to validate p_childCommand of execute(void* p_childCommand).
+         * If the command is not expecting a child response, and one occurs, then this
+         * is a non-recoverable error as the parent isn't expecting a child child response, so the child response
+         * belongs to another command, or there is a memory leak or failure to return a pointer such that the child command
+         * is re-using memory it is not supposed to use (or a variety of other reasons).
+         * In short, the system is unstable and needs to be stopped or something could go very wrong!
+         *
+         * Likewise, if the wrong child response comes back, then this is a similar situation
+         * as an unexpected response.
+         *
+         * This routine prints appropriate debug information, then triggers a "log fatal".
+         *
+         * If multiple child commands could be returned to the parent command, then this method should
+         * be overridden.
+         *
+         * @param p_childCommand	pointer to the child command received from execute(void* p_childCommand)
+         * @param p_expectedChildCommand  Set to nullptr if not expecting a child command;
+         * 							      pointer to expected child command otherwise
+         */
+        void validateChildResponse(CommandBase* p_childCommand, CommandBase* p_expectedChildCommand);
 
 
     protected:

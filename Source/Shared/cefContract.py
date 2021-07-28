@@ -50,6 +50,8 @@ class errorCode(Enum):
     errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues                      = 8
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand                  = 9
     errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch           = 11
+    errorCode_RequestedCefProxyCommandNotAllocatable                            = 12,
+
     errorCode_NumApplicationErrorCodes                                          = auto()
 
 
@@ -65,11 +67,13 @@ class commandOpCode(Enum):
     A comment is discouraged for each command type to ease maintenance; refer to the references in source code
     for information about the command.
     """
-    commandOpCodeNone           = 0
-    commandOpCodePing           = 1
+    commandOpCodeNone               = 0
+    commandOpCodePing               = 1
+    commandOpCodeDebugPortRouter    = 2
+    commandOpCodeCefCommandProxy    = 3
 
-    maxCommandOpCodeNumber      = auto()
-    commandOpCodeInvalid        = 0xFFFF
+    maxCommandOpCodeNumber          = auto()
+    commandOpCodeInvalid            = 0xFFFF
 
 
 #####################################################################################################################
@@ -100,12 +104,6 @@ Debug Port Framing Signature
 """
 DEBUG_PACKET_UINT32_FRAMING_SIGNATURE = 0x43454653
 
-
-"""
-Debug Port Packet Size
-  * Max number of bytes in a debug port packet
-"""
-DEBUG_PORT_MAX_PACKET_SIZE_BYTES = 528
 
 class cefCommandHeader(ctypes.Structure):
     """
@@ -157,7 +155,38 @@ class cefCommandDebugPortHeader(ctypes.Structure):
     ]
 
 
+
 """
+    Maximum cef Command payload size in bytes
+"""
+DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES = 512
+
+class cefCommandMaximum(ctypes.Structure):
+    """ 
+    Maximum size of that a cef command can be
+    """
+ _fields_ = [
+     (m_commandHeader,    cefCommandHeader),
+     (m_payload, 	   ctypes.c_char * DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES)
+     ]  
+    
+class cefCommandPacketMaximum(ctypes.Structure):
+    """ 
+    Maximum size of that a cef command packet can be (includes all layers of debug port comm stack)
+    """
+ _fields_ = [
+     (m_commandDebugPortHeader, cefCommandDebugPortHeader),
+     (m_command,		 ctypes.c_char * sys.getsizeof(cefCommandMaximum)) 
+     ]  
+    
+"""
+Debug Port Packet Size
+  * Max number of bytes in a debug port packet
+"""
+DEBUG_PORT_MAX_PACKET_SIZE_BYTES = sys.getsizeof(cefCommandPacketMaximum) 
+    
+
+    
 CommandPing constants
 """
 CMD_PING_UINT8_REQUEST_EXPECTED_VALUE   = 0xA3
@@ -207,3 +236,39 @@ class cefCommandPingResponse(ctypes.Structure):
         ('m_padding2', ctypes.c_uint32),
         ('m_uint64Value', ctypes.c_uint64)
     ]
+    
+    
+
+"""
+LOGGING                                                                                                ******/ 
+"""
+
+"""
+Logging Constants
+"""
+LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
+class cefLoggingAscii(ctypes.Structure):
+    """
+    Ascii Logging Structure (passes a string (rather than a string hash) in log packet
+    """
+    _fields_ = [
+        (m_logVariable1, ctypes.c_uint64),
+        (m_logVariable2, ctypes.c_uint64),
+        (m_logVariable3, ctypes.c_uint64),
+        (m_logString, ctypes.c_char * LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS)
+    ]
+ 
+"""
+Ascii Logging Packet
+"""
+
+class cefLoggingPacketAscii(ctypes.Structure):
+    """
+    cefLoggingPacketAscii
+        See logging implementation files for variable documentation
+    """
+    _fields_ = [
+        ('m_debugPortPacketHeader', cefCommandDebugPortHeader),
+        ('m_loggingInfo', cefLoggingAscii)'
+    ]
+

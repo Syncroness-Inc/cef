@@ -40,7 +40,7 @@ class CommandPing : public CommandBase
 			{ }
 
 		//! See base class for method description
-		bool execute(void* p_parentCommand);
+		bool execute(CommandBase* p_parentCommand);
         errorCode_t importFromCefCommand(void* p_cefCommand);
         errorCode_t exportToCefCommand(void* p_cefCommand);
 
