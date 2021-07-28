@@ -220,39 +220,3 @@ class Transport:
         packet.payload = packetPayload
         return packet
 
-if __name__ == '__main__':
-    from DebugSerialPort import DebugSerialPort
-    p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
-    p.open()
-    t = Transport(p)
-
-    def buildCommand():
-        pingHeader = cefContract.cefCommandHeader()
-        pingHeader.m_commandOpCode = cefContract.commandOpCode.commandOpCodePing.value
-        pingHeader.m_commandSequenceNumber = 1
-        pingHeader.m_commandErrorCode = 0
-        pingHeader.m_commandNumBytes = 48
-
-        pingRequest = cefContract.cefCommandPingRequest()
-        pingRequest.m_header = pingHeader
-        pingRequest.m_uint8Value = 1
-        pingRequest.m_uint16Value = 2
-        pingRequest.m_uint32Value = 3
-        pingRequest.m_uint64Value = 4
-
-        class CefCommand(ctypes.Structure):
-            _fields_ = [('header', cefContract.cefCommandHeader), ('payload', cefContract.cefCommandPingRequest)]
-
-        command = CefCommand()
-        command.header = pingHeader
-        command.payload = pingRequest
-
-        return bytes(command)
-
-    c = buildCommand()
-    t.send(c)
-    response = None
-    while True:
-        resp = t.getNextPacket()
-        if resp is not None:
-            print(resp)
