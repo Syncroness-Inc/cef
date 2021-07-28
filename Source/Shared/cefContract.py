@@ -50,6 +50,12 @@ class errorCode(Enum):
     errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues                      = 8
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand                  = 9
     errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch           = 11
+    errorCode_debugPortErrorCodeNone                  						    = 12
+	errorCode_debugPortErrorCodeParity 	   									    = 13
+	errorCode_debugPortErrorCodeNoise										    = 14
+	errorCode_debugPortErrorCodeFrame										    = 15
+	errorCode_debugPortErrorCodeOverrun										    = 16
+	errorCode_debugPortErrorCodeUnknown										    = 17
     errorCode_NumApplicationErrorCodes                                          = auto()
 
 
@@ -97,6 +103,9 @@ See the importFromCefCommand() and exportToCefCommand() functions for each comma
 Debug Port Framing Signature
   * This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
   * Every Byte MUST be unique
+
+  WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
+  regardless of endianness. Will refactor is time permits or a project runs into a problem 
 """
 DEBUG_PACKET_UINT32_FRAMING_SIGNATURE = 0x43454653
 
@@ -106,6 +115,18 @@ Debug Port Packet Size
   * Max number of bytes in a debug port packet
 """
 DEBUG_PORT_MAX_PACKET_SIZE_BYTES = 528
+
+class debugPacketDataType(Enum):
+    """
+    Debug Port Packet Data Type - the debug port expect the following types of packets
+    - command request
+    - command response
+    - logging data
+    """
+    debugPacketType_commandRequest                          = 0
+	debugPacketType_commandResponse 	   					= 1
+    debugPacketType_loggingData                             = 3
+
 
 class cefCommandHeader(ctypes.Structure):
     """
