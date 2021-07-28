@@ -59,18 +59,15 @@ class Transport:
     @staticmethod
     def calculateChecksum(data: bytes) -> int:
         """
-        This simple checksum adds all bits in the input
+        This simple checksum adds all bytes in the input
         @param data: the data to compute the checksum over, as a byte array
-        @return bitSum: the sum of all set bits in the input data
+        @return byteSum: the sum of all bytes in the input data
         """
-        bitSum = 0
+        byteSum = 0
         for byte in data:
-            binary = bin(byte)
-            for bit in binary:
-                if bit == '1':
-                    bitSum += 1
-        # print("CHECKSUM: {}".format(bitSum)) # uncomment for debug
-        return bitSum
+            byteSum += byte
+        # print("CHECKSUM: {}".format(byteSum)) # uncomment for debug
+        return byteSum
 
     @staticmethod
     def framingSignatureToBytes(endianness=BIG_ENDIAN):
@@ -222,3 +219,40 @@ class Transport:
         packet.header = packetHeader
         packet.payload = packetPayload
         return packet
+
+if __name__ == '__main__':
+    from DebugSerialPort import DebugSerialPort
+    p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
+    p.open()
+    t = Transport(p)
+
+    def buildCommand():
+        pingHeader = cefContract.cefCommandHeader()
+        pingHeader.m_commandOpCode = cefContract.commandOpCode.commandOpCodePing.value
+        pingHeader.m_commandSequenceNumber = 1
+        pingHeader.m_commandErrorCode = 0
+        pingHeader.m_commandNumBytes = 48
+
+        pingRequest = cefContract.cefCommandPingRequest()
+        pingRequest.m_header = pingHeader
+        pingRequest.m_uint8Value = 1
+        pingRequest.m_uint16Value = 2
+        pingRequest.m_uint32Value = 3
+        pingRequest.m_uint64Value = 4
+
+        class CefCommand(ctypes.Structure):
+            _fields_ = [('header', cefContract.cefCommandHeader), ('payload', cefContract.cefCommandPingRequest)]
+
+        command = CefCommand()
+        command.header = pingHeader
+        command.payload = pingRequest
+
+        return bytes(command)
+
+    c = buildCommand()
+    t.send(c)
+    response = None
+    while True:
+        resp = t.getNextPacket()
+        if resp is not None:
+            print(resp)
