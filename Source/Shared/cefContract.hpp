@@ -159,7 +159,8 @@ enum
 {
     debugPacketType_commandRequest                          = 0,
 	debugPacketType_commandResponse 	   					= 1,
-    debugPacketType_loggingData                             = 2,
+    debugPacketType_loggingDataAscii                        = 2,
+	debugPacketType_loggingDataBinary						= 3,
 };
 typedef uint16_t debugPacketDataType_t;
 

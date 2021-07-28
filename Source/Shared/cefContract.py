@@ -51,11 +51,11 @@ class errorCode(Enum):
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand                  = 9
     errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch           = 11
     errorCode_debugPortErrorCodeNone                  						    = 12
-	errorCode_debugPortErrorCodeParity 	   									    = 13
-	errorCode_debugPortErrorCodeNoise										    = 14
-	errorCode_debugPortErrorCodeFrame										    = 15
-	errorCode_debugPortErrorCodeOverrun										    = 16
-	errorCode_debugPortErrorCodeUnknown										    = 17
+    errorCode_debugPortErrorCodeParity 	   									    = 13
+    errorCode_debugPortErrorCodeNoise										    = 14
+    errorCode_debugPortErrorCodeFrame										    = 15
+    errorCode_debugPortErrorCodeOverrun										    = 16
+    errorCode_debugPortErrorCodeUnknown										    = 17
     errorCode_NumApplicationErrorCodes                                          = auto()
 
 
@@ -124,8 +124,9 @@ class debugPacketDataType(Enum):
     - logging data
     """
     debugPacketType_commandRequest                          = 0
-	debugPacketType_commandResponse 	   					= 1
-    debugPacketType_loggingData                             = 3
+    debugPacketType_commandResponse 	   					= 1
+    debugPacketType_loggingDataAscii                        = 3
+    debugPacketType_loggingDataBinary                       = 4
 
 
 class cefCommandHeader(ctypes.Structure):

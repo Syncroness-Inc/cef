@@ -26,13 +26,6 @@ from Shared import cefContract
 from DebugPortDriver import DebugPortDriver
 
 
-#TODO: replace with CEF Contract values once defined
-PACKET_TYPE_COMMAND_REQUEST = 0
-PACKET_TYPE_COMMAND_RESPONSE = 1
-PACKET_TYPE_LOG_ASCII = 2
-PACKET_TYPE_LOG_BINARY = 3
-
-
 class Transport:
     """
     Object for packetizing outgoing commands and framing incoming data with bi-endian support.
@@ -66,7 +59,7 @@ class Transport:
         byteSum = 0
         for byte in data:
             byteSum += byte
-        # print("CHECKSUM: {}".format(byteSum)) # uncomment for debug
+        print("CHECKSUM: {}".format(byteSum)) # uncomment for debug
         return byteSum
 
     @staticmethod
@@ -197,7 +190,7 @@ class Transport:
             packetHeader.m_framingSignature = cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE
             packetHeader.m_packetPayloadChecksum = self.calculateChecksum(payload)
             packetHeader.m_payloadSize = len(payload)
-            packetHeader.m_packetType = PACKET_TYPE_COMMAND_REQUEST # Outgoing packets are always this type
+            packetHeader.m_packetType = cefContract.debugPacketDataType.debugPacketType_commandRequest.value # Outgoing packets are always this type
             packetHeader.m_reserve = 0
             tmpChecksum = self.calculateChecksum(bytes(packetHeader))
             packetHeader.m_packetHeaderChecksum = tmpChecksum
