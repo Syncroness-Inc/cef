@@ -56,13 +56,20 @@ class Router:
         self.__endianness = endianness
         self.__packetReadThread = Thread(target=self._readPackets)
         self.sequenceNumber = 1
+        self.responsePending = False
 
         self.__packetReadThread.start()
 
     def send(self, command):
-        command.header.m_commandSequenceNumber = self.sequenceNumber
-        self.sequenceNumber += 1
-        self.__transport.send(command)
+        if self.responsePending:
+            print("Cannot send, awaiting pending response")
+            return False
+        else:
+            command.header.m_commandSequenceNumber = self.sequenceNumber
+            self.sequenceNumber += 1
+            self.__transport.send(command)
+            self.responsePending = True
+            return True
 
     def _readPackets(self):
         while(True):
