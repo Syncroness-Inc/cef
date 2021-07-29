@@ -23,9 +23,9 @@ written permission of Syncroness.
  *
  * Logging:
  * 		When logging has a new log, it requests memory via checkoutLogBuffer()
- * 			Logging then fills in cefLogging_t with logging information
+ * 			Logging then fills in cefLog_t with logging information
  * 		Then the log is "returned" via returnLogBuffer(), and added to a queue to transmit
- * 		checkoutLogPacket() returns a pointer to a cefLoggingPacket_t if there is a log to transmit
+ * 		checkoutLogPacket() returns a pointer to a cefLogPacket_t if there is a log to transmit
  * 		Once the transmit has been completed, the log is returned via returnLogPacket()
  *
  * CEF Proxy Command
@@ -39,7 +39,7 @@ written permission of Syncroness.
  */
 
 /**
- * Maximum number of logging cefLoggingPacketAscii_t that can exist in the system at one time.
+ * Maximum number of logging cefLogPacketAscii_t that can exist in the system at one time.
  * Caution:  Logging packets can be memory hogs, to be careful how big this number is
  */
 static const uint32_t maxNumLoggingPackets = 2;
@@ -48,18 +48,18 @@ static const uint32_t maxNumLoggingPackets = 2;
 
 //! Singleton instantiation of CommandDebugPortRouter
 static CommandDebugPortRouter commandDebugPortRouterSingleton(BufferPoolBase::BufferPoolId_Logging,
-	      	  	  	  	  	  	  	  	  	  	  sizeof(cefLoggingPacket_t),
+	      	  	  	  	  	  	  	  	  	  	  sizeof(cefLogPacket_t),
 												  maxNumLoggingPackets);
 
 
 
 
 CommandDebugPortRouter::CommandDebugPortRouter(uint32_t logBufferPoolId,
-								   uint32_t numBytesPerLoggingEntry,
-								   uint32_t maxNumLoggingEntries) :
+								   uint32_t numBytesPerLogEntry,
+								   uint32_t maxNumLogEntries) :
 					CommandBase(commandOpCodeDebugPortRouter),
-					m_loggingPool(logBufferPoolId, numBytesPerLoggingEntry, maxNumLoggingEntries),
-					m_logsToSend(maxNumLoggingEntries),
+					m_logPool(logBufferPoolId, numBytesPerLogEntry, maxNumLogEntries),
+					m_logsToSend(maxNumLogEntries),
 					m_numBytesInCefCommandResponse(0),
 				    m_cefCommandPacketState(cefCommandPacketState_bufferAvailable)
 					{ }
@@ -110,38 +110,38 @@ bool CommandDebugPortRouter::execute(CommandBase* p_childCommand)
 }
 
 
-cefLogging_t* CommandDebugPortRouter::checkoutLogBuffer()
+cefLog_t* CommandDebugPortRouter::checkoutLogBuffer()
 {
-	cefLoggingPacket_t* p_loggingPacket = (cefLoggingPacket_t*)m_loggingPool.allocate(sizeof(cefLoggingPacket_t));
+	cefLogPacket_t* p_logPacket = (cefLogPacket_t*)m_logPool.allocate(sizeof(cefLogPacket_t));
 
-	if (p_loggingPacket == nullptr)
+	if (p_logPacket == nullptr)
 	{
-		// No logging buffers available; they must all be backed up in the transmit queue
+		// No log buffers available; they must all be backed up in the transmit queue
 		// Eventually we want to thrown away some data and make room for an overflow message
 		return nullptr;
 	}
 
-	// We want to return a pointer to the logging packet only and "hide" the packet header
+	// We want to return a pointer to the log packet only and "hide" the packet header
 	// part of the memory from this API.
-	return &(p_loggingPacket->m_loggingInfo);
+	return &(p_logPacket->m_log);
 }
 
 
-void CommandDebugPortRouter::returnLogBuffer(cefLogging_t* p_cefLogBuffer)
+void CommandDebugPortRouter::returnLogBuffer(cefLog_t* p_cefLogBuffer)
 {
 	if (p_cefLogBuffer == nullptr)
 	{
 		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "A nullptr log buffer was returned!");
 	}
 
-	size_t const offsetToBaseAddr = offsetof(cefLoggingPacket_t, m_loggingInfo);
+	size_t const offsetToBaseAddr = offsetof(cefLogPacket_t, m_log);
 
 	// We were pointing to a member variable that is not the first address of the structure...so adjust accordingly
-	void* p_loggingPacket = reinterpret_cast<void*>(reinterpret_cast<char*>(p_cefLogBuffer) - offsetToBaseAddr);
+	void* p_logPacket = reinterpret_cast<void*>(reinterpret_cast<char*>(p_cefLogBuffer) - offsetToBaseAddr);
 
 	// The log packet is assumed to have valid logging data, and now is ready to be transmitted, so add
 	// it to the log to send fifo.
-	if (m_logsToSend.put(p_loggingPacket) == false)
+	if (m_logsToSend.put(p_logPacket) == false)
 	{
 		// Something is messed up in the system setup as there should be room to send all logs we have buffer space for
 		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "m_logsToSend not setup correctly in CommandDebugPortRouter");
@@ -150,24 +150,24 @@ void CommandDebugPortRouter::returnLogBuffer(cefLogging_t* p_cefLogBuffer)
 }
 
 
-cefLoggingPacket_t* CommandDebugPortRouter::checkoutLogPacket()
+cefLogPacket_t* CommandDebugPortRouter::checkoutLogPacket()
 {
-	void* p_cefLoggingPacket = nullptr;
+	void* p_cefLogPacket = nullptr;
 
-	if (m_logsToSend.get(p_cefLoggingPacket) == false)
+	if (m_logsToSend.get(p_cefLogPacket) == false)
 	{
 		// No logs to send
 		return nullptr;
 	}
 
-	return (cefLoggingPacket_t*)p_cefLoggingPacket;
+	return (cefLogPacket_t*)p_cefLogPacket;
 }
 
 
-void CommandDebugPortRouter::returnLogPacket(cefLoggingPacket_t* p_cefLogBuffer)
+void CommandDebugPortRouter::returnLogPacket(cefLogPacket_t* p_cefLogBuffer)
 {
 	// If memory is attempted to be returned to a pool that it was not allocated from, then free() with trace fatal.
-	m_loggingPool.free(p_cefLogBuffer);
+	m_logPool.free(p_cefLogBuffer);
 }
 
 

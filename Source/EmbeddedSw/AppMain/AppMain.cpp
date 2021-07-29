@@ -140,7 +140,7 @@ static void johnTesting()
     numEntries = rb.getCurrentNumberOfEntries();  // 1
     result = rb.removeItem((void*)9);  // last item
     numEntries = rb.getCurrentNumberOfEntries();  // 8
-#endif 0  // ring buffer test
+#endif  // ring buffer test
 
 #if 0  // we don't want to do this anymore, as a later command will need to allocate a ping command
     // test for CommandGenerator
@@ -157,10 +157,10 @@ static void johnTesting()
 #if 0 // turn this on to check router...may screw up normal operation...so test manually, disable, then reboot...
     //*************** Check out Logging in CommandDebugPortRouter
     // Tests below assumes code has been hacked to only have 2 Log Buffers.
-    cefLogging_t* p_logTemp = (cefLogging_t*)0x1;
-    cefLogging_t* p_logTemp2 = (cefLogging_t*) 0x3;
-    cefLogging_t* p_logTemp3 = (cefLogging_t*) 0x4;
-    cefLoggingPacket_t* p_logPacket1 = (cefLoggingPacket_t*)0x5;
+    cefLog_t* p_logTemp = (cefLog_t*)0x1;
+    cefLog_t* p_logTemp2 = (cefLog_t*) 0x3;
+    cefLog_t* p_logTemp3 = (cefLog_t*) 0x4;
+    cefLogPacket_t* p_logPacket1 = (cefLogPacket_t*)0x5;
     p_logTemp3 = p_logTemp2;
 
     p_logPacket1 = CommandDebugPortRouter::instance().checkoutLogPacket();  // nullptr

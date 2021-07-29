@@ -165,26 +165,77 @@ class cefCommandMaximum(ctypes.Structure):
     """ 
     Maximum size of that a cef command can be
     """
- _fields_ = [
-     (m_commandHeader,    cefCommandHeader),
-     (m_payload, 	   ctypes.c_char * DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES)
-     ]  
+    _fields_ = [
+        (m_commandHeader,    cefCommandHeader),
+        (m_payload, 	      ctypes.c_char * DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES)
+        ]  
     
 class cefCommandPacketMaximum(ctypes.Structure):
     """ 
     Maximum size of that a cef command packet can be (includes all layers of debug port comm stack)
     """
- _fields_ = [
-     (m_commandDebugPortHeader, cefCommandDebugPortHeader),
-     (m_command,		 ctypes.c_char * sys.getsizeof(cefCommandMaximum)) 
-     ]  
+    _fields_ = [
+        (m_commandDebugPortHeader, cefCommandDebugPortHeader),
+        (m_command,		 ctypes.c_char * sys.getsizeof(cefCommandMaximum)) 
+        ]  
     
 """
 Debug Port Packet Size
   * Max number of bytes in a debug port packet
 """
 DEBUG_PORT_MAX_PACKET_SIZE_BYTES = sys.getsizeof(cefCommandPacketMaximum) 
+  
+  
+
+"""
+--------------- LOGGING --------------------------  
+"""
+
+"""
+Logging Constants
+"""
+LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
+
+class cefLoggingAscii(ctypes.Structure):
+    """
+        Ascii Logging Structure (passes a string (rather than a string hash) in log packet
+    """
+    _fields_ = [
+        ('m_header', cefCommandHeader),    
     
+        (m_logVariable1, ctypes.c_uint64),
+        (m_logVariable2, ctypes.c_uint64),
+        (m_logVariable3, ctypes.c_uint64),
+        (m_logString, ctypes.c_char * LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS)
+    ]
+ 
+"""
+Ascii Logging Packet
+"""
+
+class cefLoggingPacketAscii(ctypes.Structure):
+    """
+    cefLoggingPacketAscii
+        See logging implementation files for variable documentation
+    """
+    _fields_ = [
+        ('m_debugPortPacketHeader', cefCommandDebugPortHeader),
+        ('m_loggingInfo', cefLoggingAscii)'
+    ]  
+  
+  
+  
+DEBUG_PORT_MAX_TRANSMIT_PAYLOAD_SIZE_BYTES = max([sys.getsizeof(cefCommandPacketMaximum), 
+                                                  sys.getsizeof(cefLogPacketAscii)])
+  
+class cefDebugPortTransmitPacketMaximum
+    """
+	Maximum Debug Port Transmit Packet.  
+    """	
+    _fields_ = [
+        (m_debugPortPacketHeader, ctypes.c_char * sys.getsizeof(cefCommandDebugPortHeader)),
+        (m_cefTransmitPayload, ctypes.c_char * DEBUG_PORT_MAX_TRANSMIT_PAYLOAD_SIZE_BYTES)
+        ]
 
     
 CommandPing constants
@@ -240,18 +291,21 @@ class cefCommandPingResponse(ctypes.Structure):
     
 
 """
-LOGGING                                                                                                ******/ 
+--------------- LOGGING --------------------------  
 """
 
 """
 Logging Constants
 """
 LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
-class cefLoggingAscii(ctypes.Structure):
+
+class cefLogAscii(ctypes.Structure):
     """
-    Ascii Logging Structure (passes a string (rather than a string hash) in log packet
+        Ascii Logging Structure (passes a string (rather than a string hash) in log packet
     """
     _fields_ = [
+        ('m_header', cefCommandHeader),    
+    
         (m_logVariable1, ctypes.c_uint64),
         (m_logVariable2, ctypes.c_uint64),
         (m_logVariable3, ctypes.c_uint64),
@@ -262,13 +316,13 @@ class cefLoggingAscii(ctypes.Structure):
 Ascii Logging Packet
 """
 
-class cefLoggingPacketAscii(ctypes.Structure):
+class cefLogPacketAscii(ctypes.Structure):
     """
-    cefLoggingPacketAscii
+    cefLogPacketAscii
         See logging implementation files for variable documentation
     """
     _fields_ = [
         ('m_debugPortPacketHeader', cefCommandDebugPortHeader),
-        ('m_loggingInfo', cefLoggingAscii)'
+        ('m_loggingInfo', cefLogAscii)'
     ]
 

@@ -204,11 +204,11 @@ typedef struct
 
 
 /**
- * Maxiumum size that a CEF command packet can be (including all layers of the debug port communications stack)
+ * Maximum size that a CEF command packet can be (including all layers of the debug port communications stack)
  */
 typedef struct
 {
-	cefCommandDebugPortHeader_t		m_debugPortPacketHeader;			// Must be the first command in this structure
+	cefCommandDebugPortHeader_t		m_debugPortPacketHeader;			// Must be the first item in this structure
 	char							m_cefCommandPayload[sizeof(cefCommandMaximum_t)];
 } cefCommandPacketMaximum_t;
 
@@ -217,6 +217,86 @@ typedef struct
  * *Max number of bytes in a debug port packet
  */
 #define DEBUG_PORT_MAX_PACKET_SIZE_BYTES (sizeof(cefMaximumCommandPacket_t))
+
+#define MAX_LOCAL(A, B) (A > B ? A : B)
+
+
+/*********************************************************************************************************************/
+/******  LOGGING                                                                                                ******/
+/*********************************************************************************************************************/
+
+/**
+ * Logging Structures.  For now, a display string is passed that python uses to display the variables.
+ * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
+ */
+#define LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS  128	// Make divisible by 8 bytes
+#define LOGGING_ASCII_FILENAME_NUM_CHARACTERS 40 			// Make divisible by 8 bytes
+typedef struct
+{
+	cefCommandHeader_t m_header;				// Must be 1st entry in structure, guaranteed to be 64 bit aligned
+
+	//! The 3 64 bit values we can have for any log message
+	uint64_t	m_logVariable1;		// 64 bit aligned
+	uint64_t	m_logVariable2;		// 64 bit aligned
+	uint64_t	m_logVariable3;		// 64 bit aligned
+
+	//! time stamp of when the log occurred (unit of time may be project specific as resolution of available clocks vary
+	uint64_t	m_timeStamp;		// 64 bit aligned
+
+	//! The logging string to be printed to the screen (null terminated, unless at max length)
+	char		m_logString[LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS];  	// 64 bit aligned
+
+	//! filename and line number help debug to know where in code the log message came from
+	char 		m_fileName[LOGGING_ASCII_FILENAME_NUM_CHARACTERS];			// 64 bit aligned
+
+	//! filename and line number help debug to know where in code the log message came from
+	uint32_t 	m_fileLineNumber;		// 32 bit aligned
+
+	//! Log Sequence Number (helps to know how many logs were dropped when debug port can't keep up with logging)
+	uint16_t 	m_logSequenceNumber;	// 48 bit aligned
+
+	//! Log module id					// 56 bit aligned
+	uint8_t		m_moduleId;
+
+	//! Type of log message
+	uint8_t		m_logType;				// 64 bit aligned
+
+} cefLog_t;
+
+
+//! Log Packet
+typedef struct
+{
+	cefCommandDebugPortHeader_t	m_debugPortPacketHeader;
+	cefLog_t m_log;
+} cefLogPacket_t;
+
+
+
+//! What is the biggest payload in the Debug Transmit Packet that we can have
+#define DEBUG_PORT_MAX_TRANSMIT_PAYLOAD_SIZE_BYTES  MAX_LOCAL((sizeof(cefCommandMaximum_t)), (sizeof(cefLog_t)))
+
+/**
+ * Maximum Debug Port Transmit Packet.  This structure is used as an interface between
+ * the Router and the Transport Layer (where the router provides the memory, but does
+ * not have knowledge how to modify the transport layer structures.  Nor does the
+ * transmit layer have the knowledge of how to modify the payload)
+ */
+typedef struct
+{
+	char m_debugPortPacketHeader[sizeof(cefCommandDebugPortHeader_t)];  	// Must be first item in this structure
+	char m_cefTransmitPayload[DEBUG_PORT_MAX_TRANSMIT_PAYLOAD_SIZE_BYTES];
+}cefDebugPortTransmitPacketMaximum_t;
+
+/**
+ * Minimum Debug Port Transmit Packet (see notes above about maximum)
+ */
+typedef struct
+{
+	char m_debugPortPacketHeader[sizeof(cefCommandDebugPortHeader_t)];  	// Must be first item in this structure
+	char m_cefReceivePayload[sizeof(cefCommandPacketMaximum_t)];
+}cefDebugPortReceivePacketMaximum_t;
+
 
 /**
  * CommandPing
@@ -258,36 +338,51 @@ typedef struct
 } cefCommandPingResponse_t;
 
 
-
-/*********************************************************************************************************************/
-/******  LOGGING                                                                                                ******/
-/*********************************************************************************************************************/
-
-/**
- * Logging Structure.  For now, a display string is passed that python uses to display the variables.
- * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
+/*******
+ * Naming Convention
+ * 		ESw - Embedded Software
+ * 		Python - the python based test framework
+ * 		cef = Common Embedded Framework
+ * 			  This name is used to help differentiate commonly used terms such as "buffer"
+ * 		cefCommand is a command sent by python to the ESw and translated into a ESw command.
+ * 			Does not include transport layer and below headers
+ * 		cefLog is information from a log being sent to python to be displayed to the user (example "LOG_INFO()")
+ * 			Does not include transport layer and below headers
+ * 		DebugPort is a generic term to capture the entire communication stack of the port used for debugging.
+ * 			The Debug port could be a "serial port" or Ethernet or some other protocol.
+ * 		Transport, as in the OSI transport layer
+ * 		Request/Response   Python originates requests, and received responses
+ * 			The embedded software responds to requests (i.e. Python is the master, ESw is the slave)
+ * 		Packet, as in OSI packet, or bundle of information sent out in a particular OSI layer
+ * 		Payload & Header : Each packet is divided into a "header" and "payload".
+ * 			The payload is just a blob of data, which may contain additional header/payload data
+ * 			The header is unique to each layer, but at the very least describes what is in the payload
+ * 		PhysicalByteStream - as in Physical layer of the ISO network layer.  In short a pointer to a
+ * 			buffer of bytes to send over the wire.
+ *
+ * cefDebugPortTransportRequestPacket or cefDebugPortTransportTransmitPacket
+ * 		consists of the following
+ * 			cefDebugPortTransportPacketHeader
+ * 			cefDebugPortTransportPayload 	Abstract class that contains byte data of cefCommand or cefLog
+ *
+ * 	cefCommand  (used for both request and response)
+ * 		cefCommonPayloadHeader  (used for Command and Logging payloads)
+ * 		cefCommandPayload
+ *
+ * 	cefLog
+ * 		cefCommonPayloadHeader
+ * 		cefLogPayload
+ *
+ * 		getNextCefLogBuffer, returnCefLogBuffer
+ * 		checkout, CefDebugPortTransportReceivePacket
+ *
+ *
+ *
+ *
+ * 		getNext
  */
-#define LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS  128
-typedef struct
-{
-	// todo:  Add more variables when logging is fulling implemented (like Module Id, log level, function, line #...)
-
-	uint64_t	m_logVariable1;		// 64 bit aligned
-	uint64_t	m_logVariable2;		// 64 bit aligned
-	uint64_t	m_logVariable3;		// 64 bit aligned
-
-	//! The logging string to be printed to the screen (null terminated, unless at max length)
-	// MUST BE LAST CHARACTER IN STRUCTURE AS ALIGNMENT IS "UNKNOWN"
-	char		m_logString[LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS];
-} cefLogging_t;
 
 
-//! Logging Packet
-typedef struct
-{
-	cefCommandDebugPortHeader_t	m_debugPortPacketHeader;
-	cefLogging_t m_loggingInfo;
-} cefLoggingPacket_t;
 
 
 

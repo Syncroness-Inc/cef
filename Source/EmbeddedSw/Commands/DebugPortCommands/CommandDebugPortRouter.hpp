@@ -22,7 +22,7 @@ written permission of Syncroness.
  * Interface definition for Command Debug Port Router
  *
  * The Debug Port Router is responsible:
- * 1. Coordinating the use use of Logging and Cef Command buffers
+ * 1. Coordinating the use use of Log and Cef Command buffers
  * 2. Instantiating the DebugPortTransport Layer
  * 3. Providing appropropriate public interfaces to
  * 		a. Logging
@@ -40,8 +40,8 @@ class CommandDebugPortRouter : public CommandBase
 		 * Constructor
 		 *
 		 * @param logBufferPoolId  log buffer pool ID (for debug), from BufferPoolBase::BufferPoolIdxx
-		 * @param numBytesPerLoggingEntry  Number of bytes per logging entry
-		 * @param maxNumLoggingEntries  Maximum number of log entries to keep in the system at one time
+		 * @param numBytesPerLogEntry  Number of bytes per log entry
+		 * @param maxNumLogEntries  Maximum number of log entries to keep in the system at one time
 		 */
 		CommandDebugPortRouter(uint32_t logBufferPoolId,
 				   uint32_t numBytesPerLoggingEntry,
@@ -61,41 +61,41 @@ class CommandDebugPortRouter : public CommandBase
 		//! Note:  CommandDebugPortRouter is not a CEF command, so it does not have an import/export method implemented
 
 		/**
-		 * Checks out a logging buffer that must be returned once the logging data is filled in
-		 * 		Note that this is a cefLogging_t, NOT a cefLoggingPacket_t
+		 * Checks out a log buffer that must be returned once the log data is filled in
+		 * 		Note that this is a cefLog_t, NOT a cefLogPacket_t
 		 *
-		 * @return returns nullptr if no buffer is available; pointer to logging structure otherwise
+		 * @return returns nullptr if no buffer is available; pointer to log structure otherwise
 		 */
-		//*cefLogging_t checkoutLogBuffer();
-		cefLogging_t* checkoutLogBuffer();
+		//*cefLog_t checkoutLogBuffer();
+		cefLog_t* checkoutLogBuffer();
 
 		/**
-		 * Returns a cefLogging_t logging pointer that was previously checked out
+		 * Returns a cefLog_t log pointer that was previously checked out
 		 * 		Note:  It is a fatal error to return memory that was not previously checked out from
 		 * 		the Command Debug Port Router
 		 * 		Note:  It is assumed that the buffer is returned with valid log data
 		 *
 		 * 	@param pointer to buffer that was checked out with checkoutLogBuffer
 		 */
-		void returnLogBuffer(cefLogging_t* p_cefLogBuffer);
+		void returnLogBuffer(cefLog_t* p_cefLogBuffer);
 
 		/**
-		 * Checks out a logging packet for transmitting.  It is assumed that the buffer contains
-		 * valid cefLogging_t data
+		 * Checks out a log packet for transmitting.  It is assumed that the buffer contains
+		 * valid cefLog_t data
 		 *
-		 * @return nullptr if no logging packet is available, pointer to logging packet otherwise
+		 * @return nullptr if no log packet is available, pointer to log packet otherwise
 		 */
-		cefLoggingPacket_t* checkoutLogPacket();
+		cefLogPacket_t* checkoutLogPacket();
 
 		/**
-		 * Returns a cefLoggingPacket_t pointer that was previously checked out
+		 * Returns a cefLogPacket_t pointer that was previously checked out
 		 * 		Note:  It is a fatal error to return memory that was not previously checked out from
 		 * 		the Command Debug Port Router
 		 * 		It is assumed that the Log Packet is no longer needed when checked back in
 		 *
 		 * 	@param pointer to buffer that was checked out with checkoutLogBuffer
 		 */
-		void returnLogPacket(cefLoggingPacket_t* p_cefLogBuffer);
+		void returnLogPacket(cefLogPacket_t* p_cefLogBuffer);
 
 
 		/**
@@ -171,8 +171,8 @@ class CommandDebugPortRouter : public CommandBase
 		};
 
 
-        //! Pool of cefLoggingPacketAscii_t to allocate for logging
-        BufferPoolBase m_loggingPool;
+        //! Pool of cefLogPacketAscii_t to allocate for logging
+        BufferPoolBase m_logPool;
 
         //! List of logs that have been filled out and ready to be sent.
         RingBufferOfVoidPointers m_logsToSend;
