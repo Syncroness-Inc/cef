@@ -59,7 +59,7 @@ class Transport:
         byteSum = 0
         for byte in data:
             byteSum += byte
-        print("CHECKSUM: {}".format(byteSum)) # uncomment for debug
+        # print("CHECKSUM: {}".format(byteSum)) # uncomment for debug
         return byteSum
 
     @staticmethod
@@ -212,4 +212,3 @@ class Transport:
         packet.header = packetHeader
         packet.payload = packetPayload
         return packet
-
