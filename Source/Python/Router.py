@@ -187,9 +187,8 @@ class Router:
 
         # HEADER CHECKING STUFF HERE
         if not self.__lastSentCommand.validateHeader(commandResponseHeader):
-            #TODO raise an exception here
             print("INVALID COMMAND RESPONSE HEADER")
-            pass
+            return False
         
         commandResponse = self.__lastSentCommand.expectedResponseType()
         for f in commandResponse._fields_:
@@ -206,9 +205,10 @@ class Router:
         if not self.__lastSentCommand.validateResponse(commandResponse):
             #TODO raise an exception here
             print("INVALID COMMAND RESPONSE")
-            pass
-        else:
-            print("RESPONSE SUCCESS")
+            return False
+        
+        print("RESPONSE SUCCESS")
+        return True
 
 
 if __name__ == '__main__':
