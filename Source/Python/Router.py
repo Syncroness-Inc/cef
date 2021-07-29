@@ -51,13 +51,9 @@ class Command(ABC):
     def expectedResponseType(self):
         pass
 
-    def validateHeader(self, responseHeader: cefContract.cefCommandHeader):
-        if responseHeader.m_commandOpCode != self.header.m_commandOpCode or \
-            responseHeader.m_commandSequenceNumber != self.header.m_commandSequenceNumber or \
-            responseHeader.m_commandErrorCode != cefContract.errorCode.errorCode_OK:
-            return False
-        else:
-            return True
+    @abstractmethod
+    def validateHeader(self):
+        pass
 
     def __len__(self):
         return len(bytes(self.request))
@@ -108,6 +104,14 @@ class CommandPing(Command):
             receivedResponse.m_uint32Value != self.expectedResponse.m_uint32Value or \
             receivedResponse.m_uint64Value != self.expectedResponse.m_uint64Value or \
             receivedResponse.m_testValue != self.expectedResponse.m_testValue:
+            return False
+        else:
+            return True
+
+    def validateHeader(self, responseHeader: cefContract.cefCommandHeader):
+        if responseHeader.m_commandOpCode != self.header.m_commandOpCode or \
+            responseHeader.m_commandSequenceNumber != self.header.m_commandSequenceNumber or \
+            responseHeader.m_commandErrorCode != cefContract.errorCode.errorCode_OK.value:
             return False
         else:
             return True
@@ -179,7 +183,7 @@ class Router:
             setattr(commandResponseHeader, f[0], n)
             for b in range(numBytes):
                 payload.pop(0) # remove the consumed bytes
-            # print("{}: {}".format(f[0], hex(getattr(commandResponseHeader, f[0])))) # uncomment for debug
+            print("{}: {}".format(f[0], hex(getattr(commandResponseHeader, f[0])))) # uncomment for debug
 
         # HEADER CHECKING STUFF HERE
         if not self.__lastSentCommand.validateHeader(commandResponseHeader):
@@ -196,7 +200,7 @@ class Router:
             setattr(commandResponse, f[0], n)
             for b in range(numBytes):
                 payload.pop(0) # remove the consumed bytes
-            # print("{}: {}".format(f[0], hex(getattr(commandResponse, f[0])))) # uncomment for debug
+            print("{}: {}".format(f[0], hex(getattr(commandResponse, f[0])))) # uncomment for debug
 
 
         if not self.__lastSentCommand.validateResponse(commandResponse):
