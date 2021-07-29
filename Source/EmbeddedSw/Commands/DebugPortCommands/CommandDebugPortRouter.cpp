@@ -14,7 +14,7 @@ with any information storage or retrieval system, without the prior
 written permission of Syncroness.
 ****************************************************************** */
 
-#include <DebugPortCommands/CommandDebugPortRouter.hpp>
+#include "CommandDebugPortRouter.hpp"
 #include "Logging.hpp"
 
 
@@ -76,7 +76,7 @@ bool CommandDebugPortRouter::execute(CommandBase* p_childCommand)
     bool commandDone = false;
     bool shouldYield = false;
 
-    validateChildResponse(p_childCommand, nullptr);
+    validateNullChildResponse(p_childCommand);
 
     while (shouldYield == false)
     {

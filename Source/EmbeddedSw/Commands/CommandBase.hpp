@@ -168,19 +168,11 @@ class CommandBase
          * is re-using memory it is not supposed to use (or a variety of other reasons).
          * In short, the system is unstable and needs to be stopped or something could go very wrong!
          *
-         * Likewise, if the wrong child response comes back, then this is a similar situation
-         * as an unexpected response.
-         *
          * This routine prints appropriate debug information, then triggers a "log fatal".
          *
-         * If multiple child commands could be returned to the parent command, then this method should
-         * be overridden.
-         *
          * @param p_childCommand	pointer to the child command received from execute(void* p_childCommand)
-         * @param p_expectedChildCommand  Set to nullptr if not expecting a child command;
-         * 							      pointer to expected child command otherwise
          */
-        void validateChildResponse(CommandBase* p_childCommand, CommandBase* p_expectedChildCommand);
+        void validateNullChildResponse(CommandBase* p_childCommand);
 
 
     protected:

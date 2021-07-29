@@ -25,10 +25,10 @@ written permission of Syncroness.
 #include "BufferPoolBase.hpp"
 #include "Logging.hpp"
 
-BufferPoolBase::BufferPoolBase(uint32_t bufferPoolId, uint32_t maxBufferSize, uint32_t numBuffers) :
+BufferPoolBase::BufferPoolBase(uint32_t bufferPoolId, uint32_t maxBufferSizeInBytes, uint32_t numBuffers) :
 	m_bufferPoolId(bufferPoolId),
 	m_ringBufferOfBufferMemory(numBuffers),
-	m_maxBufferSizeInBytes(maxBufferSize),
+	m_maxBufferSizeInBytes(maxBufferSizeInBytes),
 	m_numBuffers(numBuffers),
 	mp_memoryPoolStart(nullptr),
 	mp_memoryPoolEnd(nullptr)
@@ -44,6 +44,7 @@ BufferPoolBase::BufferPoolBase(uint32_t bufferPoolId, uint32_t maxBufferSize, ui
 	{
 		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to allocate buffer memory pool. MaxBufferSize={}, m_maxBufferSizeInBytes={:d}, BufferPoolId={:d}", m_maxBufferSize, m_numBuffers, m_bufferPoolId);
 	}
+	void* p_Temp = &mp_memoryPoolStart[totalNumBytesNeeded];
 	mp_memoryPoolEnd = &mp_memoryPoolStart[totalNumBytesNeeded - 1];
 
 	// Fill up the memory pool

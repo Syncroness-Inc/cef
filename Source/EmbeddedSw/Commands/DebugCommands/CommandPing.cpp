@@ -27,7 +27,7 @@ bool CommandPing::execute(CommandBase* p_childCommand)
     bool commandDone = false;
     bool shouldYield = false;
 
-    validateChildResponse(p_childCommand, nullptr);
+    validateNullChildResponse(p_childCommand);
 
     while (shouldYield == false)
     {

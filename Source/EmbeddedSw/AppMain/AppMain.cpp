@@ -45,9 +45,14 @@ static void tonyTesting()
 #include "CommandPing.hpp"
 #include "RingBufferOfVoidPointers.hpp"
 #include "CommandGenerator.hpp"
+
+// Need to allocate these variables out of the scope of the stack
+
+CommandPing testPing;
+
 static void johnTesting()
 {
-#if 1 // turn this on to check ring buffer manually (this code will generate warnings
+#if 0 // turn this on to check ping command
     cefCommandPingRequest_t cefCommandPingRequest;
     cefCommandPingResponse_t cefCommandPingResponse;
 
@@ -55,10 +60,6 @@ static void johnTesting()
     cefCommandPingRequest.m_header.m_commandOpCode = commandOpCodePing;
     cefCommandPingRequest.m_header.m_commandNumBytes = sizeof(cefCommandPingRequest);
     cefCommandPingRequest.m_header.m_commandRequestResponseSequenceNumberPython = 777;
-
-    // Call the constructor as if Proxy Command generated the code.
-    CommandPing testPing;
-
 
     // These numbers should result in an error as not what was expected
     cefCommandPingRequest.m_offsetToAddToResponse = 1;
@@ -73,8 +74,10 @@ static void johnTesting()
     testPing.execute(nullptr);
 
     testPing.exportToCefCommand(&cefCommandPingResponse);
+#endif
 
 
+#if 0  // turn this on to test RingBufferOfVoidPointers
     bool result ;
 
     void* pTemp = (void*)0x1234;
@@ -137,7 +140,9 @@ static void johnTesting()
     numEntries = rb.getCurrentNumberOfEntries();  // 1
     result = rb.removeItem((void*)9);  // last item
     numEntries = rb.getCurrentNumberOfEntries();  // 8
+#endif 0  // ring buffer test
 
+#if 0  // we don't want to do this anymore, as a later command will need to allocate a ping command
     // test for CommandGenerator
     //CommandGenerator myCommandGenerator;
     bool allocatableCommand = false;
@@ -146,7 +151,10 @@ static void johnTesting()
 
     CommandExecutor::instance().addCommandToQueue(p_cgCommand);  //(to be executed by main while loop)
     //CommandExecutor::instance().executeCommands(2);   // return value should be 1
+#endif
 
+
+#if 0 // turn this on to check router...may screw up normal operation...so test manually, disable, then reboot...
     //*************** Check out Logging in CommandDebugPortRouter
     // Tests below assumes code has been hacked to only have 2 Log Buffers.
     cefLogging_t* p_logTemp = (cefLogging_t*)0x1;
@@ -195,27 +203,27 @@ static void johnTesting()
     p_cefPacket = CommandDebugPortRouter::instance().checkoutCefTransmitCommandPacket(numBytesInCommandResponse);
     CommandDebugPortRouter::instance().returnCefTransmitCommandPacket(p_cefPacket);
 
-    p_cefPacket = CommandDebugPortRouter::instance().checkoutCefReceiveCommandPacket();
+    // this lines screws up the next test p_cefPacket = CommandDebugPortRouter::instance().checkoutCefReceiveCommandPacket();
+#endif // router
 
 
+#if 1
     /*********** Check out CommandCefCommandProxy *************/
-    // this code relies upon the previous test code, and assumes checkoutCefReceiveCommandPacket has just been completed.
+    // Drive the CEF Command packet through its state machine
+    cefCommandPacketMaximum_t* p_cefPacket2 = CommandDebugPortRouter::instance().checkoutCefReceiveCommandPacket();
 
     // Initialize it so we run the ping command (don't worry about internals of command...it will just return an error code)
-	cefCommandPingRequest_t* p_cefPing = (cefCommandPingRequest_t*)&(p_cefPacket->m_cefCommandPayload);
+	cefCommandPingRequest_t* p_cefPing = (cefCommandPingRequest_t*)&(p_cefPacket2->m_cefCommandPayload);
 	p_cefPing->m_header.m_commandErrorCode = 0;
 	p_cefPing->m_header.m_commandNumBytes = sizeof(cefCommandPingRequest_t);
 	p_cefPing->m_header.m_commandOpCode = commandOpCodePing;
 	p_cefPing->m_header.m_commandRequestResponseSequenceNumberPython = 777;
 	p_cefPing->m_header.m_padding1 = 333;
 
-    CommandDebugPortRouter::instance().returnCefReceiveCommandPacket(p_cefPacket);   // return it so it drives things to the right state
+    CommandDebugPortRouter::instance().returnCefReceiveCommandPacket(p_cefPacket2);   // return it so it drives things to the right state
     // when we start up the code, CommandCefCommandProxy should find a CEF ping command to work on
     // and it should return a response to be transmitted to the CommandDebugPortRouter (look at singleton to see buffer state)
-
-
 #endif
-
 
 }
 
@@ -223,17 +231,8 @@ void AppMain::initialize()
 {
 	//! Tony, call uart shim initialization from here
 
-	// Add the Singletons that are suppose to execute forever to the Executor Queue
-	CommandPing tempPing;
-	tempPing.execute(nullptr);
-	CommandBase* p_cmd = &tempPing;
-	p_cmd->execute(nullptr);
-
-	CommandExecutor::instance().addCommandToQueue(p_cmd);
-	//CommandExecutor::instance().addCommandToQueue(&tempPing);
-
-	//CommandExecutor::instance().addCommandToQueue(&CommandDebugPortRouter::instance());
-	//CommandExecutor::instance().addCommandToQueue(&CommandCefCommandProxy::instance());
+	CommandExecutor::instance().addCommandToQueue(&CommandDebugPortRouter::instance());
+	CommandExecutor::instance().addCommandToQueue(&CommandCefCommandProxy::instance()); 
 }
 
 void AppMain::runAppMain_noReturn()
@@ -245,7 +244,7 @@ void AppMain::runAppMain_noReturn()
 	//tonyTesting();
 
 	//! @toDo Remove this when have alternate means of testing
-	//johnTesting();
+	johnTesting();
 
 	//! run the infinite while loop.  There is no return from this routine.
 	run();

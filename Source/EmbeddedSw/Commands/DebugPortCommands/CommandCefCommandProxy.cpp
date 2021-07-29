@@ -43,21 +43,19 @@ CommandCefCommandProxy& CommandCefCommandProxy::instance()
 	return commandCefCommandProxySingleton;
 }
 
-#if 1
-bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
-{
-	return false;
-}
 
-#else
 bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
 {
     bool commandDone = false;
     bool shouldYield = false;
-#if 1
+
     errorCode_t status = errorCode_OK;
 
-    validateChildResponse(p_childCommand, mp_childCommand);
+    if (m_commandState != commandStateWaitForChildResponse)
+    {
+    	// If not expecting a child response, confirm that it is a nullptr
+    	validateNullChildResponse(p_childCommand);
+    }
 
     while (shouldYield == false)
     {
@@ -130,7 +128,19 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
 
             case commandStateWaitForChildResponse:
             {
-            	// We have a valid child response.  Now export the data to form a CEF Command Response
+            	/**
+            	 * CommandCefCommandProxy is called continuously from the CommandExecutor.
+            	 * It may take many loops through the CommandExecutor before we have a
+            	 * child response.  So need to just keeping waiting until we do have a child response.
+            	 */
+            	if (mp_childCommand == nullptr)
+            	{
+            		shouldYield = true;
+            		break;
+            	}
+
+            	// We have a child response...process it by exporting the data to the Cef command
+            	// so we can send results/response back to the proxy command generator.
             	status = mp_childCommand->exportToCefCommand(mp_cefCommand);
 
             	if (status != errorCode_OK)
@@ -196,7 +206,7 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
             }
         }
     }
-#endif
+
     return commandDone;
 }
-#endif
+

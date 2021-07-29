@@ -88,9 +88,13 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
         {
             case commandStateGetNextCommand:
             {
+            	uint32_t numEntries = m_executeCommandsQueue.getCurrentNumberOfEntries();
+
             	void* p_temp = nullptr;
                 bool gotCommand = m_executeCommandsQueue.get(p_temp);
                 mp_commandToExecute = (CommandBase*)p_temp;
+
+                uint32_t numEntries2 = m_executeCommandsQueue.getCurrentNumberOfEntries();
 
                 if (gotCommand == false)
                 {
@@ -105,10 +109,6 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
             }
             case commandStateExecuteCommand:
             {
-#include "CommandPing.hpp"
-            	CommandPing* p_temp = (CommandPing*)mp_commandToExecute;
-            	p_temp->execute(nullptr);
-
                 bool commandDone = mp_commandToExecute->execute(mp_childCommand);
                 ++numCommandsExecuted;
 
@@ -119,6 +119,9 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
                      * Re-add it to the queue to wait its turn to execute again.
                      */
                     bool successfullyAdded = m_executeCommandsQueue.put(mp_commandToExecute);
+
+                    uint32_t numEntries3 = m_executeCommandsQueue.getCurrentNumberOfEntries();
+
                     if (successfullyAdded == false)
                     {
                         // We just removed this command from the queue, so we should be able to add it back in!
@@ -143,6 +146,28 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
                 {
                     // setup so next command to execute is the parent command
                     mp_commandToExecute = mp_commandToExecute->getParentCommand();
+
+                    /**
+                     * The parent command is already in m_executeCommandsQueue.
+                     * So, we need to remove it, before we execute it or else the same
+                     * pointer can get added back into m_executeCommandsQueue a second time
+                     * if the command doesn't finish executing.  In short, before we
+                     * execute a command, we need to remove it from the queue first.
+                     */
+                    bool successfullyRemovedCommand = m_executeCommandsQueue.removeItem(mp_commandToExecute);
+                    if (successfullyRemovedCommand == false)
+                    {
+                    	/**
+                    	 * By design, the parent command should be on the execute list.
+                    	 * If it isn't, then we have a memory leak or a programming
+                    	 * bug somewhere.  We can't just ignore that the command wasn't
+                    	 * on the list as we could have a bug that could cause the system
+                    	 * to fail in a mysterious, and possibly, terrible way.
+                    	 * If nothing else, the child command
+                    	 * relies on the parent command to free it.
+                    	 */
+                        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Parent command not on execution queue 0x{:x}", mp_commandToExecute);
+                    }
                     m_commandState = commandStateExecuteCommand;
                     break;
                 }

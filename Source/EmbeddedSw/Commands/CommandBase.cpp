@@ -90,14 +90,14 @@ errorCode_t CommandBase::exportToCefCommandBase(cefCommandHeader_t* p_cefCommand
 	return errorCode_OK;
 }
 
-void CommandBase::validateChildResponse(CommandBase* p_childCommand, CommandBase* p_expectedChildCommand)
+void CommandBase::validateNullChildResponse(CommandBase* p_childCommand)
 {
 	// See comments in function header in .hpp file
 
 	// @todo  Once determine how handle emptying logging queue when log_fatal issued, then add additional
 	// debug print here (i.e. printInfo() for both this object and the child object) to aid debug...
 
-    if (p_childCommand != p_expectedChildCommand)
+    if (p_childCommand != nullptr)
     {
     	LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unexpected child response received (0x{:x}, 0x(:x})", (uint64_t)p_childCommand, (uint64_t)p_expectedChildCommand);
     }
