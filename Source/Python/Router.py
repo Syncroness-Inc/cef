@@ -20,8 +20,6 @@ from os.path import dirname, abspath
 import ctypes
 from threading import Thread
 
-
-
 sys.path.append(dirname(dirname(abspath(__file__))))
 from Shared import cefContract
 from DebugPortDriver import DebugPortDriver
@@ -94,7 +92,7 @@ class Router:
             print("{}: {}".format(f[0], hex(getattr(commandResponseHeader, f[0])))) # uncomment for debug
 
         # HEADER CHECKING STUFF HERE
-        if not self.__lastSentCommand.validateHeader(commandResponseHeader):
+        if not self.__lastSentCommand.validateResponseHeader(commandResponseHeader):
             print("INVALID COMMAND RESPONSE HEADER")
             return False
         
@@ -110,8 +108,7 @@ class Router:
             print("{}: {}".format(f[0], hex(getattr(commandResponse, f[0])))) # uncomment for debug
 
 
-        if not self.__lastSentCommand.validateResponse(commandResponse):
-            #TODO raise an exception here
+        if not self.__lastSentCommand.validateResponseBody(commandResponse):
             print("INVALID COMMAND RESPONSE")
             return False
         
