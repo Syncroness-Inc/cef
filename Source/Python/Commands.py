@@ -131,7 +131,7 @@ class CommandPing(Command):
         self.expectedResponse.m_uint64Value = cefContract.CMD_PING_UINT64_REQUEST_EXPECTED_VALUE + self.OFFSET_VALUE
         self.expectedResponse.m_testValue = self.TEST_VALUE
 
-    def validateResponse(self, receivedResponse: cefContract.cefCommandPingResponse):
+    def validateResponseBody(self, receivedResponse: cefContract.cefCommandPingResponse):
         """
         Ping-specific response field checking
         """

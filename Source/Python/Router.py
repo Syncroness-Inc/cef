@@ -19,6 +19,7 @@ import sys
 from os.path import dirname, abspath
 import ctypes
 from threading import Thread
+import time
 
 sys.path.append(dirname(dirname(abspath(__file__))))
 from Shared import cefContract
@@ -31,14 +32,16 @@ class Router:
     """
     Object for dispositioning incoming packets to command and logging handlers.
     """
-
-    def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN):
+    def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN, responseTimeout=5):
         self.__transport = Transport(debugPortInterface)
         self.__endianness = endianness
         self.__packetReadThread = Thread(target=self._readPackets)
         self.__sequenceNumber = 0
         self.__lastSentCommand = None
+        self.__lastSendTime = None
         self.responsePending = False
+        self.responseTimeout = responseTimeout # in seconds
+        self.timeoutOccurred = False
 
         self.__packetReadThread.start()
 
@@ -47,28 +50,38 @@ class Router:
             print("Cannot send, awaiting pending response")
             return False
         else:
-            #TODO RECEIVE TIMEOUT SOMEWHERE
+            self.timeoutOccurred = False
             self.__sequenceNumber += 1
             command.setSequenceNumber(self.__sequenceNumber)
             self.__transport.send(command.payload())
             self.responsePending = True
             self.__lastSentCommand = command
+            self.__lastSendTime = time.time()
             return True
 
     def _readPackets(self):
         while(True):
+            currentTime = time.time()
+            if self.responsePending and abs(currentTime - self.__lastSendTime) > self.responseTimeout:
+                # timeout on command response
+                self.responsePending = False
+                self.timeoutOccurred = True
+                print("Timeout occurred on command response")
             packet = self.__transport.getNextPacket()
             if packet is not None:
+                self.responsePending = False
                 packetType = packet.header.m_packetType
                 if packetType == cefContract.debugPacketDataType.debugPacketType_commandResponse.value:
                     self._handleCommandResponse(packet)
                 elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingDataAscii.value:
+                    #TODO log handling
                     pass
                 elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingDataBinary.value:
+                    #TODO log handling
                     pass
                 else:
-                    #TODO unknown packet type, throw an exception
-                    pass
+                    raise Exception("Unknown packet type")
+                
 
     def _handleCommandResponse(self, packet):
         # extract commandresponse from packet
@@ -121,7 +134,6 @@ if __name__ == '__main__':
     p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
     p.open()
     r = Router(p)
-
     testPing = CommandPing()
-    r.send(testPing)
+
     r.send(testPing)
