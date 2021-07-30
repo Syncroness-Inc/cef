@@ -26,6 +26,8 @@ written permission of Syncroness.
 class DebugPortDriver {
 
 public:
+
+
    /**
     * Start Send Debug Data transfer. Command response and logging are the two data that can be sent.
     * 
@@ -33,6 +35,14 @@ public:
     * @param packetSize - Number of Bytes to send
     */
    virtual void sendData(void* sendBuffer, int packetSize);
+
+   /**
+    * Returns Status on if Send is in progress
+    * 
+    * @return true - send currently in progress
+    * @return false - send currently not in progress
+    */
+   bool getSendInProgress(void);
    
    /**
     * Start receiving data from Python utilities
@@ -43,6 +53,25 @@ public:
     * @return returns true if all buffers/offsets are valid to be able to arm receive data
     */
    virtual bool startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
+
+   /**
+    * Returns the current number of bytes that have been received durring current send.
+    * 
+    * @return integer value of number of bytes currently received
+    */
+   virtual int getCurrentBytesReceived(void);
+
+   /**
+    * Changes the number of bytes receive is expecting for packet to be finished.  The number of bytes received will
+    * not be known until the packet header is received and decoded.  At this point the expected receive may change from
+    * max to new amount.  
+    * Rules
+    * - Receive size can not exceed Max Bytes
+    * - If receive size is less then or equal to m_currentBufferOffset receive will be stopped
+    * 
+    * @param newReceiveSize - new expected bytes to receive in packet
+    */
+   virtual void editReceiveSize(int newReceiveSize);
 
    /**
     * Stops receiving data. This will instantly stop the receive of data even in the middle of a packet.

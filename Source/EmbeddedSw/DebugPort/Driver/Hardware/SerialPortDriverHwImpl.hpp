@@ -48,14 +48,17 @@ public:
    bool startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
 
    /**
-    * Changes the number of bytes receive is expecting for packet to be finished.  The number of bytes received will
-    * not be known until the packet header is received and decoded.  At this point the expected receive may change from
-    * max to new amount.  
-    * Rules
-    * - Receive size can not exceed Max Bytes
-    * - If receive size is less then or equal to m_currentBufferOffset receive will be stopped
-    * 
-    * @param newReceiveSize - new expected bytes to receive in packet
+    * See base class for method documentation
+    */
+   int getCurrentBytesReceived(void);
+
+   /**
+    * See base class for method documentation
+    */
+   bool getSendInProgress(void);
+
+   /**
+    * See base class for method documentation
     */
    void editReceiveSize(int newReceiveSize);
    

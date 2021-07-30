@@ -92,7 +92,7 @@ typedef uint16_t errorCode_t;
  */
 enum
 {
-    commandOpCodeNone                              		= 0,	// Illegal command type, reserved
+    commandOpCodeNone                              		= 0,	
 	commandOpCodePing 	   						   		= 1,
 
     maxCommandOpCodeNumber, // Must be last, except for 'invalid'
@@ -161,7 +161,7 @@ enum
 	debugPacketType_commandResponse 	   					= 1,
     debugPacketType_loggingData                             = 2,
 };
-typedef uint16_t debugPacketDataType_t;
+typedef uint8_t debugPacketDataType_t;
 
 /**
  * CEF Command Header

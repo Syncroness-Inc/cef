@@ -28,9 +28,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 }
 
+//Hal callback override will call shim::rxCallback
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	extern UART_HandleTypeDef huart3;
+	if(&huart3 == huart)
+	{
+		ShimBase::getInstance().txCallback();
+	}
+}
+
 //Hal callback override uart error shim::errorCallback
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
+	// TODO - figure out if it is transmit and let transport layer know it failed/can try again
 	extern UART_HandleTypeDef huart3;
 	if(&huart3 == huart)
 	{
@@ -40,10 +51,19 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 
 void ShimSTM::rxCallback()
 {
-	if(mp_callbackClass != nullptr && mp_callback != nullptr)
+	if(mp_rxCallbackClass != nullptr && mp_rxCallback != nullptr)
 	{
-		(mp_callbackClass->*mp_callback)();
+		(mp_rxCallbackClass->*mp_rxCallback)();
 	}
+}
+
+void ShimSTM::txCallback()
+{
+	/** 
+	 * Decided if you need to do anything here in the future
+	 * As of now HAL_UART_GetState is polled by Transport 
+	 * and action is decided from there
+	 ** */
 }
 
 void ShimSTM::errorCallback()
@@ -77,16 +97,30 @@ void ShimSTM::errorCallback()
 	}
 }
 
-void ShimSTM::startInterruptSend(void*sendBuffer, int bufferSize)
+bool ShimBase::getSendInProgress(void)
 {
+	//We can in the future make this more sophisticated to return more information then sending/not sending
 	extern UART_HandleTypeDef huart3;
-	HAL_UART_Transmit_IT(&huart3, (uint8_t *)sendBuffer, bufferSize);
+	if(HAL_UART_GetState(&huart3) == HAL_UART_STATE_BUSY_TX)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool ShimSTM::startInterruptSend(void*sendBuffer, int bufferSize)
+{
+		extern UART_HandleTypeDef huart3;
+		HAL_StatusTypeDef startSend = HAL_UART_Transmit_IT(&huart3, (uint8_t *)sendBuffer, bufferSize);
+		if(startSend )
+		//TODO
+		return true;
 }
 
 void ShimSTM::startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, bool (SerialPortDriverHwImpl::* callback)(void))
 {
-	mp_callbackClass = callbackClass;
-	mp_callback = callback;
+	mp_rxCallbackClass = callbackClass;
+	mp_rxCallback = callback;
 	extern UART_HandleTypeDef huart3;
 	HAL_UART_Receive_IT(&huart3, ((uint8_t *)receiveByte), sizeof(uint8_t));
 }
@@ -100,7 +134,7 @@ void ShimSTM::startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, voi
 void ShimSTM::forceStopReceive(void)
 {
 	extern UART_HandleTypeDef huart3;
-	HAL_UART_AbortReceive (&huart3);
+	HAL_UART_AbortReceive_IT (&huart3);
 }
 
 

@@ -25,6 +25,16 @@ void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 	ShimBase::getInstance().startInterruptSend(sendBuffer, packetSize);
 }
 
+int SerialPortDriverHwImpl::getCurrentBytesReceived(void)
+{
+	return m_currentBufferOffset;
+}
+
+bool SerialPortDriverHwImpl::getSendInProgress(void)
+{
+	ShimBase::getInstance().getSendInProgress();
+}
+
 bool SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
 {
 	m_receiveBufferSize = receiveSize;

@@ -30,19 +30,25 @@ public:
 	ShimSTM():ShimBase() {}
 
    /**
-    * See base class for method documentation
+    * See base class for method documentation 
     */
-   void rxCallback();
+   void rxCallback(void);
 
    /**
     * See base class for method documentation
     */
-   void errorCallback();
+   void txCallback(void);
+
+   /**
+    * See base class for method documentation
+    */
+   void errorCallback(void);
 
 	/**
 	 * See base class for method documentation
 	 */
-   void startInterruptSend(void*sendBuffer, int bufferSize);
+   bool startInterruptSend( void*sendBuffer, int bufferSize );
+
    /**
     * See base class for method documentation
     */

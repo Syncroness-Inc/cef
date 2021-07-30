@@ -34,9 +34,24 @@ public:
    static ShimBase& getInstance();
 
    /**
-    * Receive callback.  This will send callback to SerialPortDriverHwImpl to decided if receive should continue
+    * Receive finished callback.  
+    * This will send callback to SerialPortDriverHwImpl to decided if receive should continue
     */
    virtual void rxCallback();
+
+   /**
+    * Transmit finished callback.  
+    * This will send callback to SerialPortDriverHwImpl to indicate send is finished.
+    */
+   virtual void txCallback();
+
+   /**
+    * @brief Returns if send if in progress via hardware data to inform transport layer if this is currently happening
+    * 
+    * @return true A send in currently in progress
+    * @return false No send is going on
+    */
+   bool getSendInProgress(void);
 
    /**
     * Error callback.  This will send callback to SerialPortDriverHwImpl inform Debug port
@@ -48,8 +63,10 @@ public:
     * 
 	 * @param sendBuffer send buffer
     * @param bufferSize number of bytes to be sent in the buffer
+    * 
+    * @return returns true if it was able to start a send routine (dependint on m_startInProgress)
 	 */
-   virtual void startInterruptSend(void* sendBuffer, int bufferSize);
+   virtual bool startInterruptSend(void* sendBuffer, int bufferSize);
 
    /**
     * Start receive interrupt driven data
@@ -78,18 +95,18 @@ public:
 protected:
 	//! Constructor.
 	ShimBase():
-   mp_callbackClass(nullptr),
-   mp_callback(nullptr),
+   mp_rxCallbackClass(nullptr),
+   mp_rxCallback(nullptr),
    mp_errorCallbackClass(nullptr),
    mp_errorCallback(nullptr)
-	{}
+ 	{}
 
 
    //! Callback class instance for receive callback
-   SerialPortDriverHwImpl* mp_callbackClass; 
+   SerialPortDriverHwImpl* mp_rxCallbackClass; 
    //! Callback function for receive callback
-	bool (SerialPortDriverHwImpl::* mp_callback)(void);
-   //! allback class instance for receive error callback
+	bool (SerialPortDriverHwImpl::* mp_rxCallback)(void);
+   //! Callback class instance for receive error callback
    SerialPortDriverHwImpl* mp_errorCallbackClass; 
    /**
     * Callback function for receive error callback
