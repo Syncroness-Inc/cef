@@ -38,7 +38,8 @@ class Command(ABC):
     @abstractmethod
     def buildCommand(self):
         """
-        Populate the command header and request body according to the CEF contract
+        Populate the command header and request body according to the CEF contract. This should make
+        use of any and all command-specific expected/test values for both requests and responses.
         """
         pass
 
@@ -140,6 +141,7 @@ class CommandPing(Command):
             receivedResponse.m_uint32Value != self.expectedResponse.m_uint32Value or \
             receivedResponse.m_uint64Value != self.expectedResponse.m_uint64Value or \
             receivedResponse.m_testValue != self.expectedResponse.m_testValue:
+            print("Invalid Ping response value(s)")
             return False
         else:
             return True

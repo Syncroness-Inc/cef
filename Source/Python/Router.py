@@ -30,7 +30,9 @@ from Commands import *
 
 class Router:
     """
-    Object for dispositioning incoming packets to command and logging handlers.
+    Object for dispositioning incoming packets to command and logging handlers. Packets
+    are continuously read from the transport layer queue with a separate forever loop on its own
+    thread.
     """
     def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN, responseTimeout=5):
         self.__transport = Transport(debugPortInterface)
@@ -46,33 +48,50 @@ class Router:
         self.__packetReadThread.start()
 
     def send(self, command: Command):
+        """
+        Transmit the command request via the supplied transport layer. Only one oustanding
+        command is permitted at a time - a response must be received or a timeout must occur before
+        a new command may be issued. Upon sending, the current sequence number is incremented and 
+        applied to the outgoing command's header.
+        @param command: the full command (header and body) to be used as packet payload
+        @return: False if a response has not yet been received for the current command, else True
+        """
         if self.responsePending:
             print("Cannot send, awaiting pending response")
             return False
         else:
-            self.timeoutOccurred = False
             self.__sequenceNumber += 1
             command.setSequenceNumber(self.__sequenceNumber)
-            self.__transport.send(command.payload())
+
+            self.timeoutOccurred = False
             self.responsePending = True
+            self.__transport.send(command.payload())
+
             self.__lastSentCommand = command
             self.__lastSendTime = time.time()
             return True
 
     def _readPackets(self):
+        """
+        Retrieve framed packets from the transport queue. Command responses are validated for errors, logs
+        are decoded (if necessary) and saved to file.
+        """
         while(True):
+            # check for timeout on the current request/response transaction
             currentTime = time.time()
             if self.responsePending and abs(currentTime - self.__lastSendTime) > self.responseTimeout:
-                # timeout on command response
                 self.responsePending = False
                 self.timeoutOccurred = True
                 print("Timeout occurred on command response")
+
+            # get the next packet in the queue and handle according to type - new packet types added
+            # to the CEF contract should have handling added here
             packet = self.__transport.getNextPacket()
             if packet is not None:
-                self.responsePending = False
                 packetType = packet.header.m_packetType
                 if packetType == cefContract.debugPacketDataType.debugPacketType_commandResponse.value:
                     self._handleCommandResponse(packet)
+                    self.responsePending = False
                 elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingDataAscii.value:
                     #TODO log handling
                     pass
@@ -81,20 +100,27 @@ class Router:
                     pass
                 else:
                     raise Exception("Unknown packet type")
-                
 
     def _handleCommandResponse(self, packet):
-        # extract commandresponse from packet
-        # check against expected length
-        # extract header from commandresponse
-        # check sequence number
-        # check error code
-        # check opCode (should match what was sent)
+        """
+        The main validation logic for incoming command responses:
+        1. Extract the response (packet payload) from the packet
+        2. Check its length against the expected length (according to the contract)
+        3. Extract the command's header and validate (proper sequence number and opCode, no error codes)
+        4. Extract and validate the content of the command body (received values vs expected per CEF contract)
+        @param packet: the full response packet received from the transport layer
+        @return: False if any part of the response does not match expected values, else True
+        """
 
+        # 1. extract payload from packet
         payload = list(bytes(packet.payload.bytes))
-        print("RECEIVED VS EXPECTED    {}  {}".format(len(payload), self.__lastSentCommand.expectedResponseLength()))
-        assert(len(payload) == self.__lastSentCommand.expectedResponseLength())
 
+        # 2. check the length against the expected type of response
+        expectedLength = self.__lastSentCommand.expectedResponseLength()
+        # print("RECEIVED VS EXPECTED    {}  {}".format(len(payload), expectedLength)) # uncomment for debug
+        assert(len(payload) == expectedLength)
+
+        # 3. extract and populate the command response header
         commandResponseHeader = cefContract.cefCommandHeader()
         for f in commandResponseHeader._fields_:
             numBytes = ctypes.sizeof(f[1])
@@ -104,11 +130,11 @@ class Router:
                 payload.pop(0) # remove the consumed bytes
             print("{}: {}".format(f[0], hex(getattr(commandResponseHeader, f[0])))) # uncomment for debug
 
-        # HEADER CHECKING STUFF HERE
+        # 3. validate the extracted header
         if not self.__lastSentCommand.validateResponseHeader(commandResponseHeader):
-            print("INVALID COMMAND RESPONSE HEADER")
             return False
         
+        # 4. extract and populate command response body
         commandResponse = self.__lastSentCommand.expectedResponseType()
         for f in commandResponse._fields_:
             if f[0] == 'm_header':
@@ -120,12 +146,10 @@ class Router:
                 payload.pop(0) # remove the consumed bytes
             print("{}: {}".format(f[0], hex(getattr(commandResponse, f[0])))) # uncomment for debug
 
-
+        # 4. validate extracted command body
         if not self.__lastSentCommand.validateResponseBody(commandResponse):
-            print("INVALID COMMAND RESPONSE")
             return False
         
-        print("RESPONSE SUCCESS")
         return True
 
 
