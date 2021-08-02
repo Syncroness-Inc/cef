@@ -117,8 +117,9 @@ class Router:
 
         # 2. check the length against the expected type of response
         expectedLength = self.__lastSentCommand.expectedResponseLength()
-        # print("RECEIVED VS EXPECTED    {}  {}".format(len(payload), expectedLength)) # uncomment for debug
-        assert(len(payload) == expectedLength)
+        if len(payload) != expectedLength:
+            print("Invalid command response length - received: {}, expected: {}".format(len(payload), expectedLength))
+            return False
 
         # 3. extract and populate the command response header
         commandResponseHeader = cefContract.cefCommandHeader()
