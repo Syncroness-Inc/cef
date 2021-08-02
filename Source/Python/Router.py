@@ -35,8 +35,8 @@ class Router:
     thread.
     """
     def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN, responseTimeout=5):
-        self.__transport = Transport(debugPortInterface)
         self.__endianness = endianness
+        self.__transport = Transport(debugPortInterface, endianness=self.__endianness)
         self.__packetReadThread = Thread(target=self._readPackets)
         self.__sequenceNumber = 0
         self.__lastSentCommand = None
