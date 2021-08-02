@@ -44,6 +44,7 @@ class Router:
         self.responsePending = False
         self.responseTimeout = responseTimeout # in seconds
         self.timeoutOccurred = False
+        self.commandSuccess = False
 
         self.__packetReadThread.start()
 
@@ -65,10 +66,11 @@ class Router:
 
             self.timeoutOccurred = False
             self.responsePending = True
-            self.__transport.send(command.payload())
-
+            self.commandSuccess = False
             self.__lastSentCommand = command
             self.__lastSendTime = time.time()
+            self.__transport.send(command.payload())
+
             return True
 
     def _readPackets(self):
@@ -90,7 +92,7 @@ class Router:
             if packet is not None:
                 packetType = packet.header.m_packetType
                 if packetType == cefContract.debugPacketDataType.debugPacketType_commandResponse.value:
-                    self._handleCommandResponse(packet)
+                    self.commandSuccess = self._handleCommandResponse(packet)
                     self.responsePending = False
                 elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingDataAscii.value:
                     #TODO log handling
@@ -152,13 +154,3 @@ class Router:
             return False
         
         return True
-
-
-if __name__ == '__main__':
-    from DebugSerialPort import DebugSerialPort
-    p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
-    p.open()
-    r = Router(p)
-    testPing = CommandPing()
-
-    r.send(testPing)
