@@ -30,15 +30,20 @@ AppMain& AppMain::instance()
 // These include files are just needed for testing.
 #include "main.h"
 #include "SerialPortDriverHwImpl.hpp"
+#include "DebugPortTransportLayer.hpp"
 uint8_t receiveBuffer[528];
 SerialPortDriverHwImpl debugPortDriver;
 uint8_t testSend[23] = {'U','A','R','T',' ','S','t','a','r','t',' ','S','u','c','c','e','s','s','f','u','l','\r','\n'};
-static void tonyTesting()
+static void tonyTesting(void)
 {
-	debugPortDriver.startReceive(&receiveBuffer);
 
-	extern UART_HandleTypeDef huart3;
-	HAL_UART_Transmit_IT(&huart3, (uint8_t *)testSend, sizeof(testSend));
+	//debugPortDriver.startReceive(&receiveBuffer);
+	//extern UART_HandleTypeDef huart3;
+	//HAL_UART_Transmit_IT(&huart3, (uint8_t *)testSend, sizeof(testSend));
+
+	//myTransport.xmit;
+	//myTransport.recv;
+
 
 }
 
@@ -174,6 +179,7 @@ void AppMain::runAppMain_noReturn()
 	run();
 }
 
+DebugPortTransportLayer myTransport;
 void AppMain::run()
 {
 	/**
@@ -182,10 +188,11 @@ void AppMain::run()
 	 * as well as other tasks that may need to run from the forever while loop.
 	 */
 	uint32_t const numCommandsAllowedToExecute = 2;
-
 	while (1)
 	{
 		CommandExecutor::instance().executeCommands(numCommandsAllowedToExecute);
+		myTransport.xmit();
+		myTransport.recv();
 
 		// When watch dog timer is implemented, this should be the one place the watch dog is petted
 	}

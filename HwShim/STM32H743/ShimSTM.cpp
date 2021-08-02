@@ -97,7 +97,7 @@ void ShimSTM::errorCallback()
 	}
 }
 
-bool ShimBase::getSendInProgress(void)
+bool ShimSTM::getSendInProgress(void)
 {
 	//We can in the future make this more sophisticated to return more information then sending/not sending
 	extern UART_HandleTypeDef huart3;
@@ -112,8 +112,11 @@ bool ShimSTM::startInterruptSend(void*sendBuffer, int bufferSize)
 {
 		extern UART_HandleTypeDef huart3;
 		HAL_StatusTypeDef startSend = HAL_UART_Transmit_IT(&huart3, (uint8_t *)sendBuffer, bufferSize);
-		if(startSend )
-		//TODO
+		if(startSend != HAL_OK)
+		{//TODO
+			return false;
+		}
+
 		return true;
 }
 

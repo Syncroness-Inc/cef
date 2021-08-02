@@ -17,7 +17,7 @@ written permission of Syncroness.
 #ifndef __DEBUG_PORT_TRANSPORT_LAYER_H
 #define __DEBUG_PORT_TRANSPORT_LAYER_H
 #include "cefContract.hpp"
-#include "DebugPortDriver.hpp"
+#include "SerialPortDriverHwImpl.hpp"
 
 /**
  * 
@@ -56,22 +56,50 @@ public:
 
 	//! Constructor.
 	DebugPortTransportLayer():
-   m_transmitState(debugPortXmitWaitingForBuffer),
-   m_receiveState(debugPortRecvWaitForBuffer),
-   mp_xmitBuffer(nullptr),
-   mp_receiveBuffer(nullptr),
-   m_receivePacketLength(0),
    m_sendBufferAvailable(false),     //test buffer delete
    m_receiveBufferAvailable(true),   //test buffer delete
    m_copy(false),                   //test delete
    mp_myRequest(&m_myRequest),        //test delete
-   mp_myResponse(nullptr)       //test delete
+   mp_myResponse(nullptr),       //test delete
+   m_transmitState(debugPortXmitWaitingForBuffer),
+      m_receiveState(debugPortRecvWaitForBuffer),
+      mp_xmitBuffer(nullptr),
+      mp_receiveBuffer(nullptr),
+      m_receivePacketLength(0)
    {}
 
    void xmit(void);
    void recv(void);
 private:
-   DebugPortDriver m_myDebugPortDriver;
+   /**
+    * Transmit States
+    */
+      enum
+      {
+         debugPortXmitWaitingForBuffer          = 0,
+         debugPortXmitGeneratePacketHeader         ,
+         debugPortXmitReadyToSend                  ,
+         debugPortXmitSendingPacket                ,
+         debugPortXmitFinishedSendingPacket        ,
+      };
+      typedef uint16_t debugPortTransmitStates_t;
+
+   /**
+    * Receive States
+    */
+      enum
+      {
+         debugPortRecvWaitForBuffer             = 0,
+         debugPortRecvWaitForPacketHeader          ,
+         debugPortRecvWaitForCefPacket             ,
+         debugPortRecvFinishedRecv                 ,
+      };
+      typedef uint16_t debugPortReceiveStates_t;
+
+
+   debugPortTransmitStates_t  m_transmitState;
+   debugPortReceiveStates_t   m_receiveState;
+   SerialPortDriverHwImpl m_myDebugPortDriver;
    void generatePacketHeader();
    bool receivePacketHeader(void);
    uint32_t calculateChecksum(void* myStruct,  uint structSize);
@@ -81,33 +109,8 @@ private:
    
 
 
-/**
- * Transmit States
- */
-   enum
-   {
-      debugPortXmitWaitingForBuffer          = 0,	
-      debugPortXmitGeneratePacketHeader         ,
-      debugPortXmitReadyToSend                  ,
-      debugPortXmitSendingPacket                ,
-      debugPortXmitFinishedSendingPacket        ,
-   };
-   typedef uint16_t debugPortTransmitStates_t;
 
-/**
- * Receive States
- */
-   enum
-   {
-      debugPortRecvWaitForBuffer             = 0,	
-      debugPortRecvWaitForPacketHeader          ,
-      debugPortRecvWaitForCefPacket             ,
-      debugPortRecvFinishedRecv                 ,
-   };
-   typedef uint16_t debugPortReceiveStates_t;
 
-   debugPortReceiveStates_t   m_receiveState;
-   debugPortTransmitStates_t  m_transmitState;
 
 
 

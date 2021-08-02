@@ -26,6 +26,8 @@ written permission of Syncroness.
 class DebugPortDriver {
 
 public:
+	//! Constructor.
+	DebugPortDriver() {}
 
 
    /**
@@ -89,10 +91,6 @@ public:
     * @return error code of the send or receive error
     */
    virtual errorCode_t errorCallback(void);
-
-protected:
-	//! Constructor.
-	DebugPortDriver() {}
 
 };
 

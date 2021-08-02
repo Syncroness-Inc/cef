@@ -69,7 +69,7 @@ uint32_t DebugPortTransportLayer::calculateChecksum(void* myStruct, uint structS
 	//cast to command/header TODO
 	uint32_t myChecksum = 0;
 	unsigned char *p = (unsigned char *)&myStruct;
-	for (int i=0; i<structSize; i++) 
+	for (uint i=0; i<structSize; i++)
 	{
 		myChecksum += p[i];
 	}
@@ -186,6 +186,7 @@ void DebugPortTransportLayer::recv(void)
 		}
 		m_receiveState = debugPortRecvFinishedRecv;
 	case debugPortRecvFinishedRecv:
+	{
 		//ensure checksum matches
 		cefCompleteRequest_t* myReceiveBuffer = (cefCompleteRequest_t*)mp_receiveBuffer;
 		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->pingResponse, sizeof(&myReceiveBuffer->pingResponse));
@@ -202,6 +203,7 @@ void DebugPortTransportLayer::recv(void)
 		returnReceiveBuffer(mp_receiveBuffer);
 		m_receiveState = debugPortRecvWaitForBuffer;
 		break;		
+	}
 	default:
 		LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Receive State Machien in unknown state.");
 		break;

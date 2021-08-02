@@ -51,7 +51,7 @@ public:
     * @return true A send in currently in progress
     * @return false No send is going on
     */
-   bool getSendInProgress(void);
+   virtual bool getSendInProgress(void);
 
    /**
     * Error callback.  This will send callback to SerialPortDriverHwImpl inform Debug port

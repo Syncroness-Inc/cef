@@ -41,12 +41,12 @@ bool DebugPortDriver::startReceive(void* receiveBuffer,  int receiveSize)
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::startReceive() called, supposed to be implemented in derived class");
 }
 
-int getCurrentBytesReceived(void)
+int DebugPortDriver::getCurrentBytesReceived(void)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::getCurrentBytesReceived() called, supposed to be implemented in derived class");
 }
 
-void editReceiveSize(int newReceiveSize)
+void DebugPortDriver::editReceiveSize(int newReceiveSize)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::editReceiveSize() called, supposed to be implemented in derived class");
 }

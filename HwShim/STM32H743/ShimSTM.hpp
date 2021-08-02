@@ -37,6 +37,11 @@ public:
    /**
     * See base class for method documentation
     */
+   bool getSendInProgress(void);
+
+   /**
+    * See base class for method documentation
+    */
    void txCallback(void);
 
    /**
