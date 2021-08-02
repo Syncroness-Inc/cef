@@ -241,7 +241,7 @@ void AppMain::runAppMain_noReturn()
 	initialize();
 
 	//! @toDo Remove this when have alternate means of testing
-	//tonyTesting();
+	tonyTesting();
 
 	//! @toDo Remove this when have alternate means of testing
 	johnTesting();
