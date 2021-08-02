@@ -24,7 +24,31 @@ written permission of Syncroness.
 void* DebugPortTransportLayer::getSendBuffer()
 {
 	m_sendBufferAvailable = false;
-	return mp_xmitBuffer;
+	if(m_copy)
+	{
+		//load response
+		m_myResponse.pingResponse.m_header.m_commandErrorCode = m_myRequest.pingResponse.m_header.m_commandErrorCode;
+		m_myResponse.pingResponse.m_header.m_commandNumBytes = m_myRequest.pingResponse.m_header.m_commandNumBytes;
+		m_myResponse.pingResponse.m_header.m_commandOpCode = m_myRequest.pingResponse.m_header.m_commandOpCode;
+		m_myResponse.pingResponse.m_header.m_commandRequestResponseSequenceNumberPython = m_myRequest.pingResponse.m_header.m_commandRequestResponseSequenceNumberPython;
+		m_myResponse.pingResponse.m_header.m_padding1 = m_myRequest.pingResponse.m_header.m_padding1;
+
+		m_myResponse.pingResponse.m_padding1 = m_myRequest.pingResponse.m_padding1;
+		m_myResponse.pingResponse.m_padding2 = m_myRequest.pingResponse.m_padding2;
+		m_myResponse.pingResponse.m_testValue = m_myRequest.pingResponse.m_testValue;
+		m_myResponse.pingResponse.m_uint16Value = m_myRequest.pingResponse.m_uint16Value;
+		m_myResponse.pingResponse.m_uint32Value = m_myRequest.pingResponse.m_uint32Value;
+		m_myResponse.pingResponse.m_uint64Value = m_myRequest.pingResponse.m_uint64Value;
+		m_myResponse.pingResponse.m_uint8Value = m_myRequest.pingResponse.m_uint8Value;
+		//set response
+		mp_myResponse = &m_myResponse;
+		m_copy = false;
+	}
+	else
+	{
+		mp_myResponse = nullptr;
+	}
+	return mp_myResponse;
 }
 void DebugPortTransportLayer::returnSendBuffer(void*)
 {
@@ -33,7 +57,7 @@ void DebugPortTransportLayer::returnSendBuffer(void*)
 void* DebugPortTransportLayer::getReceiveBuffer()
 {
 	m_receiveBufferAvailable = false;
-	return mp_receiveBuffer;
+	return mp_myRequest;
 }
 void DebugPortTransportLayer::returnReceiveBuffer(void*)
 {
@@ -52,53 +76,50 @@ uint32_t DebugPortTransportLayer::calculateChecksum(void* myStruct, uint structS
 	return myChecksum;
 }
 
-bool DebugPortTransportLayer::generatePacketHeader(void* header, void* request)
+void DebugPortTransportLayer::generatePacketHeader() //transmit = cefResponse
 {
-//Cast 
-cefCommandDebugPortHeader_t* myHeaderType = (cefCommandDebugPortHeader_t*)header;
-//TODO there are multiple responses need to decide
-cefCommandPingResponse_t* myRequestType = (cefCommandPingResponse_t*)request;
-
-//GENERATE HEADER
-//Framing Signature
-myHeaderType->m_framingSignature = DEBUG_PACKET_UINT32_FRAMING_SIGNATURE;
-//Payload Checksum need to change sizeof to correct response
-myHeaderType->m_packetPayloadChecksum = calculateChecksum(request, sizeof(&myRequestType));
-//Get Size TODO myRequestType is not generic this will probable be fixed when generating
-myHeaderType->m_payloadSize = sizeof(&myRequestType);
-//Packet type TODO this could be loggin 
-myHeaderType->m_packetType = debugPacketType_commandResponse; 
-//0 for checksum
-myHeaderType->m_reserve = 0;
-//0 to calcultate checksum
-myHeaderType->m_packetHeaderChecksum = 0;
-//Calculate checksum
-myHeaderType->m_packetHeaderChecksum = calculateChecksum(header, sizeof(cefCommandDebugPortHeader_t));
+	//GENERATE HEADER
+	//Framing Signature
+	cefCompleteResponse_t* myXmitBuffer = (cefCompleteResponse_t*)mp_myResponse;
+	myXmitBuffer->headerResponse.m_framingSignature = DEBUG_PACKET_UINT32_FRAMING_SIGNATURE;
+	//Payload Checksum need to change sizeof to correct response
+	myXmitBuffer->headerResponse.m_packetPayloadChecksum = calculateChecksum((void*)(&myXmitBuffer->pingResponse), sizeof(&myXmitBuffer->pingResponse));
+	//Get Size TODO myRequestType is not generic this will probable be fixed when generating
+	myXmitBuffer->headerResponse.m_payloadSize = sizeof(&myXmitBuffer->pingResponse);
+	//Packet type TODO this could be loggin 
+	myXmitBuffer->headerResponse.m_packetType = debugPacketType_commandResponse; 
+	//0 for checksum
+	myXmitBuffer->headerResponse.m_reserve = 0;
+	//0 to calcultate checksum
+	myXmitBuffer->headerResponse.m_packetHeaderChecksum = 0;
+	//Calculate checksum
+	myXmitBuffer->headerResponse.m_packetHeaderChecksum = calculateChecksum((void*)(&myXmitBuffer->headerResponse), sizeof(&myXmitBuffer->headerResponse));
 }
 
-bool DebugPortTransportLayer::receivePacketHeader()
+bool DebugPortTransportLayer::receivePacketHeader() //receive = request
 {
+	cefCompleteRequest_t* myReceiveBuffer = (cefCompleteRequest_t*)mp_receiveBuffer;
 	//Check to see if we have received enough bites for a full packet header
-	if(m_myDebugPortDriver.getCurrentBytesReceived() >= sizeof(cefCommandDebugPortHeader_t))
+	if(m_myDebugPortDriver.getCurrentBytesReceived() >= sizeof(&myReceiveBuffer->headerResponse))
 	{
 		//Check to see if Checksum header matches
-		uint32_t headerCheck = calculateChecksum(mp_receiveBuffer, sizeof(cefCommandDebugPortHeader_t));
-		cefCommandDebugPortHeader_t* myHeaderType = (cefCommandDebugPortHeader_t*)mp_receiveBuffer;
-		if(headerCheck != myHeaderType->m_packetHeaderChecksum)
+		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->headerResponse, sizeof(&myReceiveBuffer->headerResponse));
+		if(headerCheck != myReceiveBuffer->headerResponse.m_packetHeaderChecksum)
 		{
 			//Checksum header does not match
 			//TODO stop reset 
+			LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Header Checksum does not match.");
 			return false;
 		}
 		//Get/Set packet size
-		m_receivePacketLength = myHeaderType->m_payloadSize;
+		m_receivePacketLength = myReceiveBuffer->headerResponse.m_payloadSize;
 		m_myDebugPortDriver.editReceiveSize(m_receivePacketLength);
 		return true;
 	}
 	return false;
 }
 
-void DebugPortTransportLayer::xmit(void)
+void DebugPortTransportLayer::xmit(void) //transmit = cefResponse 
 {
 	switch (m_transmitState)
 	{
@@ -112,17 +133,12 @@ void DebugPortTransportLayer::xmit(void)
 		//When buffer is ready generate packet header 
 		m_transmitState = debugPortXmitGeneratePacketHeader;
 	case debugPortXmitGeneratePacketHeader:
-		if(generatePacketHeader(mp_xmitBuffer, mp_xmitBuffer))
-		{
-			m_transmitState = debugPortXmitReadyToSend;
-		}
+		generatePacketHeader();
+		m_transmitState = debugPortXmitReadyToSend;
 		break;
 	case debugPortXmitReadyToSend:
-		//delete
-		uint8_t sendBuffer[64];
-		int packetSize = 64;
 		//
-		m_myDebugPortDriver.sendData((uint8_t(*)[64]) mp_xmitBuffer, packetSize);
+		m_myDebugPortDriver.sendData((uint8_t*)mp_xmitBuffer, sizeof(mp_xmitBuffer));
 		m_transmitState = debugPortXmitSendingPacket;
 		break;	
 	case debugPortXmitSendingPacket:
@@ -170,6 +186,19 @@ void DebugPortTransportLayer::recv(void)
 		}
 		m_receiveState = debugPortRecvFinishedRecv;
 	case debugPortRecvFinishedRecv:
+		//ensure checksum matches
+		cefCompleteRequest_t* myReceiveBuffer = (cefCompleteRequest_t*)mp_receiveBuffer;
+		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->pingResponse, sizeof(&myReceiveBuffer->pingResponse));
+		if(headerCheck != myReceiveBuffer->headerResponse.m_packetPayloadChecksum)
+		{
+			//TODO tell router data no good
+			LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer debug packet checksum does not match.");
+		}
+		else
+		{
+			//DELETE THIS IS TEST
+			m_copy = true;
+		}
 		returnReceiveBuffer(mp_receiveBuffer);
 		m_receiveState = debugPortRecvWaitForBuffer;
 		break;		

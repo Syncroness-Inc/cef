@@ -26,6 +26,34 @@ written permission of Syncroness.
 
 class DebugPortTransportLayer {
 public:
+   //test code delete ***************************
+   typedef struct
+   {
+      cefCommandDebugPortHeader_t headerResponse;
+      cefCommandPingResponse_t   pingResponse;
+      
+   } cefCompleteResponse_t;
+   typedef struct
+   {
+      cefCommandDebugPortHeader_t headerResponse;
+      cefCommandPingRequest_t   pingResponse;
+      
+   } cefCompleteRequest_t;
+   bool m_sendBufferAvailable;
+   bool m_receiveBufferAvailable;
+   bool m_copy;
+   void* getSendBuffer();
+   void returnSendBuffer(void*);
+   void* getReceiveBuffer();
+   void returnReceiveBuffer(void*);
+   void* mp_myRequest;
+   void* mp_myResponse;
+   cefCompleteResponse_t m_myResponse;
+   cefCompleteRequest_t m_myRequest;
+
+   //************************************************
+
+
 	//! Constructor.
 	DebugPortTransportLayer():
    m_transmitState(debugPortXmitWaitingForBuffer),
@@ -33,20 +61,24 @@ public:
    mp_xmitBuffer(nullptr),
    mp_receiveBuffer(nullptr),
    m_receivePacketLength(0),
-   m_sendBufferAvailable(true),     //test buffer delete
-   m_receiveBufferAvailable(true)   //test buffer delete
+   m_sendBufferAvailable(false),     //test buffer delete
+   m_receiveBufferAvailable(true),   //test buffer delete
+   m_copy(false),                   //test delete
+   mp_myRequest(&m_myRequest),        //test delete
+   mp_myResponse(nullptr)       //test delete
    {}
 
    void xmit(void);
    void recv(void);
 private:
    DebugPortDriver m_myDebugPortDriver;
-   bool generatePacketHeader(void*, void*);
+   void generatePacketHeader();
    bool receivePacketHeader(void);
    uint32_t calculateChecksum(void* myStruct,  uint structSize);
    void* mp_xmitBuffer;
    void* mp_receiveBuffer;
    uint8_t m_receivePacketLength;
+   
 
 
 /**
@@ -79,14 +111,7 @@ private:
 
 
 
-   //test code delete ***************************
-   bool m_sendBufferAvailable;
-   bool m_receiveBufferAvailable;
-   void* getSendBuffer();
-   void returnSendBuffer(void*);
-   void* getReceiveBuffer();
-   void returnReceiveBuffer(void*);
-   //************************************************
+
 };
 
 #endif  // end header guard
