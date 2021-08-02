@@ -35,20 +35,32 @@ class Base:
         if self.__router.timeoutOccurred:
             return False
         else:
-            return True
+            if not self.__router.commandSuccess:
+                return False
+            else:
+                return True
 
 
 class Diag(Base):
     """
     Basic test module for issuing Ping commands to the target to test communications
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, interface):
+        super().__init__(interface)
 
     def ping(self):
-        self.send(CommandPing())
+        ping = CommandPing()
+        self.send(ping)
         result = self.receive()
         if result:
             print("Ping Success!")
         else:
             print("Ping Fail!")
+
+
+if __name__ == '__main__':
+    from DebugSerialPort import DebugSerialPort
+    p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
+    p.open()
+    d = Diag(p)
+    d.ping()
