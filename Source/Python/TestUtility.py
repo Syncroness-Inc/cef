@@ -61,6 +61,7 @@ class Diag(Base):
 if __name__ == '__main__':
     from DebugSerialPort import DebugSerialPort
     p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
+    # p = DebugSerialPort('/dev/tty3', baudRate=9600)
     p.open()
     d = Diag(p)
     # d.ping()

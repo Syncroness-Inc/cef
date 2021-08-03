@@ -200,11 +200,7 @@ class Transport:
             # _pack_ = 1 # uncomment and edit this value if there are boundary alignment issues        
             _fields_ = [('bytes', ctypes.c_byte * packetHeader.m_payloadSize)]
 
-        # class CefPacket(ctypes.Structure):
-        #     # _pack_ = 1 # uncomment and edit this value if there are boundary alignment issues
-        #     _fields_ = [('header', cefContract.cefCommandDebugPortHeader), ('payload', CefPayload)]
-
-        class CefPacket(ctypes.BigEndianStructure):
+        class CefPacket(ctypes.Structure):
             # _pack_ = 1 # uncomment and edit this value if there are boundary alignment issues
             _fields_ = [('header', cefContract.cefCommandDebugPortHeader), ('payload', CefPayload)]
 

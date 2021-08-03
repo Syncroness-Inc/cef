@@ -26,6 +26,11 @@ import ctypes
 from enum import Enum, auto
 
 
+# NOTE: Choose one of the following and comment out the other depending on
+# your target's architecture
+structureEndiannessType = ctypes.BigEndianStructure
+# structureEndiannessType = ctypes.LittleEndianStructure
+
 #####################################################################################################################
 ######  ERROR CODES                                                                                            ######
 #####################################################################################################################
@@ -129,7 +134,7 @@ class debugPacketDataType(Enum):
     debugPacketType_loggingDataBinary                       = 4
 
 
-class cefCommandHeader(ctypes.Structure):
+class cefCommandHeader(structureEndiannessType):
     """
     CEF Command Header
     Each Request and Receive command has a common header associated with it.
@@ -156,7 +161,7 @@ class cefCommandHeader(ctypes.Structure):
     ]
 
 
-class cefCommandDebugPortHeader(ctypes.Structure):
+class cefCommandDebugPortHeader(structureEndiannessType):
     """
     CEF Command Debug Port Header
     Each Command Request, Command Response, and Logging Packet has a common debug header associated with it.
@@ -188,7 +193,7 @@ CMD_PING_UINT32_REQUEST_EXPECTED_VALUE  = 0x208461A3
 CMD_PING_UINT64_REQUEST_EXPECTED_VALUE  = 0x936217995202A373
 
 
-class cefCommandPingRequest(ctypes.Structure):
+class cefCommandPingRequest(structureEndiannessType):
     """
     CommandPing
         See command implementation files for variable documentation
@@ -210,7 +215,7 @@ class cefCommandPingRequest(ctypes.Structure):
     ]
 
 
-class cefCommandPingResponse(ctypes.Structure):
+class cefCommandPingResponse(structureEndiannessType):
     """
     CommandPing
         See command implementation files for variable documentation
