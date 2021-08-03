@@ -20,7 +20,7 @@ written permission of Syncroness.
 #include "ShimBase.hpp"
 #include "cefContract.hpp"
 
-//Delete test **************************************************
+//Delete moc router test **************************************************
 void* DebugPortTransportLayer::getSendBuffer()
 {
 	m_sendBufferAvailable = false;
@@ -28,7 +28,7 @@ void* DebugPortTransportLayer::getSendBuffer()
 	{
 		//load response
 		m_myResponse.pingResponse.m_header.m_commandErrorCode = m_myRequest.pingResponse.m_header.m_commandErrorCode;
-		m_myResponse.pingResponse.m_header.m_commandNumBytes = m_myRequest.pingResponse.m_header.m_commandNumBytes;
+		m_myResponse.pingResponse.m_header.m_commandNumBytes = sizeof(cefCommandPingResponse_t);
 		m_myResponse.pingResponse.m_header.m_commandOpCode = m_myRequest.pingResponse.m_header.m_commandOpCode;
 		m_myResponse.pingResponse.m_header.m_commandRequestResponseSequenceNumberPython = m_myRequest.pingResponse.m_header.m_commandRequestResponseSequenceNumberPython;
 		m_myResponse.pingResponse.m_header.m_padding1 = m_myRequest.pingResponse.m_header.m_padding1;
@@ -127,7 +127,7 @@ void DebugPortTransportLayer::xmit(void) //transmit = cefResponse
 		mp_xmitBuffer = getSendBuffer();
 		if(mp_xmitBuffer == nullptr)
 		{
-			//If buffer is not ready leave state machien dont block
+			//If buffer is not ready leave state machine don't block
 			break;
 		}
 		//When buffer is ready generate packet header 
@@ -145,7 +145,7 @@ void DebugPortTransportLayer::xmit(void) //transmit = cefResponse
 		//check if sending is finished
 		if(m_myDebugPortDriver.getSendInProgress())
 		{
-			//Sending not finished leave stat machien
+			//Sending not finished leave state machine
 			break;
 		}
 		//sending finished
