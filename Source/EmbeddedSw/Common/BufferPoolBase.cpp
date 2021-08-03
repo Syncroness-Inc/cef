@@ -44,7 +44,6 @@ BufferPoolBase::BufferPoolBase(uint32_t bufferPoolId, uint32_t maxBufferSizeInBy
 	{
 		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to allocate buffer memory pool. MaxBufferSize={}, m_maxBufferSizeInBytes={:d}, BufferPoolId={:d}", m_maxBufferSize, m_numBuffers, m_bufferPoolId);
 	}
-	void* p_Temp = &mp_memoryPoolStart[totalNumBytesNeeded];
 	mp_memoryPoolEnd = &mp_memoryPoolStart[totalNumBytesNeeded - 1];
 
 	// Fill up the memory pool

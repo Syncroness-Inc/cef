@@ -215,17 +215,20 @@ static void johnTesting()
 #if 1
     /*********** Check out CommandCefCommandProxy *************/
     // Drive the CEF Command packet through its state machine
-    cefCommandPacketMaximum_t* p_cefPacket2 = CommandDebugPortRouter::instance().checkoutCefReceiveCommandPacket();
+    CefBuffer* p_cefBuffer = CommandDebugPortRouter::instance().checkoutCefCommandReceiveBuffer();
+    // Pretend we received a ping command
+    p_cefBuffer->setNumberOfValidBytes(sizeof(cefCommandPingRequest_t));
 
     // Initialize it so we run the ping command (don't worry about internals of command...it will just return an error code)
-	cefCommandPingRequest_t* p_cefPing = (cefCommandPingRequest_t*)&(p_cefPacket2->m_cefCommandPayload);
+    cefCommandPingRequest_t* p_cefPing = (cefCommandPingRequest_t*)p_cefBuffer->getBufferStartAddress();
+
 	p_cefPing->m_header.m_commandErrorCode = 0;
 	p_cefPing->m_header.m_commandNumBytes = sizeof(cefCommandPingRequest_t);
 	p_cefPing->m_header.m_commandOpCode = commandOpCodePing;
 	p_cefPing->m_header.m_commandRequestResponseSequenceNumberPython = 777;
-	p_cefPing->m_header.m_padding1 = 333;
+	p_cefPing->m_header.m_padding1 = 33;
 
-    CommandDebugPortRouter::instance().returnCefReceiveCommandPacket(p_cefPacket2);   // return it so it drives things to the right state
+    CommandDebugPortRouter::instance().checkinCefCommandReceiveBuffer(p_cefBuffer);
     // when we start up the code, CommandCefCommandProxy should find a CEF ping command to work on
     // and it should return a response to be transmitted to the CommandDebugPortRouter (look at singleton to see buffer state)
 #endif

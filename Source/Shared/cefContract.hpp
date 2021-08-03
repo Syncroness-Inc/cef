@@ -70,6 +70,7 @@ enum
 	errorCode_debugPortErrorCodeOverrun										= 16,
 	errorCode_debugPortErrorCodeUnknown										= 17,
 	errorCode_RequestedCefProxyCommandNotAllocatable				 		= 18,
+	errorCode_BufferValidBytesExceedsBufferSize								= 19,
 
 	errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
 };
@@ -146,12 +147,6 @@ typedef uint16_t commandOpCode_t;
 #define DEBUG_PACKET_UINT32_FRAMING_SIGNATURE 0x43454653
 
 /**
- * Debug Port Packet Size
- * *Max number of bytes in a debug port packet
- */
-#define DEBUG_PORT_MAX_PACKET_SIZE_BYTES 528
-
-/**
  *  Debug Port Packet Data Type - the debug port expect the following types of packets
  * - command request
  * - command response
@@ -162,6 +157,9 @@ enum
     debugPacketType_commandRequest                          = 0,
 	debugPacketType_commandResponse 	   					= 1,
     debugPacketType_loggingData                             = 2,
+
+    // Must be last entry
+    debugPacketType_invalid                                 = 0xffff
 };
 typedef uint16_t debugPacketDataType_t;
 
@@ -170,6 +168,8 @@ typedef uint16_t debugPacketDataType_t;
  * Each Request and Receive command has a common header associated with it.
  * The CEF Command Header must be an increment of 8 bytes so that when the CEF command header
  * is used within a structure, the next variable in the structure can rely upon being 64 bit aligned.
+ * The Header MUST be the first member variable in all CEF Commands as this is relied upon to open
+ * up commands to determine what type of the CEF command is (by checking the OpCode).
  *
  * Having both the request and the response structures have a common header, then the implementation of the command packets
  * can optionally share the same memory buffer for receiving/sending commands to the debug port in memory constrained systems.
@@ -199,130 +199,21 @@ typedef struct
  * Each Command Request, Command Response, and Logging Packet has a common debug header associated with it.
  * The CEF Command Debug Header must guarantee to end on a 64 bit alignment as other structures that follow
  * this header rely on it ending on a 64 bit alignment.
+ *
+ * This is the header that is added at the Transport Layer of the Debug Port OSI Stack
  */
 typedef struct
 {
 	uint32_t 	m_framingSignature;			//32 bit aligned
 	uint32_t 	m_packetPayloadChecksum;	//Checksum over the payload only, 64 bit aligned
 	uint32_t 	m_payloadSize;				//Payload size in bytes, 32 bit aligned
-	/**
-	 * The types of packets are
-	 * * Command Request
-	 * * Command Response
-	 * * Logging Packet
-	 */
+
+	//! The types of packets are defined in debugPacketDataType_t
 	uint8_t 	m_packetType;				//40 bit aligned
 	uint8_t 	m_reserve;					//48 bit aligned
 	uint16_t 	m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
 
-
-//! Maximum cef Command payload size in bytes
-#define DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES  512
-
-/**
- * Maximum size that a CEF command can be
- */
-typedef struct
-{
-	cefCommandHeader_t 				m_cefCommandHeader;
-	char     						m_cefCommandPayload[DEBUG_PORT_MAX_CEF_COMMAND_PAYLOAD_SIZE_IN_BYTES];
-} cefCommandMaximum_t;
-
-
-/**
- * Maximum size that a CEF command packet can be (including all layers of the debug port communications stack)
- */
-typedef struct
-{
-	cefCommandDebugPortHeader_t		m_debugPortPacketHeader;			// Must be the first item in this structure
-	char							m_cefCommandPayload[sizeof(cefCommandMaximum_t)];
-} cefCommandPacketMaximum_t;
-
-/**
- * Debug Port Packet Size
- * *Max number of bytes in a debug port packet
- */
-//jws fix this #define DEBUG_PORT_MAX_PACKET_SIZE_BYTES (sizeof(cefMaximumCommandPacket_t))
-
-#define MAX_LOCAL(A, B) (A > B ? A : B)
-
-
-/*********************************************************************************************************************/
-/******  LOGGING                                                                                                ******/
-/*********************************************************************************************************************/
-
-/**
- * Logging Structures.  For now, a display string is passed that python uses to display the variables.
- * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
- */
-#define LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS  128	// Make divisible by 8 bytes
-#define LOGGING_ASCII_FILENAME_NUM_CHARACTERS 40 			// Make divisible by 8 bytes
-typedef struct
-{
-	cefCommandHeader_t m_header;				// Must be 1st entry in structure, guaranteed to be 64 bit aligned
-
-	//! The 3 64 bit values we can have for any log message
-	uint64_t	m_logVariable1;		// 64 bit aligned
-	uint64_t	m_logVariable2;		// 64 bit aligned
-	uint64_t	m_logVariable3;		// 64 bit aligned
-
-	//! time stamp of when the log occurred (unit of time may be project specific as resolution of available clocks vary
-	uint64_t	m_timeStamp;		// 64 bit aligned
-
-	//! The logging string to be printed to the screen (null terminated, unless at max length)
-	char		m_logString[LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS];  	// 64 bit aligned
-
-	//! filename and line number help debug to know where in code the log message came from
-	char 		m_fileName[LOGGING_ASCII_FILENAME_NUM_CHARACTERS];			// 64 bit aligned
-
-	//! filename and line number help debug to know where in code the log message came from
-	uint32_t 	m_fileLineNumber;		// 32 bit aligned
-
-	//! Log Sequence Number (helps to know how many logs were dropped when debug port can't keep up with logging)
-	uint16_t 	m_logSequenceNumber;	// 48 bit aligned
-
-	//! Log module id					// 56 bit aligned
-	uint8_t		m_moduleId;
-
-	//! Type of log message
-	uint8_t		m_logType;				// 64 bit aligned
-
-} cefLog_t;
-
-
-//! Log Packet
-typedef struct
-{
-	cefCommandDebugPortHeader_t	m_debugPortPacketHeader;
-	cefLog_t m_log;
-} cefLogPacket_t;
-
-
-
-//! What is the biggest payload in the Debug Transmit Packet that we can have
-#define DEBUG_PORT_MAX_TRANSMIT_PAYLOAD_SIZE_BYTES  MAX_LOCAL((sizeof(cefCommandMaximum_t)), (sizeof(cefLog_t)))
-
-/**
- * Maximum Debug Port Transmit Packet.  This structure is used as an interface between
- * the Router and the Transport Layer (where the router provides the memory, but does
- * not have knowledge how to modify the transport layer structures.  Nor does the
- * transmit layer have the knowledge of how to modify the payload)
- */
-typedef struct
-{
-	char m_debugPortPacketHeader[sizeof(cefCommandDebugPortHeader_t)];  	// Must be first item in this structure
-	char m_cefTransmitPayload[DEBUG_PORT_MAX_TRANSMIT_PAYLOAD_SIZE_BYTES];
-}cefDebugPortTransmitPacketMaximum_t;
-
-/**
- * Minimum Debug Port Transmit Packet (see notes above about maximum)
- */
-typedef struct
-{
-	char m_debugPortPacketHeader[sizeof(cefCommandDebugPortHeader_t)];  	// Must be first item in this structure
-	char m_cefReceivePayload[sizeof(cefCommandPacketMaximum_t)];
-}cefDebugPortReceivePacketMaximum_t;
 
 
 /**
@@ -365,56 +256,80 @@ typedef struct
 } cefCommandPingResponse_t;
 
 
-/*******
- * Naming Convention
- * 		ESw - Embedded Software
- * 		Python - the python based test framework
- * 		cef = Common Embedded Framework
- * 			  This name is used to help differentiate commonly used terms such as "buffer"
- * 		cefCommand is a command sent by python to the ESw and translated into a ESw command.
- * 			Does not include transport layer and below headers
- * 		cefLog is information from a log being sent to python to be displayed to the user (example "LOG_INFO()")
- * 			Does not include transport layer and below headers
- * 		DebugPort is a generic term to capture the entire communication stack of the port used for debugging.
- * 			The Debug port could be a "serial port" or Ethernet or some other protocol.
- * 		Transport, as in the OSI transport layer
- * 		Request/Response   Python originates requests, and received responses
- * 			The embedded software responds to requests (i.e. Python is the master, ESw is the slave)
- * 		Packet, as in OSI packet, or bundle of information sent out in a particular OSI layer
- * 		Payload & Header : Each packet is divided into a "header" and "payload".
- * 			The payload is just a blob of data, which may contain additional header/payload data
- * 			The header is unique to each layer, but at the very least describes what is in the payload
- * 		PhysicalByteStream - as in Physical layer of the ISO network layer.  In short a pointer to a
- * 			buffer of bytes to send over the wire.
- *
- * cefDebugPortTransportRequestPacket or cefDebugPortTransportTransmitPacket
- * 		consists of the following
- * 			cefDebugPortTransportPacketHeader
- * 			cefDebugPortTransportPayload 	Abstract class that contains byte data of cefCommand or cefLog
- *
- * 	cefCommand  (used for both request and response)
- * 		cefCommonPayloadHeader  (used for Command and Logging payloads)
- * 		cefCommandPayload
- *
- * 	cefLog
- * 		cefCommonPayloadHeader
- * 		cefLogPayload
- *
- * 		getNextCefLogBuffer, returnCefLogBuffer
- * 		checkout, CefDebugPortTransportReceivePacket
- *
- *
- *
- *
- * 		getNext
- */
 
+
+
+
+/*********************************************************************************************************************/
+/******  LOGGING                                                                                                ******/
+/*********************************************************************************************************************/
+
+/**
+ * Logging Structures.  For now, a display string is passed that python uses to display the variables.
+ * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
+ */
+#define LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS  128    // Make divisible by 8 bytes
+#define LOGGING_ASCII_FILENAME_NUM_CHARACTERS 40            // Make divisible by 8 bytes
+typedef struct
+{
+    cefCommandHeader_t m_header;                // Must be 1st entry in structure, guaranteed to be 64 bit aligned
+
+    //! The 3 64 bit values we can have for any log message
+    uint64_t    m_logVariable1;     // 64 bit aligned
+    uint64_t    m_logVariable2;     // 64 bit aligned
+    uint64_t    m_logVariable3;     // 64 bit aligned
+
+    //! time stamp of when the log occurred (unit of time may be project specific as resolution of available clocks vary
+    uint64_t    m_timeStamp;        // 64 bit aligned
+
+    //! The logging string to be printed to the screen (null terminated, unless at max length)
+    char        m_logString[LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS];   // 64 bit aligned
+
+    //! filename and line number help debug to know where in code the log message came from
+    char        m_fileName[LOGGING_ASCII_FILENAME_NUM_CHARACTERS];          // 64 bit aligned
+
+    //! filename and line number help debug to know where in code the log message came from
+    uint32_t    m_fileLineNumber;       // 32 bit aligned
+
+    //! Log Sequence Number (helps to know how many logs were dropped when debug port can't keep up with logging)
+    uint16_t    m_logSequenceNumber;    // 48 bit aligned
+
+    //! Log module id                   // 56 bit aligned
+    uint8_t     m_moduleId;
+
+    //! Type of log message
+    uint8_t     m_logType;              // 64 bit aligned
+
+} cefLog_t;
+
+
+/*********************************************************************************************************************/
+/******  Debug Port constants that rely on previously defined structures                                        ******/
+/*********************************************************************************************************************/
+
+/**
+ * Maximum number of bytes in the application layer payload.
+ * In other words, the total number of bytes the application layer would request the
+ * transport layer to received/send.
+ * This number does NOT include Transport layer headers
+ */
+#define DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND (sizeof(cefCommandHeader_t) + 512)
+#define DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG     (sizeof(cefLog_t))
+#define MAX_LOCAL(A,B)  (A > B ? A : B)
+#define DEBUG_PORT_MAX_APPLICATION_PAYLOAD         MAX_LOCAL(DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND, DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG)
+
+
+/**
+ * Debug Port Packet Size
+ * Max number of bytes in a debug port packet
+ */
+#define DEBUG_PORT_MAX_PACKET_SIZE_BYTES (sizeof(cefCommandDebugPortHeader_t) + DEBUG_PORT_MAX_APPLICATION_PAYLOAD)
 
 
 
 
 /**
- * This must be the last line in the CEF COMMAND REQUEST AND RESPONSE STRUCTURES section in order to
+ * This must be the last line in the shared structures section in order to
  * restore packing to the previous value
  */
 #pragma pack(pop)

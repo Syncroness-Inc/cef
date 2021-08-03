@@ -88,13 +88,9 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
         {
             case commandStateGetNextCommand:
             {
-            	uint32_t numEntries = m_executeCommandsQueue.getCurrentNumberOfEntries();
-
             	void* p_temp = nullptr;
                 bool gotCommand = m_executeCommandsQueue.get(p_temp);
                 mp_commandToExecute = (CommandBase*)p_temp;
-
-                uint32_t numEntries2 = m_executeCommandsQueue.getCurrentNumberOfEntries();
 
                 if (gotCommand == false)
                 {
@@ -119,8 +115,6 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
                      * Re-add it to the queue to wait its turn to execute again.
                      */
                     bool successfullyAdded = m_executeCommandsQueue.put(mp_commandToExecute);
-
-                    uint32_t numEntries3 = m_executeCommandsQueue.getCurrentNumberOfEntries();
 
                     if (successfullyAdded == false)
                     {

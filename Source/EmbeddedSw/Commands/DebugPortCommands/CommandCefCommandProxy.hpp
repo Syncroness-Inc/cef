@@ -23,6 +23,7 @@ written permission of Syncroness.
  */
 
 #include "CommandBase.hpp"
+#include "CefBuffer.hpp"
 
 
 class CommandCefCommandProxy : public CommandBase
@@ -33,7 +34,7 @@ class CommandCefCommandProxy : public CommandBase
 		 */
 		CommandCefCommandProxy() :
 			CommandBase(commandOpCodeCefCommandProxy),
-			mp_cefCommand(nullptr),
+			mp_cefCommandHeader(nullptr),
 			mp_childCommand(nullptr)
 			{ }
 
@@ -65,8 +66,11 @@ class CommandCefCommandProxy : public CommandBase
 			commandStateReportError,
         };
 
+        //! Pointer to the CEF Buffer containing the command to be processed
+        CefBuffer* mp_cefBuffer;
+
         //! The CEF command to be processed
-        cefCommandMaximum_t* mp_cefCommand;
+        cefCommandHeader_t* mp_cefCommandHeader;
 
         //! The allocated internal command that is generated based on information in mp_cefCommand
         //! This is a child command so once it finished executing it returns to this object

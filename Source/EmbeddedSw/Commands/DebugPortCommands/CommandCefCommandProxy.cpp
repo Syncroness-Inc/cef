@@ -68,12 +68,19 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
             }
             case commandStateGetCefCommandRequest:
             {
-            	mp_cefCommand = CommandDebugPortRouter::instance().checkoutCefCommandBuffer();
-            	if (mp_cefCommand == nullptr)
+            	mp_cefBuffer = CommandDebugPortRouter::instance().checkoutCefCommandProxyProcessingBuffer();
+            	if (mp_cefBuffer == nullptr)
+                {
+                    // No packet to work on; exit and try again later
+                    shouldYield = true;
+                    break;
+                }
+
+            	// The first element of every command MUST be a command header
+            	mp_cefCommandHeader = (cefCommandHeader_t*)mp_cefBuffer->getBufferStartAddress();
+            	if (mp_cefCommandHeader == nullptr)
             	{
-            		// No packet to work on; exit and try again later
-            		shouldYield = true;
-            		break;
+           	       LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Programming Error:  Passed nullptr for Cef Command");
             	}
 
             	// We have a CEF command to work on; process it
@@ -85,7 +92,7 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
             case commandStateProcessCommand:
             {
             	bool allocatableCommand = false;
-            	mp_childCommand = CommandGenerator::instance().allocateCommand(mp_cefCommand->m_cefCommandHeader.m_commandOpCode, allocatableCommand);
+            	mp_childCommand = CommandGenerator::instance().allocateCommand(mp_cefCommandHeader->m_commandOpCode, allocatableCommand);
 
             	// Was the command allocatable?  If not, need to return an error as not setup correctly to allocate the command
             	if (allocatableCommand == false)
@@ -107,7 +114,7 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
             	mp_childCommand->setParentCommand(this);
 
             	// We have a command, now import the data to the command
-            	status = mp_childCommand->importFromCefCommand(mp_cefCommand);
+            	status = mp_childCommand->importFromCefCommand(mp_cefCommandHeader);
 
             	if (status != errorCode_OK)
             	{
@@ -141,7 +148,7 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
 
             	// We have a child response...process it by exporting the data to the Cef command
             	// so we can send results/response back to the proxy command generator.
-            	status = mp_childCommand->exportToCefCommand(mp_cefCommand);
+            	status = mp_childCommand->exportToCefCommand(mp_cefCommandHeader);
 
             	if (status != errorCode_OK)
             	{
@@ -160,7 +167,7 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
 
             case commandStateSendAndReleaseResources:
             {
-				// We are all done with the child command (if there was one issued)
+				// We are all done with the child command (if there was one issued) so release it
             	if (mp_childCommand != nullptr)
             	{
 					CommandGenerator::instance().freeCommand(mp_childCommand);
@@ -168,9 +175,19 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
 					mp_childCommand = nullptr;
             	}
 
+            	// Note:  The Command header has been updated by the export command
+            	// Update number of valid bytes in the command response header
+            	uint32_t commandNumBytes = mp_cefCommandHeader->m_commandNumBytes;
+            	errorCode_t setValidBytesStatus = mp_cefBuffer->setNumberOfValidBytes(commandNumBytes);
+            	if (setValidBytesStatus != errorCode_OK)
+            	{
+            	    // There is memory corruption as we added more bytes to the buffer than we had room!
+                    LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Memory corruption from adding to many bytes to buffer! {:d} {:d} {:d}", setValidBytesStatus, commandNumBytes, mp_cefBuffer->getMaxBufferSizeInBytes());
+            	}
+
             	// Return the checked out CEF Command buffer (which triggers the transmit of the CEF command back to proxy command generator)
-            	CommandDebugPortRouter::instance().returnCefCommandBuffer(mp_cefCommand, mp_cefCommand->m_cefCommandHeader.m_commandNumBytes);
-            	mp_cefCommand = nullptr;
+            	CommandDebugPortRouter::instance().checkinCefCommandProxyProcessingBuffer(mp_cefBuffer);
+            	mp_cefCommandHeader = nullptr;
 
             	// Look for another Cef Command to process next time we have a chance to run
             	m_commandState = commandStateGetCefCommandRequest;
@@ -181,13 +198,13 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
 
             case commandStateReportError:
             {
-                LOG_ERROR(Logging::LogModuleIdCefDebugCommands, "CEF Command Handling Failed.  Status={:d}, OpCode={:d}", m_commandState, mp_cefCommand->m_cefCommandHeader.m_commandOpCode);
+                LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "CEF Command Handling Failed.  Status={:d}, OpCode={:d}", m_commandState, mp_cefCommand->m_cefCommandHeader.m_commandOpCode);
 
             	// Report the error back to proxy command generator
-            	mp_cefCommand->m_cefCommandHeader.m_commandErrorCode = status;
+            	mp_cefCommandHeader->m_commandErrorCode = status;
 
             	// There is no response payload other than the header
-            	mp_cefCommand->m_cefCommandHeader.m_commandNumBytes = sizeof(mp_cefCommand->m_cefCommandHeader);
+            	mp_cefCommandHeader->m_commandNumBytes = sizeof(cefCommandHeader_t);
 
             	// We have reported what error conditions we can, so now send the CEF command back to proxy command generator
             	m_commandState = commandStateSendAndReleaseResources;
@@ -199,7 +216,7 @@ bool CommandCefCommandProxy::execute(CommandBase* p_childCommand)
             default:
             {
                 // If we get here, we've lost our mind.
-                LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "CommandCefCommandProxy Unhandled command state {:d}", m_commandState);
+                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "CommandCefCommandProxy Unhandled command state {:d}", m_commandState);
                 shouldYield = true;
                 commandDone = true;
                 break;

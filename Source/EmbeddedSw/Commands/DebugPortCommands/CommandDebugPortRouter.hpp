@@ -32,6 +32,7 @@ written permission of Syncroness.
 #include "CommandBase.hpp"
 #include "BufferPoolBase.hpp"
 #include "cefContract.hpp"
+#include "CefBuffer.hpp"
 
 class CommandDebugPortRouter : public CommandBase
 {
@@ -39,13 +40,13 @@ class CommandDebugPortRouter : public CommandBase
 		/**
 		 * Constructor
 		 *
-		 * @param logBufferPoolId  log buffer pool ID (for debug), from BufferPoolBase::BufferPoolIdxx
-		 * @param numBytesPerLogEntry  Number of bytes per log entry
-		 * @param maxNumLogEntries  Maximum number of log entries to keep in the system at one time
+		 * @param logBufferPoolId  		log buffer pool ID (for debug), from BufferPoolBase::BufferPoolIdxx
+		 * @param numBytesPerLogEntry  	Number of bytes per log entry
+		 * @param maxNumLogEntries  	Maximum number of log entries to keep in the system at one time
 		 */
 		CommandDebugPortRouter(uint32_t logBufferPoolId,
-				   uint32_t numBytesPerLoggingEntry,
-				   uint32_t maxNumLoggingEntries);
+				               uint32_t numBytesPerLoggingEntry,
+				               uint32_t maxNumLoggingEntries);
 
 		/**
 		 *  Obtain a reference to the Command Debug Port.
@@ -60,95 +61,75 @@ class CommandDebugPortRouter : public CommandBase
 
 		//! Note:  CommandDebugPortRouter is not a CEF command, so it does not have an import/export method implemented
 
+
 		/**
 		 * Checks out a log buffer that must be returned once the log data is filled in
-		 * 		Note that this is a cefLog_t, NOT a cefLogPacket_t
 		 *
 		 * @return returns nullptr if no buffer is available; pointer to log structure otherwise
 		 */
 		//*cefLog_t checkoutLogBuffer();
-		cefLog_t* checkoutLogBuffer();
+		cefLog_t* checkoutLogBufferLogging();
+
+        /**
+         * Returns a cefLog_t log pointer that was previously checked out
+         *      Note:  It is a fatal error to return memory that was not previously checked out from
+         *      the Command Debug Port Router
+         *      Note:  It is assumed that the buffer is returned with valid log data
+         *
+         *  @param pointer to buffer that was checked out with checkoutLogBuffer
+         */
+        void checkinLogBufferLogging(cefLog_t* p_cefLogBuffer);
 
 		/**
-		 * Returns a cefLog_t log pointer that was previously checked out
-		 * 		Note:  It is a fatal error to return memory that was not previously checked out from
-		 * 		the Command Debug Port Router
-		 * 		Note:  It is assumed that the buffer is returned with valid log data
-		 *
-		 * 	@param pointer to buffer that was checked out with checkoutLogBuffer
-		 */
-		void returnLogBuffer(cefLog_t* p_cefLogBuffer);
-
-		/**
-		 * Checks out a log packet for transmitting.  It is assumed that the buffer contains
-		 * valid cefLog_t data
-		 *
-		 * @return nullptr if no log packet is available, pointer to log packet otherwise
-		 */
-		cefLogPacket_t* checkoutLogPacket();
-
-		/**
-		 * Returns a cefLogPacket_t pointer that was previously checked out
-		 * 		Note:  It is a fatal error to return memory that was not previously checked out from
-		 * 		the Command Debug Port Router
-		 * 		It is assumed that the Log Packet is no longer needed when checked back in
-		 *
-		 * 	@param pointer to buffer that was checked out with checkoutLogBuffer
-		 */
-		void returnLogPacket(cefLogPacket_t* p_cefLogBuffer);
-
-
-		/**
-		 * Checks out the CEF Command Packet Buffer to receive a command.
+		 * Checks out the CEF Command Buffer to receive a command.
 		 * 		It is assumed that upon check in of the buffer, there is a valid CEF command in the buffer
 		 *
-		 * @return nullptr if the CEF packet buffer is not available; pointer to cefCommandPacketMaximum_t struct otherwise
+		 * @return nullptr if the CEF command buffer is not available; pointer to CefBuffer otherwise
 		 */
-		cefCommandPacketMaximum_t*  checkoutCefReceiveCommandPacket();
+		CefBuffer* checkoutCefCommandReceiveBuffer();
 
 		/**
-		 * Returns CEF Command Packet Buffer with a valid CEF Command
+		 * Returns CEF Command Buffer with a valid CEF command
 		 * 		It is a fatal error to return anything other the the CEF command buffer
 		 *
-		 * @param p_cefCommandPacket 	pointer to CEF command packet buffer
+		 * @param p_cefBuffer 	pointer to CEF command buffer
 		 */
-		void returnCefReceiveCommandPacket(cefCommandPacketMaximum_t*);
+		void checkinCefCommandReceiveBuffer(CefBuffer* p_cefBuffer);
 
 		/**
-		 * Gets a buffer containing the CEF command to be processed.  It is assumed the buffer contains a cef command request.
-		 * 	The buffer is described by cefCommandMaximum_t
-		 * 	This routine is typically called by the Embedded Sw routine responsible for processing a CEF Command
+		 *  Gets a buffer containing the CEF command to be processed.  It is assumed the buffer contains a cef command request.
+		 * 	This routine is called by the Embedded Sw routine responsible for processing a CEF Command
 		 *
-		 * @return nullptr if the CEF command buffer is not available; pointer to cefCommandMaximum_t struct otherwise
+		 * @return nullptr if the CEF command buffer is not available; pointer to CefBuffer otherwise
 		 */
-		cefCommandMaximum_t* checkoutCefCommandBuffer();
+		CefBuffer* checkoutCefCommandProxyProcessingBuffer();
 
 		/**
 		 * Returns the CEF command buffer than now contains a CEF command response
 		 *   This routine is typically called by the Embedded Sw routine responsible for processing a CEF Command
 		 *
-		 * @param p_cefCommandPacket 	pointer to CEF command buffer
-		 * @param numBytesInCommandResponse	 Number of valid bytes in the command response (including the header)
+		 * @param p_cefBuffer 	pointer to CEF command buffer that was previously checked out
 		 */
-		void returnCefCommandBuffer(cefCommandMaximum_t* p_cefCommandResponse, uint32_t numBytesInCommandResponse);
+		void checkinCefCommandProxyProcessingBuffer(CefBuffer* p_cefCommand);
 
 		/**
-		 * Gets the CEF command packet buffer that has a CEF Command Response payload to Transmit
+		 * Gets the CEF buffer to transmit next
+		 *      Note:  CefBuffer.getNumberOfValidBytes() contains the number of bytes to transmit
 		 *
-		 * @param numBytesInPayload
+		 * @param debugDataType  what type of data is being transmitted (returned as a reference)
 		 *
-		 * @return nullptr if the CEF command buffer is not available, pointer to cefCommandMaximum_t struct otherwise
-		 * 				the cefCommandMaximum_t has a valid payload to transfer
+		 * @return nullptr if the CEF command buffer is not available, pointer to CefBuffer otherwise
 		 */
-		cefCommandPacketMaximum_t* checkoutCefTransmitCommandPacket(uint32_t& numBytesInPayload);
+		CefBuffer* checkoutCefTransmitBuffer(debugPacketDataType_t& debugDataType);
 
 		/**
-		 * Returns the CEF command packet buffer.  The DebugPortRouter now owns this buffer and can do
-		 * 		with the buffer whatever it pleases.
+		 * Returns the CEF command buffer after transmit has been completed.
+		 *      The DebugPortRouter now owns this buffer and can do
+		 * 	    with the buffer whatever it pleases.
 		 *
-		 * @param p_cefCommandPacket	pointer to cefCommandPacketMaximum_t to be returned
+		 * @param p_cefBuffer 	pointer to cefBuffer that was previously checked out for transmitting
 		 */
-		void returnCefTransmitCommandPacket(cefCommandPacketMaximum_t* p_cefCommandPacket);
+		void checkinCefTransmitBuffer(CefBuffer* p_cefBuffer);
 
 
 	private:
@@ -159,32 +140,81 @@ class CommandDebugPortRouter : public CommandBase
             commandStateExecuteTransportFunctions = commandStateFirstDerivedState,
         };
 
-        //! CEF Command Packet State.  The states are expected to progress sequentially.
+        //! CEF Command Buffer State.  The states are expected to progress sequentially.
         enum
 		{
-        	cefCommandPacketState_bufferAvailable,
-			cefCommandPacketState_receivingPacket,
-			cefCommandPacketState_packetReceived,
-			cefCommandPacketState_proxyCommandOwnsPacket,
-			cefCommandPacketState_readyToTransmit,
-			cefCommandPacketState_transmittingPacket
+        	cefCommandBufferState_bufferAvailable,
+			cefCommandBufferState_receivingCommand,
+			cefCommandBufferState_commandReceived,
+			cefCommandBufferState_proxyCommandOwnsBuffer,
+			cefCommandBufferState_readyToTransmit,
+			cefCommandBufferState_transmittingBuffer
 		};
 
 
-        //! Pool of cefLogPacketAscii_t to allocate for logging
+        /**
+         * Checks out next cefLog_t buffer for transmitting logging information
+         *
+         * @return nullptr if there is no logging data to be transmitted, valid pointer otherwise
+         */
+        cefLog_t* checkoutLogTransmitBuffer();
+
+        /**
+         * Returns a cefLog_t pointer of log data that was previously checked out for transmitting
+         *      Note:  It is a fatal error to return memory that was not previously checked out from
+         *      the Command Debug Port Router
+         *      It is assumed that the buffer can be re-used for logging when checked back in
+         *
+         *  @param pointer to cefLog_t that was checked out with checkoutLogTransmitBuffer
+         */
+        void checkinLogTransmitBuffer(cefLog_t* p_cefLog);
+
+
+        /**
+         * Gets the CEF command buffer to transmit next
+         *      Note:  CefBuffer.getNumberOfValidBytes() contains the number of bytes to transmit
+         *
+         * @param debugDataType  what type of data is being transmitted
+         *
+         * @return nullptr if the CEF command buffer is not available, pointer to CefBuffer otherwise
+         */
+        CefBuffer* checkoutCefCommandTransmitBuffer();
+
+        /**
+         * Returns the CEF command buffer after transmit has been completed.
+         *      The DebugPortRouter now owns this buffer and can do
+         *      with the buffer whatever it pleases.
+         *
+         * @param p_cefBuffer   pointer to cefBuffer that was previously checked out for transmitting
+         */
+        void checkinCefCommandTransmitBuffer(CefBuffer* p_cefBuffer);
+
+
+        //! Pool of cefLog_t to allocate for logging
         BufferPoolBase m_logPool;
 
         //! List of logs that have been filled out and ready to be sent.
         RingBufferOfVoidPointers m_logsToSend;
 
         //! There is only one CEF command that can be in existence at one time
-        cefCommandPacketMaximum_t m_cefCommandPacket;
+        //! Reserve space for this command here
+        uint8_t m_cefCommand[DEBUG_PORT_MAX_APPLICATION_PAYLOAD];
+
+        //! The CefBuffer that describes the CEF command.
+        //!     CefBuffer.getNumberOfValidBytes() describes how many valid bytes are in the buffer
+        CefBuffer m_cefCommandBuffer;
+
+        //! CefBuffer that describes the log being transmitted (re-initialized for each transmit log)
+        CefBuffer m_cefLogBufferTransmit;
+
+        //! This is used as a sanity check to make sure in correct state
+        CefBuffer* mp_cefBufferTransmit;
 
         //! Number of valid bytes in the cef Command response (including the header)
         uint32_t m_numBytesInCefCommandResponse;
 
         //! cefCommandPacket memory's state
-        uint32_t m_cefCommandPacketState;
+        uint32_t m_cefCommandBufferState;
 };
 
 #endif  // end header guard

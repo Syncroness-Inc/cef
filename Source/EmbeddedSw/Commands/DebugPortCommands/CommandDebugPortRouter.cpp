@@ -14,6 +14,8 @@ with any information storage or retrieval system, without the prior
 written permission of Syncroness.
 ****************************************************************** */
 
+#include <new>      // for placement new
+
 #include "CommandDebugPortRouter.hpp"
 #include "Logging.hpp"
 
@@ -22,11 +24,11 @@ written permission of Syncroness.
  * Implementation of CommandDebugPortRouterRouter Methods
  *
  * Logging:
- * 		When logging has a new log, it requests memory via checkoutLogBuffer()
+ * 		When logging has a new log, it requests memory via checkoutLogBufferLogging()
  * 			Logging then fills in cefLog_t with logging information
- * 		Then the log is "returned" via returnLogBuffer(), and added to a queue to transmit
- * 		checkoutLogPacket() returns a pointer to a cefLogPacket_t if there is a log to transmit
- * 		Once the transmit has been completed, the log is returned via returnLogPacket()
+ * 		Then the log is "returned" via checkinLogBufferLogging(), and added to a queue to transmit
+ * 		checkoutLogTransmitBuffer() returns a pointer of the next log to transmit
+ * 		Once the transmit has been completed, the buffer is returned via checkinLogTransmitBuffer()
  *
  * CEF Proxy Command
  * 		There is one buffer that is used for CEF Proxy Commands.
@@ -42,13 +44,12 @@ written permission of Syncroness.
  * Maximum number of logging cefLogPacketAscii_t that can exist in the system at one time.
  * Caution:  Logging packets can be memory hogs, to be careful how big this number is
  */
-static const uint32_t maxNumLoggingPackets = 2;
-//static const uint32_t maxNumLoggingPackets = 20;
+static const uint32_t maxNumLoggingPackets = 20;
 
 
 //! Singleton instantiation of CommandDebugPortRouter
 static CommandDebugPortRouter commandDebugPortRouterSingleton(BufferPoolBase::BufferPoolId_Logging,
-	      	  	  	  	  	  	  	  	  	  	  sizeof(cefLogPacket_t),
+	      	  	  	  	  	  	  	  	  	  	  sizeof(cefLog_t),
 												  maxNumLoggingPackets);
 
 
@@ -60,8 +61,10 @@ CommandDebugPortRouter::CommandDebugPortRouter(uint32_t logBufferPoolId,
 					CommandBase(commandOpCodeDebugPortRouter),
 					m_logPool(logBufferPoolId, numBytesPerLogEntry, maxNumLogEntries),
 					m_logsToSend(maxNumLogEntries),
-					m_numBytesInCefCommandResponse(0),
-				    m_cefCommandPacketState(cefCommandPacketState_bufferAvailable)
+					m_cefCommandBuffer(&m_cefCommand, sizeof(m_cefCommand)),
+					m_cefLogBufferTransmit(nullptr, 0),
+					mp_cefBufferTransmit(nullptr),
+				    m_cefCommandBufferState(cefCommandBufferState_bufferAvailable)
 					{ }
 
 
@@ -98,7 +101,7 @@ bool CommandDebugPortRouter::execute(CommandBase* p_childCommand)
             default:
             {
                 // If we get here, we've lost our mind.
-                LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unhandled command state {:d}", m_commandState);
+                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unhandled command state {:d}", m_commandState);
                 shouldYield = true;
                 commandDone = true;
                 break;
@@ -110,168 +113,239 @@ bool CommandDebugPortRouter::execute(CommandBase* p_childCommand)
 }
 
 
-cefLog_t* CommandDebugPortRouter::checkoutLogBuffer()
+cefLog_t* CommandDebugPortRouter::checkoutLogBufferLogging()
 {
-	cefLogPacket_t* p_logPacket = (cefLogPacket_t*)m_logPool.allocate(sizeof(cefLogPacket_t));
+    cefLog_t* p_cefLog = (cefLog_t*)m_logPool.allocate(sizeof(cefLog_t));
 
-	if (p_logPacket == nullptr)
+	if (p_cefLog == nullptr)
 	{
 		// No log buffers available; they must all be backed up in the transmit queue
 		// Eventually we want to thrown away some data and make room for an overflow message
 		return nullptr;
 	}
 
-	// We want to return a pointer to the log packet only and "hide" the packet header
-	// part of the memory from this API.
-	return &(p_logPacket->m_log);
+	return p_cefLog;
 }
 
 
-void CommandDebugPortRouter::returnLogBuffer(cefLog_t* p_cefLogBuffer)
+void CommandDebugPortRouter::checkinLogBufferLogging(cefLog_t* p_cefLog)
 {
-	if (p_cefLogBuffer == nullptr)
+	if (p_cefLog == nullptr)
 	{
 		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "A nullptr log buffer was returned!");
 	}
 
-	size_t const offsetToBaseAddr = offsetof(cefLogPacket_t, m_log);
-
-	// We were pointing to a member variable that is not the first address of the structure...so adjust accordingly
-	void* p_logPacket = reinterpret_cast<void*>(reinterpret_cast<char*>(p_cefLogBuffer) - offsetToBaseAddr);
-
-	// The log packet is assumed to have valid logging data, and now is ready to be transmitted, so add
+	// The p_cefLog is assumed to have valid logging data, and now is ready to be transmitted, so add
 	// it to the log to send fifo.
-	if (m_logsToSend.put(p_logPacket) == false)
+	if (m_logsToSend.put(p_cefLog) == false)
 	{
 		// Something is messed up in the system setup as there should be room to send all logs we have buffer space for
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "m_logsToSend not setup correctly in CommandDebugPortRouter");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "m_logsToSend not setup correctly in CommandDebugPortRouter");
 	}
 
 }
 
-
-cefLogPacket_t* CommandDebugPortRouter::checkoutLogPacket()
+cefLog_t* CommandDebugPortRouter::checkoutLogTransmitBuffer()
 {
-	void* p_cefLogPacket = nullptr;
+	void* p_cefLog = nullptr;
 
-	if (m_logsToSend.get(p_cefLogPacket) == false)
+	if (m_logsToSend.get(p_cefLog) == false)
 	{
 		// No logs to send
 		return nullptr;
 	}
 
-	return (cefLogPacket_t*)p_cefLogPacket;
+	return (cefLog_t*)p_cefLog;
 }
 
 
-void CommandDebugPortRouter::returnLogPacket(cefLogPacket_t* p_cefLogBuffer)
+void CommandDebugPortRouter::checkinLogTransmitBuffer(cefLog_t* p_cefLog)
 {
 	// If memory is attempted to be returned to a pool that it was not allocated from, then free() with trace fatal.
-	m_logPool.free(p_cefLogBuffer);
+	m_logPool.free(p_cefLog);
 }
 
-
-
-cefCommandPacketMaximum_t* CommandDebugPortRouter::checkoutCefReceiveCommandPacket()
+CefBuffer* CommandDebugPortRouter::checkoutCefCommandReceiveBuffer()
 {
-	if (m_cefCommandPacketState != cefCommandPacketState_bufferAvailable)
+	if (m_cefCommandBufferState != cefCommandBufferState_bufferAvailable)
 	{
 		// If the buffer is not available...
 		return nullptr;
 	}
 
 	// Mark the packet as checked out
-	m_cefCommandPacketState = cefCommandPacketState_receivingPacket;
-	return &m_cefCommandPacket;
+	m_cefCommandBufferState = cefCommandBufferState_receivingCommand;
+	return &m_cefCommandBuffer;
 }
 
-void CommandDebugPortRouter::returnCefReceiveCommandPacket(cefCommandPacketMaximum_t* p_cefCommandPacket)
+
+void CommandDebugPortRouter::checkinCefCommandReceiveBuffer(CefBuffer* p_cefBuffer)
 {
 	// Sanity Check:  Confirm the memory was checked out appropriately in the first place
-	if (m_cefCommandPacketState != cefCommandPacketState_receivingPacket)
+	if (m_cefCommandBufferState != cefCommandBufferState_receivingCommand)
 	{
 		// Attempting to return a packet that was not checked out!
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Attempt to return memory to CommandDebugPortRouter in wrong state{:d}, Allowed {:d}", m_cefCommandPacketState, cefCommandPacketState_receivingPacket);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Attempt to return memory to CommandDebugPortRouter in wrong state{:d}, Allowed {:d}", m_cefCommandBufferState, cefCommandBufferState_receivingCommand);
 	}
 
 	// Sanity Check:  Confirm that returning the right memory
-	if (p_cefCommandPacket != &m_cefCommandPacket)
+	if (p_cefBuffer != &m_cefCommandBuffer)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Attempt to return unknown memory to CommandDebugPortRouter 0x{:x}", p_cefCommandPacket);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Attempt to return unknown memory to CommandDebugPortRouter 0x{:x}", p_cefBuffer);
 	}
 
-	// This is a valid return, so change the state of the CEF Command Buffer Packet
+	// Sanity Check that we didn't overflow the buffer
+	if (m_cefCommandBuffer.getNumberOfValidBytes() > m_cefCommandBuffer.getMaxBufferSizeInBytes())
+	{
+        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Buffer overflow! valid={%d}, max={%d}", m_cefCommandBuffer.getNumberOfValidBytes(), m_cefCommandBuffer.getMaxBufferSizeInBytes());
+	}
+
+	// This is a valid return, so change the state of the CEF Command Buffer
 	// By design, the buffer should only be returned with a CEF Receive Command
-	m_cefCommandPacketState = cefCommandPacketState_packetReceived;
+	m_cefCommandBufferState = cefCommandBufferState_commandReceived;
 }
 
-cefCommandMaximum_t* CommandDebugPortRouter::checkoutCefCommandBuffer()
+
+CefBuffer* CommandDebugPortRouter::checkoutCefCommandProxyProcessingBuffer()
 {
-	if (m_cefCommandPacketState != cefCommandPacketState_packetReceived)
+	if (m_cefCommandBufferState != cefCommandBufferState_commandReceived)
 	{
 		return nullptr;
 	}
 
 	// Mark that the cefCommand Buffer (does not include packet header) is checked out to proxy command
-	m_cefCommandPacketState = cefCommandPacketState_proxyCommandOwnsPacket;
-	return ((cefCommandMaximum_t*)&m_cefCommandPacket.m_cefCommandPayload);
+	m_cefCommandBufferState = cefCommandBufferState_proxyCommandOwnsBuffer;
+	return &m_cefCommandBuffer;
 }
 
-void CommandDebugPortRouter::returnCefCommandBuffer(cefCommandMaximum_t* p_cefCommandResponse, uint32_t numBytesInCommandResponse)
+
+void CommandDebugPortRouter::checkinCefCommandProxyProcessingBuffer(CefBuffer* p_cefBuffer)
 {
 	// Sanity Check State
-	if (m_cefCommandPacketState != cefCommandPacketState_proxyCommandOwnsPacket)
+	if (m_cefCommandBufferState != cefCommandBufferState_proxyCommandOwnsBuffer)
 	{
 		// Attempting to return a packet that was not checked out!
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Attempt to return memory to CommandDebugPortRouter in wrong state{:d}, Allowed {:d}", m_cefCommandPacketState, cefCommandPacketState_proxyCommandOwnsPacket);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Attempt to return memory to CommandDebugPortRouter in wrong state{:d}, Allowed {:d}", m_cefCommandBufferState, cefCommandBufferState_proxyCommandOwnsBuffer);
 	}
 
 	// Sanity Check Address
-	if ((char*)p_cefCommandResponse != ((char*)&m_cefCommandPacket.m_cefCommandPayload))
+	if (p_cefBuffer != &m_cefCommandBuffer)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Attempt to return unknown memory 0x{:x} via returnCefCommandBuffer, expected 0x{:x}", p_cefCommandResponse, &m_cefCommandPacket.m_cefCommandPayload);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Attempt to return unknown memory 0x{:x} via returnCefCommandBufferForProxyProcessing, expected 0x{:x}", p_cefBuffer, &m_cefCommandBuffer);
 	}
 
 	// Sanity Check numBytes makes sense
-	if (numBytesInCommandResponse > sizeof(m_cefCommandPacket.m_cefCommandPayload))
+	if (m_cefCommandBuffer.getNumberOfValidBytes() > m_cefCommandBuffer.getMaxBufferSizeInBytes())
 	{
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Illegal payload size={:d}, max allowed={:d}", numBytesInCommand, sizeof(m_cefCommandPacket.m_cefCommandPayload));
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Illegal payload size={:d}, max allowed={:d}", m_cefCommandBuffer.getNumberOfValidBytes(), m_cefCommandBuffer.getMaximumBufferSizeInBytes());
 	}
 
-	m_numBytesInCefCommandResponse = numBytesInCommandResponse;
-	m_cefCommandPacketState = cefCommandPacketState_readyToTransmit;
+	m_cefCommandBufferState = cefCommandBufferState_readyToTransmit;
 }
 
-cefCommandPacketMaximum_t* CommandDebugPortRouter::checkoutCefTransmitCommandPacket(uint32_t& numBytesInCommandResponse)
+
+CefBuffer* CommandDebugPortRouter::checkoutCefCommandTransmitBuffer()
 {
-	if (m_cefCommandPacketState != cefCommandPacketState_readyToTransmit)
+	if (m_cefCommandBufferState != cefCommandBufferState_readyToTransmit)
 	{
 		return nullptr;
 	}
 
-	// Update how bytes in the m_cefCommandPayload should be transmitted
-	numBytesInCommandResponse = m_numBytesInCefCommandResponse;
+	// Note:  The number of bytes to transmit is contained in m_cefCommandBuffer.getNumberOfValidBytes()
 
-	m_cefCommandPacketState = cefCommandPacketState_transmittingPacket;
+	m_cefCommandBufferState = cefCommandBufferState_transmittingBuffer;
 
-	return &m_cefCommandPacket;
+	return &m_cefCommandBuffer;
 }
 
-void CommandDebugPortRouter::returnCefTransmitCommandPacket(cefCommandPacketMaximum_t* p_cefCommandPacket)
+
+void CommandDebugPortRouter::checkinCefCommandTransmitBuffer(CefBuffer* p_cefBuffer)
 {
 	// Sanity Check State
-	if (m_cefCommandPacketState != cefCommandPacketState_transmittingPacket)
+	if (m_cefCommandBufferState != cefCommandBufferState_transmittingBuffer)
 	{
 		// Attempting to return a packet that was not checked out!
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Attempt to return memory to CommandDebugPortRouter in wrong state{:d}, Allowed {:d}", m_cefCommandPacketState, cefCommandPacketState_transmittingPacket);
+		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Attempt to return memory to CommandDebugPortRouter in wrong state{:d}, Allowed {:d}", m_cefCommandBufferState, cefCommandBufferState_transmittingBuffer);
 	}
 
 	// Sanity Check Address
-	if (p_cefCommandPacket != &m_cefCommandPacket)
+	if (p_cefBuffer != &m_cefCommandBuffer)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Attempt to return unknown memory to Cef Transmit Command Packet 0x{:x}, expected 0x{:x}, ", p_cefCommandResponse, &m_cefCommandPacket);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Attempt to return unknown memory to Cef Transmit Command Packet 0x{:x}, expected 0x{:x}, ", p_cefCommandResponse, &m_cefCommandPacket);
 	}
 
 	// All done with the buffer; mark buffer as being available
-	m_cefCommandPacketState = cefCommandPacketState_bufferAvailable;
+	m_cefCommandBufferState = cefCommandBufferState_bufferAvailable;
+
+	// Reset the valid bytes to aid debug as the next step is to receive another command
+	m_cefCommandBuffer.setNumberOfValidBytes(0);
+}
+
+
+CefBuffer* CommandDebugPortRouter::checkoutCefTransmitBuffer(debugPacketDataType_t& debugDataType)
+{
+    // Is there already a command checked out?
+    if (mp_cefBufferTransmit != nullptr)
+    {
+        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Attempt to checkout CEF Buffer to transmit when one is already checked out!");
+    }
+
+    // Initialize the return values
+    debugDataType = debugPacketType_invalid;
+    mp_cefBufferTransmit = nullptr;   //!<  Yes, the above nullptr check confirms this, but for defensive coding setting up anyhow.
+
+    // Is there a Command Response waiting to be sent?
+    if (m_cefCommandBufferState == cefCommandBufferState_readyToTransmit)
+    {
+        mp_cefBufferTransmit = checkoutCefCommandTransmitBuffer();
+        if (mp_cefBufferTransmit == nullptr)
+        {
+            LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Programming Error:  Unexpected nullptr for CefCommand Response!");
+        }
+        debugDataType = debugPacketType_commandResponse;
+    }
+    // Is there a log waiting to be sent?
+    else if (m_logsToSend.isEmpty() == false)
+    {
+        cefLog_t* p_cefLog = checkoutLogTransmitBuffer();
+        if (p_cefLog == nullptr)
+        {
+            LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Programming Error:  Unexpected nullptr for CefCommand Response!");
+        }
+
+        // Need to convert to CefBuffer
+        mp_cefBufferTransmit = (CefBuffer*) new ((void*)&m_cefLogBufferTransmit) CefBuffer((void*)p_cefLog, sizeof(cefLog_t));
+        if (mp_cefBufferTransmit == nullptr)
+        {
+            LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Programming Error:  Unexpected nullptr for Log Transmit!");
+        }
+
+        // Setup the number of valid bytes in the log buffer
+        mp_cefBufferTransmit->setNumberOfValidBytes(sizeof(cefLog_t));
+
+        debugDataType = debugPacketType_loggingData;
+    }
+
+    return mp_cefBufferTransmit;
+}
+
+
+void CommandDebugPortRouter::checkinCefTransmitBuffer(CefBuffer* p_cefBuffer)
+{
+    if (p_cefBuffer == nullptr)
+    {
+        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Programming Error:  Request to return nullptr for Log Transmit Buffer!");
+    }
+
+    // Is this the Cef Command Buffer?
+    if (p_cefBuffer == &m_cefCommandBuffer)
+    {
+        checkinCefCommandTransmitBuffer(p_cefBuffer);
+    }
+    // Then this must be a log buffer
+    else
+    {
+        cefLog_t* p_cefLog = (cefLog_t*)p_cefBuffer->getBufferStartAddress();
+        checkinLogTransmitBuffer(p_cefLog);
+    }
 }
