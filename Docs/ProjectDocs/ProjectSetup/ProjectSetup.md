@@ -24,6 +24,10 @@ From File->New select New C/C++ Project, which will bring up a target selection 
 
 After project creation the MCU's pins, peripherals, and clocks can be customized within the IDE and corresponding code auto-generated.
 
+## Python Utility setup
+
+The cefContract.py file has a type selection at the top that determines the endianness of the ctype structures. Choose the appropriate type that matches your target's architecture and leave the other commented out.
+
 ---
 # Normal Syncroness project development - integrating CEF into a project
 
