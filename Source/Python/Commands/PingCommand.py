@@ -17,7 +17,7 @@
 
 import ctypes
 
-from CommandBase import *
+from .CommandBase import *
 
 
 class CommandPing(CommandBase):

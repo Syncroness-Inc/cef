@@ -16,7 +16,7 @@
 
 
 from Router import Router
-from Commands import CommandPing
+from Commands.PingCommand import CommandPing
 
 
 class Base:
