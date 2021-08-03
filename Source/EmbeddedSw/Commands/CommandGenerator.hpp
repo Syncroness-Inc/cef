@@ -57,11 +57,10 @@ class CommandGenerator
 		 * Allocates a command based on the command's opCode
 		 *
 		 * @param commandOpCode  		The opcode of the command to allocate
-		 * @param allocatableCommand	Returns false if command cannot be allocated (likely because not setup)
-		 * 								True otherwise
-		 *
-		 * @param p_command		 nullptr if could not allocate a command (likely because no memory currently available)
-		 * 						 Otherwise, the object corresponding to the opCode
+		 * @param allocatableCommand    Returns false if command cannot be allocated (likely because not setup)
+		 *                                  True otherwise
+		 * @param p_command		        nullptr if could not allocate a command (likely because no memory currently available)
+		 *                                  Otherwise, the object corresponding to the opCode
 		 */
 		CommandBase* allocateCommand(commandOpCode_t commandOpCode, bool& allocatableCommand);
 

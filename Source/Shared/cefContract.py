@@ -264,16 +264,17 @@ class cefLog(ctypes.Structure):
 #####################################################################################################################
  
  
- """
- * Maximum number of bytes in the application layer payload.
- * In other words, the total number of bytes the application layer would request the
- * transport layer to received/send.
- * This number does NOT include Transport layer headers
+"""
+	 * Maximum number of bytes in the application layer payload.
+	 * In other words, the total number of bytes the application layer would request the
+	 * transport layer to received/send.
+	 * This number does NOT include Transport layer headers
 """
 DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND = ctypes.sizeof(cefCommandHeader) + 512
 DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG = ctypes.sizeof(cefLog)
-DEBUG_PORT_MAX_APPLICATION_PAYLOAD = (DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND > DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG ? \
-			DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND : DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG)
+DEBUG_PORT_MAX_APPLICATION_PAYLOAD = DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND \
+		if DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND > DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG \
+		else DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG
 
 """
 Debug Port Packet Size

@@ -1,18 +1,18 @@
 /* ******************************************************************
-\copyright COPYRIGHT AND PROPRIETARY RIGHTS NOTICES:
+ \copyright COPYRIGHT AND PROPRIETARY RIGHTS NOTICES:
 
-Copyright (C) 2021, an unpublished work by Syncroness, Inc.
-All rights reserved.
+ Copyright (C) 2021, an unpublished work by Syncroness, Inc.
+ All rights reserved.
 
-This material contains the valuable properties and trade secrets of
-Syncroness of Westminster, CO, United States of America
-embodying substantial creative efforts and confidential information,
-ideas and expressions, no part of which may be reproduced or
-transmitted in any form or by any means, electronic, mechanical, or
-otherwise, including photocopying and recording or in connection
-with any information storage or retrieval system, without the prior
-written permission of Syncroness.
-****************************************************************** */
+ This material contains the valuable properties and trade secrets of
+ Syncroness of Westminster, CO, United States of America
+ embodying substantial creative efforts and confidential information,
+ ideas and expressions, no part of which may be reproduced or
+ transmitted in any form or by any means, electronic, mechanical, or
+ otherwise, including photocopying and recording or in connection
+ with any information storage or retrieval system, without the prior
+ written permission of Syncroness.
+ ****************************************************************** */
 
 /* Header guard */
 #ifndef __CEF_CONTRACT_H
@@ -20,9 +20,9 @@ written permission of Syncroness.
 
 /* Start of c/c++ guard */
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
 
 /**
  * Contains definitions for shared structures between Embedded SW and Python Utilities.
@@ -32,10 +32,7 @@ extern "C" {
  * 	added to the python file as well.  Try to keep the python and c files in roughly the same order.
  */
 
-
 #include "cefMappings.hpp"
-
-
 
 /*********************************************************************************************************************/
 /******  ERROR CODES                                                                                            ******/
@@ -50,36 +47,35 @@ extern "C" {
  */
 enum
 {
-	errorCode_OK 							            			        = 0, 	// No Error, Pass
-	errorCode_LogFatalReturn	        									= 1,	// Should only be used in return statements immediately after LOG_FATAL.
-																					//    Currently, a TRACE_FATAL statement never returns, but this is used
-																					// 	  in the event some type of recovery is put in place in the future.
-	errorCode_PointerIsNullptr										        = 2,	// Only should be used after LOG_FATAL nullptr check
-	errorCode_reserved2												        = 3,	// to be used later for commonly used return values
-	errorCode_reserved3												        = 4,
-	errorCode_reserved4												        = 5,
-	errorCode_reserved5												        = 6,
-	errorCode_IllegalCommandState 			            			        = 7,
-	errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues			        = 8,
-	errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand		        = 9,
-	errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch 		= 11,
-	errorCode_debugPortErrorCodeNone                  						= 12,
-	errorCode_debugPortErrorCodeParity 	   									= 13,
-	errorCode_debugPortErrorCodeNoise										= 14,
-	errorCode_debugPortErrorCodeFrame										= 15,
-	errorCode_debugPortErrorCodeOverrun										= 16,
-	errorCode_debugPortErrorCodeUnknown										= 17,
-	errorCode_RequestedCefProxyCommandNotAllocatable				 		= 18,
-	errorCode_BufferValidBytesExceedsBufferSize								= 19,
+    errorCode_OK = 0, 	// No Error, Pass
+    errorCode_LogFatalReturn = 1,	// Should only be used in return statements immediately after LOG_FATAL.
+                                    //    Currently, a TRACE_FATAL statement never returns, but this is used
+                                    // 	  in the event some type of recovery is put in place in the future.
+    errorCode_PointerIsNullptr = 2,	// Only should be used after LOG_FATAL nullptr check
+    errorCode_reserved2 = 3,	// to be used later for commonly used return values
+    errorCode_reserved3 = 4,
+    errorCode_reserved4 = 5,
+    errorCode_reserved5 = 6,
+    errorCode_IllegalCommandState = 7,
+    errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues = 8,
+    errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand = 9,
+    errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch = 11,
+    errorCode_debugPortErrorCodeNone = 12,
+    errorCode_debugPortErrorCodeParity = 13,
+    errorCode_debugPortErrorCodeNoise = 14,
+    errorCode_debugPortErrorCodeFrame = 15,
+    errorCode_debugPortErrorCodeOverrun = 16,
+    errorCode_debugPortErrorCodeUnknown = 17,
+    errorCode_RequestedCefProxyCommandNotAllocatable = 18,
+    errorCode_BufferValidBytesExceedsBufferSize = 19,
 
-	errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
+    errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
 };
 
 // Application error code type must fit in 16 bits
-STATIC_ASSERT((errorCode_NumApplicationErrorCodes < UINT16_MAX), error_codes_must_fit_in_16_bits);
+STATIC_ASSERT((errorCode_NumApplicationErrorCodes < UINT16_MAX), error_codes_must_fit_in_16_bits)
+;
 typedef uint16_t errorCode_t;
-
-
 
 /*********************************************************************************************************************/
 /******  COMMAND OPCODES                                                                                        ******/
@@ -93,20 +89,19 @@ typedef uint16_t errorCode_t;
  */
 enum
 {
-    commandOpCodeNone                              		= 0,	// Illegal command type, reserved
-	commandOpCodePing 	   						   		= 1,
-	commandOpCodeDebugPortRouter				   		= 2,
-	commandOpCodeCefCommandProxy						= 3,
+    commandOpCodeNone = 0,	// Illegal command type, reserved
+    commandOpCodePing = 1,
+    commandOpCodeDebugPortRouter = 2,
+    commandOpCodeCefCommandProxy = 3,
 
     maxCommandOpCodeNumber, // Must be last, except for 'invalid'
-    commandOpCodeInvalid                               = 0xFFFF,
+    commandOpCodeInvalid = 0xFFFF,
 };
 
 // Command type must fit in 16 bits
-STATIC_ASSERT((maxCommandOpCodeNumber < UINT16_MAX), command_type_must_fit_in_16_bits);
+STATIC_ASSERT((maxCommandOpCodeNumber < UINT16_MAX), command_type_must_fit_in_16_bits)
+;
 typedef uint16_t commandOpCode_t;
-
-
 
 /*********************************************************************************************************************/
 /******  CEF COMMAND REQUEST AND RESPONSE STRUCTURES                                                            ******/
@@ -128,7 +123,6 @@ typedef uint16_t commandOpCode_t;
  * See the importFromCefCommand() and exportToCefCommand() functions for each command for definition of variables.
  * 		This is done rather than create a maintenance issue of essentially duplicating the documentation in two spots.
  */
-
 
 /**
  * This must be the first line in the CEF COMMAND REQUEST AND RESPONSE STRUCTURES section in order to
@@ -154,12 +148,10 @@ typedef uint16_t commandOpCode_t;
  */
 enum
 {
-    debugPacketType_commandRequest                          = 0,
-	debugPacketType_commandResponse 	   					= 1,
-    debugPacketType_loggingData                             = 2,
+    debugPacketType_commandRequest = 0, debugPacketType_commandResponse = 1, debugPacketType_loggingData = 2,
 
     // Must be last entry
-    debugPacketType_invalid                                 = 0xffff
+    debugPacketType_invalid = 0xffff
 };
 typedef uint16_t debugPacketDataType_t;
 
@@ -176,22 +168,22 @@ typedef uint16_t debugPacketDataType_t;
  */
 typedef struct
 {
-	uint16_t m_commandOpCode;					// 16 bit aligned
+    uint16_t m_commandOpCode;					// 16 bit aligned
 
-	/**
-	 * Rolling sequence number generated by Python to help ensure that the command response is indeed
-	 * the correct response to the command request.  It is the responsibility of the EmbeddedSw to
-	 * populate the response command's header m_commandRequestResponseSequenceNumberPython variable
-	 * with the same value that was in the request command' header field.
-	 * Python should validate that the response packet's m_commandRequestResponseSequenceNumberPython
-	 * matches the number generated for the original request command.
-	 */
-	uint16_t m_commandRequestResponseSequenceNumberPython;	// 32 bit aligned
+    /**
+     * Rolling sequence number generated by Python to help ensure that the command response is indeed
+     * the correct response to the command request.  It is the responsibility of the EmbeddedSw to
+     * populate the response command's header m_commandRequestResponseSequenceNumberPython variable
+     * with the same value that was in the request command' header field.
+     * Python should validate that the response packet's m_commandRequestResponseSequenceNumberPython
+     * matches the number generated for the original request command.
+     */
+    uint16_t m_commandRequestResponseSequenceNumberPython;	// 32 bit aligned
 
-	uint32_t m_commandErrorCode;				// 64 bit aligned
-	uint32_t m_commandNumBytes;					// Used to confirm python/embedded SW in sync on response structure; 32 bit aligned
-												// Includes both the cefCommandHeader_t and the command specific information
-	uint32_t m_padding1;						// 64 bit aligned
+    uint32_t m_commandErrorCode;				// 64 bit aligned
+    uint32_t m_commandNumBytes;					// Used to confirm python/embedded SW in sync on response structure; 32 bit aligned
+                                                // Includes both the cefCommandHeader_t and the command specific information
+    uint32_t m_padding1;						// 64 bit aligned
 } cefCommandHeader_t;
 
 /**
@@ -204,17 +196,15 @@ typedef struct
  */
 typedef struct
 {
-	uint32_t 	m_framingSignature;			//32 bit aligned
-	uint32_t 	m_packetPayloadChecksum;	//Checksum over the payload only, 64 bit aligned
-	uint32_t 	m_payloadSize;				//Payload size in bytes, 32 bit aligned
+    uint32_t m_framingSignature;			//32 bit aligned
+    uint32_t m_packetPayloadChecksum;	//Checksum over the payload only, 64 bit aligned
+    uint32_t m_payloadSize;				//Payload size in bytes, 32 bit aligned
 
-	//! The types of packets are defined in debugPacketDataType_t
-	uint8_t 	m_packetType;				//40 bit aligned
-	uint8_t 	m_reserve;					//48 bit aligned
-	uint16_t 	m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
+    //! The types of packets are defined in debugPacketDataType_t
+    uint8_t m_packetType;				//40 bit aligned
+    uint8_t m_reserve;					//48 bit aligned
+    uint16_t m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
-
-
 
 /**
  * CommandPing
@@ -230,35 +220,30 @@ typedef struct
 
 typedef struct
 {
-	cefCommandHeader_t m_header;				// Must be 1st entry in structure, guaranteed to be 64 bit aligned
+    cefCommandHeader_t m_header;				// Must be 1st entry in structure, guaranteed to be 64 bit aligned
 
-	uint8_t		m_uint8Value;					// 8  bit aligned
-	uint8_t		m_padding1;						// 16 bit aligned
-	uint16_t	m_uint16Value;					// 32 bit aligned
-	uint32_t 	m_testValue;					// 64 bit aligned
-	uint32_t	m_uint32Value;					// 32 bit aligned
-	uint32_t	m_padding2;						// 64 bit aligned
-	uint64_t 	m_offsetToAddToResponse;		// 64 bit aligned
-	uint64_t	m_uint64Value;					// 64 bit aligned
+    uint8_t m_uint8Value;					// 8  bit aligned
+    uint8_t m_padding1;						// 16 bit aligned
+    uint16_t m_uint16Value;					// 32 bit aligned
+    uint32_t m_testValue;					// 64 bit aligned
+    uint32_t m_uint32Value;					// 32 bit aligned
+    uint32_t m_padding2;						// 64 bit aligned
+    uint64_t m_offsetToAddToResponse;		// 64 bit aligned
+    uint64_t m_uint64Value;					// 64 bit aligned
 } cefCommandPingRequest_t;
 
 typedef struct
 {
-	cefCommandHeader_t m_header;				// Must be 1st entry in structure, 64 bit aligned
+    cefCommandHeader_t m_header;				// Must be 1st entry in structure, 64 bit aligned
 
-	uint8_t		m_uint8Value;					// 8  bit aligned
-	uint8_t		m_padding1;						// 16 bit aligned
-	uint16_t	m_uint16Value;					// 32 bit aligned
-	uint32_t 	m_testValue;					// 64 bit aligned
-	uint32_t	m_uint32Value;					// 32 bit aligned
-	uint32_t	m_padding2;						// 64 bit aligned
-	uint64_t	m_uint64Value;					// 64 bit aligned
+    uint8_t m_uint8Value;					// 8  bit aligned
+    uint8_t m_padding1;						// 16 bit aligned
+    uint16_t m_uint16Value;					// 32 bit aligned
+    uint32_t m_testValue;					// 64 bit aligned
+    uint32_t m_uint32Value;					// 32 bit aligned
+    uint32_t m_padding2;						// 64 bit aligned
+    uint64_t m_uint64Value;					// 64 bit aligned
 } cefCommandPingResponse_t;
-
-
-
-
-
 
 /*********************************************************************************************************************/
 /******  LOGGING                                                                                                ******/
@@ -275,33 +260,32 @@ typedef struct
     cefCommandHeader_t m_header;                // Must be 1st entry in structure, guaranteed to be 64 bit aligned
 
     //! The 3 64 bit values we can have for any log message
-    uint64_t    m_logVariable1;     // 64 bit aligned
-    uint64_t    m_logVariable2;     // 64 bit aligned
-    uint64_t    m_logVariable3;     // 64 bit aligned
+    uint64_t m_logVariable1;     // 64 bit aligned
+    uint64_t m_logVariable2;     // 64 bit aligned
+    uint64_t m_logVariable3;     // 64 bit aligned
 
     //! time stamp of when the log occurred (unit of time may be project specific as resolution of available clocks vary
-    uint64_t    m_timeStamp;        // 64 bit aligned
+    uint64_t m_timeStamp;        // 64 bit aligned
 
     //! The logging string to be printed to the screen (null terminated, unless at max length)
-    char        m_logString[LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS];   // 64 bit aligned
+    char m_logString[LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS];   // 64 bit aligned
 
     //! filename and line number help debug to know where in code the log message came from
-    char        m_fileName[LOGGING_ASCII_FILENAME_NUM_CHARACTERS];          // 64 bit aligned
+    char m_fileName[LOGGING_ASCII_FILENAME_NUM_CHARACTERS];          // 64 bit aligned
 
     //! filename and line number help debug to know where in code the log message came from
-    uint32_t    m_fileLineNumber;       // 32 bit aligned
+    uint32_t m_fileLineNumber;       // 32 bit aligned
 
     //! Log Sequence Number (helps to know how many logs were dropped when debug port can't keep up with logging)
-    uint16_t    m_logSequenceNumber;    // 48 bit aligned
+    uint16_t m_logSequenceNumber;    // 48 bit aligned
 
     //! Log module id                   // 56 bit aligned
-    uint8_t     m_moduleId;
+    uint8_t m_moduleId;
 
     //! Type of log message
-    uint8_t     m_logType;              // 64 bit aligned
+    uint8_t m_logType;              // 64 bit aligned
 
 } cefLog_t;
-
 
 /*********************************************************************************************************************/
 /******  Debug Port constants that rely on previously defined structures                                        ******/
@@ -318,22 +302,17 @@ typedef struct
 #define MAX_LOCAL(A,B)  (A > B ? A : B)
 #define DEBUG_PORT_MAX_APPLICATION_PAYLOAD         MAX_LOCAL(DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND, DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG)
 
-
 /**
  * Debug Port Packet Size
  * Max number of bytes in a debug port packet
  */
 #define DEBUG_PORT_MAX_PACKET_SIZE_BYTES (sizeof(cefCommandDebugPortHeader_t) + DEBUG_PORT_MAX_APPLICATION_PAYLOAD)
 
-
-
-
 /**
  * This must be the last line in the shared structures section in order to
  * restore packing to the previous value
  */
 #pragma pack(pop)
-
 
 /* End of c/c++ guard */
 #ifdef __cplusplus
