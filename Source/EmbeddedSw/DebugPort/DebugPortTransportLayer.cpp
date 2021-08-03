@@ -83,9 +83,9 @@ void DebugPortTransportLayer::generatePacketHeader() //transmit = cefResponse
 	cefCompleteResponse_t* myXmitBuffer = (cefCompleteResponse_t*)mp_myResponse;
 	myXmitBuffer->headerResponse.m_framingSignature = DEBUG_PACKET_UINT32_FRAMING_SIGNATURE;
 	//Payload Checksum need to change sizeof to correct response
-	myXmitBuffer->headerResponse.m_packetPayloadChecksum = calculateChecksum((void*)(&myXmitBuffer->pingResponse), sizeof(&myXmitBuffer->pingResponse));
+	myXmitBuffer->headerResponse.m_packetPayloadChecksum = calculateChecksum((void*)(&myXmitBuffer->pingResponse), sizeof(myXmitBuffer->pingResponse));
 	//Get Size TODO myRequestType is not generic this will probable be fixed when generating
-	myXmitBuffer->headerResponse.m_payloadSize = sizeof(&myXmitBuffer->pingResponse);
+	myXmitBuffer->headerResponse.m_payloadSize = sizeof(myXmitBuffer->pingResponse);
 	//Packet type TODO this could be loggin 
 	myXmitBuffer->headerResponse.m_packetType = debugPacketType_commandResponse; 
 	//0 for checksum
@@ -93,17 +93,18 @@ void DebugPortTransportLayer::generatePacketHeader() //transmit = cefResponse
 	//0 to calcultate checksum
 	myXmitBuffer->headerResponse.m_packetHeaderChecksum = 0;
 	//Calculate checksum
-	myXmitBuffer->headerResponse.m_packetHeaderChecksum = calculateChecksum((void*)(&myXmitBuffer->headerResponse), sizeof(&myXmitBuffer->headerResponse));
+	myXmitBuffer->headerResponse.m_packetHeaderChecksum = calculateChecksum((void*)(&myXmitBuffer->headerResponse), sizeof(myXmitBuffer->headerResponse));
 }
 
 bool DebugPortTransportLayer::receivePacketHeader() //receive = request
 {
 	cefCompleteRequest_t* myReceiveBuffer = (cefCompleteRequest_t*)mp_receiveBuffer;
 	//Check to see if we have received enough bites for a full packet header
-	if(m_myDebugPortDriver.getCurrentBytesReceived() >= sizeof(&myReceiveBuffer->headerResponse))
+	uint header = sizeof(myReceiveBuffer->headerResponse);
+	if(m_myDebugPortDriver.getCurrentBytesReceived() >= header)
 	{
 		//Check to see if Checksum header matches
-		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->headerResponse, sizeof(&myReceiveBuffer->headerResponse));
+		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->headerResponse, (sizeof(myReceiveBuffer->headerResponse)-sizeof(myReceiveBuffer->headerResponse.m_packetHeaderChecksum)));
 		if(headerCheck != myReceiveBuffer->headerResponse.m_packetHeaderChecksum)
 		{
 			//Checksum header does not match
@@ -111,8 +112,8 @@ bool DebugPortTransportLayer::receivePacketHeader() //receive = request
 			LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Header Checksum does not match.");
 			return false;
 		}
-		//Get/Set packet size
-		m_receivePacketLength = myReceiveBuffer->headerResponse.m_payloadSize;
+		//Get/Set packet size (header + packet)
+		m_receivePacketLength = myReceiveBuffer->headerResponse.m_payloadSize + sizeof(myReceiveBuffer->headerResponse);
 		m_myDebugPortDriver.editReceiveSize(m_receivePacketLength);
 		return true;
 	}
@@ -189,7 +190,7 @@ void DebugPortTransportLayer::recv(void)
 	{
 		//ensure checksum matches
 		cefCompleteRequest_t* myReceiveBuffer = (cefCompleteRequest_t*)mp_receiveBuffer;
-		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->pingResponse, sizeof(&myReceiveBuffer->pingResponse));
+		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->pingResponse, sizeof(myReceiveBuffer->pingResponse));
 		if(headerCheck != myReceiveBuffer->headerResponse.m_packetPayloadChecksum)
 		{
 			//TODO tell router data no good
