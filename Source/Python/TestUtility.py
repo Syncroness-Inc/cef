@@ -63,4 +63,4 @@ if __name__ == '__main__':
     p = DebugSerialPort('/dev/ttyACM0', baudRate=115200)
     p.open()
     d = Diag(p)
-    d.ping()
+    # d.ping()
