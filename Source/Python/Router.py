@@ -25,7 +25,7 @@ sys.path.append(dirname(dirname(abspath(__file__))))
 from Shared import cefContract
 from DebugPortDriver import DebugPortDriver
 from Transport import Transport
-from Commands import *
+from Commands.CommandBase import *
 
 
 class Router:
@@ -48,7 +48,7 @@ class Router:
 
         self.__packetReadThread.start()
 
-    def send(self, command: Command):
+    def send(self, command: CommandBase):
         """
         Transmit the command request via the supplied transport layer. Only one oustanding
         command is permitted at a time - a response must be received or a timeout must occur before
