@@ -33,10 +33,7 @@
  * 		There is one buffer that is used for CEF Proxy Commands.
  * 		The buffer transitions between various states as it progresses through CEF Command processing
  * 		The buffer is "checked out" by an API, which transfers ownership (i.e. rights to modify) to who checked out
- * 		    the buffer.
- * 		The command only exposes the part of the buffer that the checkout API is allowed to modify
- *		The command is responsible to allocating/managing all memory for the DebugPort (in current implementation)
- *		   	as this simplifies the current implementation.
+ * 		    the buffer.  When the buffer is "checked in", it transitions to the next state.
  */
 
 /**

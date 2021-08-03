@@ -148,7 +148,9 @@ typedef uint16_t commandOpCode_t;
  */
 enum
 {
-    debugPacketType_commandRequest = 0, debugPacketType_commandResponse = 1, debugPacketType_loggingData = 2,
+    debugPacketType_commandRequest = 0,
+    debugPacketType_commandResponse = 1,
+    debugPacketType_loggingData = 2,
 
     // Must be last entry
     debugPacketType_invalid = 0xffff
@@ -197,12 +199,12 @@ typedef struct
 typedef struct
 {
     uint32_t m_framingSignature;			//32 bit aligned
-    uint32_t m_packetPayloadChecksum;	//Checksum over the payload only, 64 bit aligned
-    uint32_t m_payloadSize;				//Payload size in bytes, 32 bit aligned
+    uint32_t m_packetPayloadChecksum;	    //Checksum over the payload only, 64 bit aligned
+    uint32_t m_payloadSize;				    //Payload size in bytes, 32 bit aligned
 
     //! The types of packets are defined in debugPacketDataType_t
-    uint8_t m_packetType;				//40 bit aligned
-    uint8_t m_reserve;					//48 bit aligned
+    uint8_t m_packetType;				    //40 bit aligned
+    uint8_t m_reserve;					    //48 bit aligned
     uint16_t m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
 
@@ -220,28 +222,28 @@ typedef struct
 
 typedef struct
 {
-    cefCommandHeader_t m_header;				// Must be 1st entry in structure, guaranteed to be 64 bit aligned
+    cefCommandHeader_t m_header;			// Must be 1st entry in structure, guaranteed to be 64 bit aligned
 
     uint8_t m_uint8Value;					// 8  bit aligned
     uint8_t m_padding1;						// 16 bit aligned
     uint16_t m_uint16Value;					// 32 bit aligned
     uint32_t m_testValue;					// 64 bit aligned
     uint32_t m_uint32Value;					// 32 bit aligned
-    uint32_t m_padding2;						// 64 bit aligned
+    uint32_t m_padding2;					// 64 bit aligned
     uint64_t m_offsetToAddToResponse;		// 64 bit aligned
     uint64_t m_uint64Value;					// 64 bit aligned
 } cefCommandPingRequest_t;
 
 typedef struct
 {
-    cefCommandHeader_t m_header;				// Must be 1st entry in structure, 64 bit aligned
+    cefCommandHeader_t m_header;			// Must be 1st entry in structure, 64 bit aligned
 
     uint8_t m_uint8Value;					// 8  bit aligned
     uint8_t m_padding1;						// 16 bit aligned
     uint16_t m_uint16Value;					// 32 bit aligned
     uint32_t m_testValue;					// 64 bit aligned
     uint32_t m_uint32Value;					// 32 bit aligned
-    uint32_t m_padding2;						// 64 bit aligned
+    uint32_t m_padding2;					// 64 bit aligned
     uint64_t m_uint64Value;					// 64 bit aligned
 } cefCommandPingResponse_t;
 
@@ -279,11 +281,11 @@ typedef struct
     //! Log Sequence Number (helps to know how many logs were dropped when debug port can't keep up with logging)
     uint16_t m_logSequenceNumber;    // 48 bit aligned
 
-    //! Log module id                   // 56 bit aligned
+    //! Log module id                // 56 bit aligned
     uint8_t m_moduleId;
 
     //! Type of log message
-    uint8_t m_logType;              // 64 bit aligned
+    uint8_t m_logType;               // 64 bit aligned
 
 } cefLog_t;
 

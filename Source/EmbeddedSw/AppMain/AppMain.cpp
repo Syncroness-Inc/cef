@@ -212,7 +212,7 @@ static void johnTesting()
 #endif // router
 
 
-#if 1
+#if 0
     /*********** Check out CommandCefCommandProxy *************/
     // Drive the CEF Command packet through its state machine
     CefBuffer* p_cefBuffer = CommandDebugPortRouter::instance().checkoutCefCommandReceiveBuffer();
@@ -252,7 +252,7 @@ void AppMain::runAppMain_noReturn()
 	tonyTesting();
 
 	//! @toDo Remove this when have alternate means of testing
-	johnTesting();
+	//johnTesting();
 
 	//! run the infinite while loop.  There is no return from this routine.
 	run();
