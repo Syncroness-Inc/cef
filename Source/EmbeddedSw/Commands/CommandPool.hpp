@@ -22,17 +22,22 @@ written permission of Syncroness.
  * The constructor allocates enough memory for the command pool (on the proper alignment) given
  * the number of commands and the maximum command size.
  *
- * A ring buffer is used to manage a "queue" of "chunks of command memory" that can be allocated/freed.
  */
 
 #include "cefMappings.hpp"
-#include "RingBufferOfVoidPointers.hpp"
+#include "BufferPoolBase.hpp"
 
-class CommandPool
+class CommandPool : public BufferPoolBase
 {
 	public:
-		//! Constructor
-		CommandPool(uint32_t maxCommandSize, uint32_t numCommands);
+		/**
+		 * Constructor
+		 *
+		 * @param commandPooolId  Unique pool id for each command
+		 * @param maxCommandSize  The maximum command size in bytes to be allocated from this pool
+		 * @param numCommands	  The maximum number of commands that can be allocated at one time for this pool
+		 */
+		CommandPool(uint32_t commandPoolId, uint32_t maxCommandSizeInBytes, uint32_t numCommands);
 
 		/**
 		 * Allocate command memory from the pool
@@ -53,24 +58,7 @@ class CommandPool
 
 
 	private:
-		// Align the memory for each command.  For now, align to a void* pointer should be the alignment
-		// requirement for structures as well.
-		static const uint32_t m_commandPoolAlignmentSizeInBytes = sizeof(void*);
 
-		//! Ring Buffer of pointers to "chunks of memory" that can be allocated for command memory
-		RingBufferOfVoidPointers m_ringBufferOfCommandMemory;
-
-		//! Maximum command size in bytes that can be allocated from this pool
-		uint32_t m_maxCommandSizeInBytes;
-
-		//! number of commands that can be allocated from this pool at one time
-		uint32_t m_numCommands;
-
-		//! pointer to the start of the memory allocated for this pool
-		uint8_t* mp_memoryPoolStart;
-
-		//! pointer to the last byte of memory in this pool
-		uint8_t* mp_memoryPoolEnd;
 };
 
 #endif  // end header guard

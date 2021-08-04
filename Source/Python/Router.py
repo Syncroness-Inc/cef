@@ -108,12 +108,8 @@ class Router:
                 if packetType == cefContract.debugPacketDataType.debugPacketType_commandResponse.value:
                     self.commandSuccess = self._handleCommandResponse(packet)
                     self.commandResponsePending = False
-                elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingDataAscii.value:
-                    #TODO log handling
-                    pass
-                elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingDataBinary.value:
-                    #TODO log handling
-                    pass
+                elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingData.value:
+                    raise Exception("Log packet handling not implemented")
                 else:
                     raise Exception("Unknown packet type")
 
