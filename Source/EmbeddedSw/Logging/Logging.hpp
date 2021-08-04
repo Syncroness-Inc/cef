@@ -31,7 +31,7 @@ extern "C" {
  */
 
 #include "cefMappings.hpp"
-
+#include "cefContract.hpp"
 
 
 class Logging
@@ -44,9 +44,44 @@ class Logging
 			LogModuleIdCefDebugCommands,
 
         } logModuleId_t;
+
+        /**
+         * Adds a logging message to the logging queue
+         *      See note at top of this file as to why a variadic function is not being used
+         *
+         * @param logType       what type of log is this (debug, info...)
+         * @param logModuleId   what module generated this log
+         * @param message       pointer to a string that describes the console message for this log
+         * @param fileName      The name of the file that generated this log
+         * @param lineNum       The line number in the file this log came from
+         * @param Var1, Var2, Var3  Up to 3 variables that go with this log
+         */
+        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum);
+        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum,
+                        uint64_t var1);
+        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum,
+                        uint64_t var1, uint64_t var2);
+        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum,
+                        uint64_t var1, uint64_t var2, uint64_t var3);
 };
 
+
 // Don't use the LOG_MESSAGE macro directly, use one of the macros below
+#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__) \
+            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber);
+
+
+#if 0
+#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__, Var1) \
+            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber, Var1);
+
+#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__, Var1, Var2) \
+            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber, Var1, Var2);
+#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__, Var1, Var2, Var3) \
+            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber, Var1, Var2, Var3);
+#endif
+
+
 //@todo implement LOG_MESSAGE in packet format...leaving spaceflight code to show what did in past
 // for now, doing nothing...
 #ifdef __SIMULATOR__
@@ -55,10 +90,11 @@ class Logging
 	//printf("[%s] logModuleId %d %s:%d " msg "\n", level, logModuleId, __FILE__,__LINE__, ##__VA_ARGS__);
 
 #else
+#if 0
 #define LOG_MESSAGE(level, logModuleId, msg, ...) \
 	/* For now, printf, in future, route tracing through system messages to GSW to display */ \
     //xil_printf("[%s] logModuleId %d %s:%d " msg "\n", level, logModuleId, __FILE__,__LINE__, ##__VA_ARGS__);
-
+#endif
 #endif
 
 
@@ -89,12 +125,20 @@ class Logging
 
 */
 
+#if 0
 #ifdef DEBUG_BUILD
-    #define LOG_DEBUG(logModuleId, msg, ...) LOG_MESSAGE("DEBUG", logModuleId, msg, ##__VA_ARGS__)
+    LOG_DEBUG(logModuleId, msg)                     LOG_MESSAGE(logTypeDebug, logModuleId, msg)
+
+
+    LOG_DEBUG(logModuleId, msg, Var1)               LOG_MESSAGE(logTypeDebug, logModuleId, Var1)
+    LOG_DEBUG(logModuleId, msg, Var1, Var2)         LOG_MESSAGE(logTypeDebug, logModuleId, Var1, Var2)
+    LOG_DEBUG(logModuleId, msg, Var1, Var2, Var3)   LOG_MESSAGE(logTypeDebug, logModuleId, Var1, Var2, Var3)
 #else
     // Compile out debug log statements for non-debug builds
     #define LOG_DEBUG(msg, ...)
 #endif
+
+
 
 #define LOG_INFO(logModuleId, msg, ...) LOG_MESSAGE("INFO", logModuleId, msg, ##__VA_ARGS__)
 
@@ -111,6 +155,16 @@ class Logging
 	//!@todo Implement RUNTIME_ASSERT in cefMappings.h  ... will need to add continuation to line above
 	RUNTIME_ASSERT(false);
 #endif
+#endif
+
+#define LOG_INFO(logModuleId, msg, ...)
+
+#define LOG_ERROR(logModuleId, msg, ...)
+
+#define LOG_WARNING(logModuleId, msg, ...)
+
+#define LOG_FATAL(logModuleId, msg, ...)
+
 
 
 

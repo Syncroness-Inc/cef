@@ -253,6 +253,19 @@ typedef struct
 } cefCommandPingResponse_t;
 
 
+/**
+ * Logging types
+ */
+typedef enum logType
+{
+    logTypeDebug        = 0,
+    logTypeInfo         = 1,
+    logTypeWarning      = 2,
+    logTypeError        = 3,
+    logTypeFatal        = 4
+} logType_t;
+
+
 
 
 /**
