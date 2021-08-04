@@ -33,6 +33,8 @@ class CommandBase(ABC):
         self.header = cefContract.cefCommandHeader()
         self.request = None
         self.expectedResponse = None
+        self.receivedResponse = None
+        self.expectedResponseType = None
 
     @abstractmethod
     def buildCommand(self):
@@ -42,17 +44,11 @@ class CommandBase(ABC):
         """
         pass
 
+    #TODO: remove
     @abstractmethod
     def validateResponseBody(self):
         """
         Command-specific field value checking
-        """
-        pass
-
-    @abstractmethod
-    def expectedResponseType(self):
-        """
-        Command-specific struct to validate against upon response
         """
         pass
 
@@ -74,6 +70,7 @@ class CommandBase(ABC):
             return False
         return True
 
+    #TODO: use a method instead of a property override
     def __len__(self):
         return len(bytes(self.request))
 

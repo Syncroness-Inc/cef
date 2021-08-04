@@ -28,9 +28,10 @@ class Base:
 
     def send(self, command):
         self.__router.send(command)
+        #TODO: raise exception if send fails
 
     def receive(self):
-        while self.__router.responsePending and not self.__router.timeoutOccurred:
+        while self.__router.commandResponsePending and not self.__router.timeoutOccurred:
             pass
         if self.__router.timeoutOccurred:
             return False
@@ -48,10 +49,14 @@ class Diag(Base):
     def __init__(self, interface):
         super().__init__(interface)
 
-    def ping(self):
+    def ping(self, var1=0, var2=0, var3=0):
         ping = CommandPing()
+
+        #TODO: combine these into a single execute()
         self.send(ping)
         result = self.receive()
+
+
         if result:
             print("Ping Success!")
         else:
@@ -64,4 +69,4 @@ if __name__ == '__main__':
     # p = DebugSerialPort('/dev/tty3', baudRate=9600)
     p.open()
     d = Diag(p)
-    # d.ping()
+    d.ping()

@@ -34,15 +34,16 @@ class Router:
     are continuously read from the transport layer queue with a separate forever loop on its own
     thread.
     """
-    def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN, responseTimeout=5):
+    def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN, responseTimeout=5, sendTimeout=5):
         self.__endianness = endianness
         self.__transport = Transport(debugPortInterface, endianness=self.__endianness)
         self.__packetReadThread = Thread(target=self._readPackets)
         self.__sequenceNumber = 0
         self.__lastSentCommand = None
         self.__lastSendTime = None
-        self.responsePending = False
+        self.commandResponsePending = False
         self.responseTimeout = responseTimeout # in seconds
+        self.sendTimeout = sendTimeout # in seconds
         self.timeoutOccurred = False
         self.commandSuccess = False
 
@@ -57,7 +58,7 @@ class Router:
         @param command: the full command (header and body) to be used as packet payload
         @return: False if a response has not yet been received for the current command, else True
         """
-        if self.responsePending:
+        if self.commandResponsePending:
             print("Cannot send, awaiting pending response")
             return False
         else:
@@ -65,13 +66,26 @@ class Router:
             command.setSequenceNumber(self.__sequenceNumber)
 
             self.timeoutOccurred = False
-            self.responsePending = True
+            self.commandResponsePending = True
             self.commandSuccess = False
             self.__lastSentCommand = command
             self.__lastSendTime = time.time()
-            self.__transport.send(command.payload())
 
+            # start a thread to send the command - this makes the send
+            # non-blocking and allows for timeout checking
+            sendThread = Thread(target=self._send, args=(command,))
+            sendThread.start()
+            sendThread.join(timeout=self.sendTimeout)
+            if sendThread.isAlive():
+                self.commandResponsePending = False
+                self.timeoutOccurred = True
+                print("Timeout occurred on command request (send)")
+                return False
+            
             return True
+
+    def _send(self, command):
+        self.__transport.send(command.payload())
 
     def _readPackets(self):
         """
@@ -81,10 +95,10 @@ class Router:
         while(True):
             # check for timeout on the current request/response transaction
             currentTime = time.time()
-            if self.responsePending and abs(currentTime - self.__lastSendTime) > self.responseTimeout:
-                self.responsePending = False
+            if self.commandResponsePending and not self.timeoutOccurred and abs(currentTime - self.__lastSendTime) > self.responseTimeout:
+                self.commandResponsePending = False
                 self.timeoutOccurred = True
-                print("Timeout occurred on command response")
+                print("Timeout occurred on command response (receive)")
 
             # get the next packet in the queue and handle according to type - new packet types added
             # to the CEF contract should have handling added here
@@ -93,7 +107,7 @@ class Router:
                 packetType = packet.header.m_packetType
                 if packetType == cefContract.debugPacketDataType.debugPacketType_commandResponse.value:
                     self.commandSuccess = self._handleCommandResponse(packet)
-                    self.responsePending = False
+                    self.commandResponsePending = False
                 elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingDataAscii.value:
                     #TODO log handling
                     pass
@@ -138,7 +152,7 @@ class Router:
             return False
         
         # 4. extract and populate command response body
-        commandResponse = self.__lastSentCommand.expectedResponseType()
+        commandResponse = self.__lastSentCommand.expectedResponseType
         for f in commandResponse._fields_:
             if f[0] == 'm_header':
                 continue # skip the header since we've already consumed those bytes above
