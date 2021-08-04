@@ -230,10 +230,6 @@ class cefCommandPingResponse(structureEndiannessType):
         ('m_uint64Value', ctypes.c_uint64)
     ]
     
-    
-
-
-  
 
 #####################################################################################################################
 ######  LOGGING                                                                                                ######
@@ -243,23 +239,23 @@ class cefCommandPingResponse(structureEndiannessType):
 LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
 LOGGING_ASCII_FILENAME_NUM_CHARACTERS = 40
 
-class cefLog(ctypes.Structure):
+class cefLog(structureEndiannessType):
     """
-        Logging Structure (passes a string (rather than a string hash) in log packet
+    Logging Structure (passes a string (rather than a string hash) in log packet
     """
     _fields_ = [
         ('m_header', cefCommandHeader),    
     
-        (m_logVariable1, ctypes.c_uint64),
-        (m_logVariable2, ctypes.c_uint64),
-        (m_logVariable3, ctypes.c_uint64),
-        (m_timeStamp, ctypes.c_uint64),
-        (m_logString, ctypes.c_char * LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS)
-        (m_fileName, ctypes.c_char * LOGGING_ASCII_FILENAME_NUM_CHARACTERS)
-        (m_fileLineNumber, ctypes.c_uint32),
-        (m_logSequenceNumber, ctypes.c_uint16),
-        (m_moduleId, ctypes.c_uint8),
-        (m_logType, ctypes.c_uint8),    
+        ('m_logVariable1', ctypes.c_uint64),
+        ('m_logVariable2', ctypes.c_uint64),
+        ('m_logVariable3', ctypes.c_uint64),
+        ('m_timeStamp', ctypes.c_uint64),
+        ('m_logString', ctypes.c_char * LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS),
+        ('m_fileName', ctypes.c_char * LOGGING_ASCII_FILENAME_NUM_CHARACTERS),
+        ('m_fileLineNumber', ctypes.c_uint32),
+        ('m_logSequenceNumber', ctypes.c_uint16),
+        ('m_moduleId', ctypes.c_uint8),
+        ('m_logType', ctypes.c_uint8),    
     ]
  
  
@@ -270,10 +266,10 @@ class cefLog(ctypes.Structure):
  
  
 """
-	 * Maximum number of bytes in the application layer payload.
-	 * In other words, the total number of bytes the application layer would request the
-	 * transport layer to received/send.
-	 * This number does NOT include Transport layer headers
+Maximum number of bytes in the application layer payload.
+In other words, the total number of bytes the application layer would request the
+transport layer to received/send.
+This number does NOT include Transport layer headers.
 """
 DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND = ctypes.sizeof(cefCommandHeader) + 512
 DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG = ctypes.sizeof(cefLog)
