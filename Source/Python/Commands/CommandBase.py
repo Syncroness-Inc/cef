@@ -44,13 +44,11 @@ class CommandBase(ABC):
         """
         pass
 
-    #TODO: remove
-    @abstractmethod
     def validateResponseBody(self):
         """
         Command-specific field value checking
         """
-        pass
+        return True
 
     def validateResponseHeader(self, responseHeader: cefContract.cefCommandHeader):
         """
