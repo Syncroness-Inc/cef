@@ -55,12 +55,14 @@ class errorCode(Enum):
     errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues                      = 8
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand                  = 9
     errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch           = 11
-    errorCode_debugPortErrorCodeNone                  						    = 12
-    errorCode_debugPortErrorCodeParity 	   									    = 13
-    errorCode_debugPortErrorCodeNoise										    = 14
-    errorCode_debugPortErrorCodeFrame										    = 15
-    errorCode_debugPortErrorCodeOverrun										    = 16
-    errorCode_debugPortErrorCodeUnknown										    = 17
+    errorCode_debugPortErrorCodeNone                  			                = 12
+    errorCode_debugPortErrorCodeParity 	   				                        = 13
+    errorCode_debugPortErrorCodeNoise						                    = 14
+    errorCode_debugPortErrorCodeFrame						                    = 15
+    errorCode_debugPortErrorCodeOverrun					                        = 16
+    errorCode_debugPortErrorCodeUnknown					                        = 17
+    errorCode_RequestedCefProxyCommandNotAllocatable                            = 18,
+	    
     errorCode_NumApplicationErrorCodes                                          = auto()
 
 
@@ -76,11 +78,13 @@ class commandOpCode(Enum):
     A comment is discouraged for each command type to ease maintenance; refer to the references in source code
     for information about the command.
     """
-    commandOpCodeNone           = 0
-    commandOpCodePing           = 1
+    commandOpCodeNone               = 0
+    commandOpCodePing               = 1
+    commandOpCodeDebugPortRouter    = 2
+    commandOpCodeCefCommandProxy    = 3
 
-    maxCommandOpCodeNumber      = auto()
-    commandOpCodeInvalid        = 0xFFFF
+    maxCommandOpCodeNumber          = auto()
+    commandOpCodeInvalid            = 0xFFFF
 
 
 #####################################################################################################################
@@ -115,12 +119,6 @@ Debug Port Framing Signature
 DEBUG_PACKET_UINT32_FRAMING_SIGNATURE = 0x43454653
 
 
-"""
-Debug Port Packet Size
-  * Max number of bytes in a debug port packet
-"""
-DEBUG_PORT_MAX_PACKET_SIZE_BYTES = 528
-
 class debugPacketDataType(Enum):
     """
     Debug Port Packet Data Type - the debug port expect the following types of packets
@@ -129,10 +127,10 @@ class debugPacketDataType(Enum):
     - logging data
     """
     debugPacketType_commandRequest                          = 0
-    debugPacketType_commandResponse 	   					= 1
-    debugPacketType_loggingDataAscii                        = 3
-    debugPacketType_loggingDataBinary                       = 4
+    debugPacketType_commandResponse                         = 1
+    debugPacketType_loggingData                             = 2
 
+    debugPacketType_invalid                                 = 0xffff
 
 class cefCommandHeader(structureEndiannessType):
     """
@@ -173,18 +171,15 @@ class cefCommandDebugPortHeader(structureEndiannessType):
         ('m_packetPayloadChecksum', ctypes.c_uint32),
         ('m_payloadSize', ctypes.c_uint32),
 
-        # The types of packets are
-        # # Command Request
-        # # Command Response
-        # # Logging Packet
-
+        # The types of packets are defined in class debugPacketDataType
         ('m_packetType', ctypes.c_uint8),
         ('m_reserve', ctypes.c_uint8),
         ('m_packetHeaderChecksum', ctypes.c_uint16)
     ]
+  
+  
 
-
-"""
+""" 
 CommandPing constants
 """
 CMD_PING_UINT8_REQUEST_EXPECTED_VALUE   = 0xA3
@@ -234,3 +229,61 @@ class cefCommandPingResponse(structureEndiannessType):
         ('m_padding2', ctypes.c_uint32),
         ('m_uint64Value', ctypes.c_uint64)
     ]
+    
+    
+
+
+  
+
+#####################################################################################################################
+######  LOGGING                                                                                                ######
+#####################################################################################################################
+
+######  Logging Constants
+LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
+LOGGING_ASCII_FILENAME_NUM_CHARACTERS = 40
+
+class cefLog(ctypes.Structure):
+    """
+        Logging Structure (passes a string (rather than a string hash) in log packet
+    """
+    _fields_ = [
+        ('m_header', cefCommandHeader),    
+    
+        (m_logVariable1, ctypes.c_uint64),
+        (m_logVariable2, ctypes.c_uint64),
+        (m_logVariable3, ctypes.c_uint64),
+        (m_timeStamp, ctypes.c_uint64),
+        (m_logString, ctypes.c_char * LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS)
+        (m_fileName, ctypes.c_char * LOGGING_ASCII_FILENAME_NUM_CHARACTERS)
+        (m_fileLineNumber, ctypes.c_uint32),
+        (m_logSequenceNumber, ctypes.c_uint16),
+        (m_moduleId, ctypes.c_uint8),
+        (m_logType, ctypes.c_uint8),    
+    ]
+ 
+ 
+ 
+#####################################################################################################################
+######  DEBUG PORT CONSTANTS THAT RELY ON PREVIOUSLY DEFINED CLASSES                                           ######
+#####################################################################################################################
+ 
+ 
+"""
+	 * Maximum number of bytes in the application layer payload.
+	 * In other words, the total number of bytes the application layer would request the
+	 * transport layer to received/send.
+	 * This number does NOT include Transport layer headers
+"""
+DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND = ctypes.sizeof(cefCommandHeader) + 512
+DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG = ctypes.sizeof(cefLog)
+DEBUG_PORT_MAX_APPLICATION_PAYLOAD = DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND \
+		if DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND > DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG \
+		else DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG
+
+"""
+Debug Port Packet Size
+  * Max number of bytes in a debug port packet
+"""
+DEBUG_PORT_MAX_PACKET_SIZE_BYTES = ctypes.sizeof(cefCommandDebugPortHeader) + DEBUG_PORT_MAX_APPLICATION_PAYLOAD
+ 

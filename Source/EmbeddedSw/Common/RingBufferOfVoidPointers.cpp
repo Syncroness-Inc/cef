@@ -48,10 +48,10 @@ bool RingBufferOfVoidPointers::put(void* putPointer)
 		return false;
 	}
 
+	// Head points to next available spot
 	// Add the value to the ring buffer before incrementing the index to make put operation thread safe
-	uint32_t index = incrementToNextIndex(m_head);
-	mp_ringArray[index] = putPointer;
-	m_head = index;
+	mp_ringArray[m_head] = putPointer;
+	m_head = incrementToNextIndex(m_head);
 
 	return true;
 }
@@ -64,10 +64,10 @@ bool RingBufferOfVoidPointers::get(void*& getPointer)
 		return false;
 	}
 
+	// tail points to the the next item to remove from the buffer
 	// Remove the value to the ring buffer before incrementing the index to make get operation thread safe
-	uint32_t index = incrementToNextIndex(m_tail);
-	getPointer = mp_ringArray[index];
-	m_tail = index;
+	getPointer = mp_ringArray[m_tail];
+	m_tail = incrementToNextIndex(m_tail);
 
 	return true;
 }

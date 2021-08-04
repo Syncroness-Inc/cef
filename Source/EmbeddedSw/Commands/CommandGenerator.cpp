@@ -86,8 +86,10 @@ static constexpr size_t debugCommandPoolMaxClassSizeInBytes = max_sizeof<
 		>();
 
 //! Number of commands in the debug command pool (be sure to add all pool counts into m_totalNumberOfCommandGeneratorCommands
-CommandPool CommandGenerator::m_debugCommandPool(debugCommandPoolMaxClassSizeInBytes,
-												 CommandGenerator::m_numDebugCommandPoolEntries);
+CommandPool CommandGenerator::m_debugCommandPool(
+						BufferPoolBase::BufferPoolId_DebugCommandPool,
+						debugCommandPoolMaxClassSizeInBytes,
+						CommandGenerator::m_numDebugCommandPoolEntries);
 
 
 //******************************************** Application Command Pool **********************************************//
@@ -131,9 +133,10 @@ CommandGenerator& CommandGenerator::instance()
 }
 
 
-CommandBase* CommandGenerator::allocateCommand(commandOpCode_t commandOpCode)
+CommandBase* CommandGenerator::allocateCommand(commandOpCode_t commandOpCode, bool& allocatableCommand)
 {
 	CommandBase* p_command = nullptr;
+	allocatableCommand = true;
 
 	switch (commandOpCode)
 	{
@@ -144,6 +147,7 @@ CommandBase* CommandGenerator::allocateCommand(commandOpCode_t commandOpCode)
 		}
 		default:
 		{
+			allocatableCommand = false;
 			LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Opcode={:d} not setup in CommandGenerator so couldn't generate a command={}", commandOpCode);
 			break;
 		}
