@@ -68,10 +68,6 @@ class CommandBase(ABC):
             return False
         return True
 
-    #TODO: use a method instead of a property override
-    def __len__(self):
-        return len(bytes(self.request))
-
     def payload(self):
         return bytes(self.request)
 
