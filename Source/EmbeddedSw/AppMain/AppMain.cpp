@@ -252,7 +252,7 @@ void AppMain::runAppMain_noReturn()
 	tonyTesting();
 
 	//! @toDo Remove this when have alternate means of testing
-	//johnTesting();
+	johnTesting();
 
 	//! run the infinite while loop.  There is no return from this routine.
 	run();
