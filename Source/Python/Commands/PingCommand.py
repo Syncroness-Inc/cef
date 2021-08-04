@@ -33,6 +33,7 @@ class CommandPing(CommandBase):
     def __init__(self):
         super().__init__()
         self.buildCommand()
+        self.expectedResponseType = type(self.expectedResponse).__new__(cefContract.cefCommandPingResponse)
 
     def buildCommand(self):
         """
@@ -68,18 +69,13 @@ class CommandPing(CommandBase):
         """
         Ping-specific response field checking
         """
+        self.receivedResponse = receivedResponse
         if receivedResponse.m_uint8Value != self.expectedResponse.m_uint8Value or \
             receivedResponse.m_uint16Value != self.expectedResponse.m_uint16Value or \
             receivedResponse.m_uint32Value != self.expectedResponse.m_uint32Value or \
             receivedResponse.m_uint64Value != self.expectedResponse.m_uint64Value or \
-            receivedResponse.m_testValue != self.expectedResponse.m_testValue:
+            receivedResponse.m_testValue != self.expectedResponse.m_testValue: #TODO: remove this check
             print("Invalid Ping response value(s)")
             return False
         else:
             return True
-
-    def expectedResponseType(self):
-        """
-        The matching Ping response for a Ping request
-        """
-        return type(self.expectedResponse).__new__(cefContract.cefCommandPingResponse)
