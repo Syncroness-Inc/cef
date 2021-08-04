@@ -66,9 +66,8 @@ void DebugPortTransportLayer::returnReceiveBuffer(void*)
 //*************************************************************
 uint32_t DebugPortTransportLayer::calculateChecksum(void* myStruct, uint structSize)
 {	
-	//cast to command/header TODO
 	uint32_t myChecksum = 0;
-	unsigned char *p = (unsigned char *)&myStruct;
+	unsigned char* p = (unsigned char *)myStruct;
 	for (uint i=0; i<structSize; i++)
 	{
 		myChecksum += p[i];
@@ -105,7 +104,8 @@ bool DebugPortTransportLayer::receivePacketHeader() //receive = request
 	{
 		//Check to see if Checksum header matches
 		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->headerResponse, (sizeof(myReceiveBuffer->headerResponse)-sizeof(myReceiveBuffer->headerResponse.m_packetHeaderChecksum)));
-		if(headerCheck != myReceiveBuffer->headerResponse.m_packetHeaderChecksum)
+		uint16_t packetHeaderChecksum = myReceiveBuffer->headerResponse.m_packetHeaderChecksum;
+		if(headerCheck != packetHeaderChecksum)
 		{
 			//Checksum header does not match
 			//TODO stop reset 
