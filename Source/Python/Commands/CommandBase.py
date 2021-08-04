@@ -44,13 +44,11 @@ class CommandBase(ABC):
         """
         pass
 
-    #TODO: remove
-    @abstractmethod
     def validateResponseBody(self):
         """
         Command-specific field value checking
         """
-        pass
+        return True
 
     def validateResponseHeader(self, responseHeader: cefContract.cefCommandHeader):
         """
@@ -69,10 +67,6 @@ class CommandBase(ABC):
             print("Response OpCode mis-match - received: {}, sent: {}".format(responseHeader.m_commandOpCode, self.header.m_commandOpCode))
             return False
         return True
-
-    #TODO: use a method instead of a property override
-    def __len__(self):
-        return len(bytes(self.request))
 
     def payload(self):
         return bytes(self.request)
