@@ -34,6 +34,7 @@ AppMain& AppMain::instance()
 uint8_t receiveBuffer[528];
 SerialPortDriverHwImpl debugPortDriver;
 uint8_t testSend[23] = {'U','A','R','T',' ','S','t','a','r','t',' ','S','u','c','c','e','s','s','f','u','l','\r','\n'};
+DebugPortTransportLayer myTransport;
 static void tonyTesting(void)
 {
 
@@ -41,8 +42,8 @@ static void tonyTesting(void)
 	//extern UART_HandleTypeDef huart3;
 	//HAL_UART_Transmit_IT(&huart3, (uint8_t *)testSend, sizeof(testSend));
 
-	//myTransport.xmit;
-	//myTransport.recv;
+	myTransport.transmitStateMachine();
+	myTransport.receiveStateMachine();
 
 
 }
@@ -179,7 +180,7 @@ void AppMain::runAppMain_noReturn()
 	run();
 }
 
-DebugPortTransportLayer myTransport;
+
 void AppMain::run()
 {
 	/**
@@ -191,8 +192,7 @@ void AppMain::run()
 	while (1)
 	{
 		CommandExecutor::instance().executeCommands(numCommandsAllowedToExecute);
-		myTransport.xmit();
-		myTransport.recv();
+		tonyTesting();
 
 		// When watch dog timer is implemented, this should be the one place the watch dog is petted
 	}
