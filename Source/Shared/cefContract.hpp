@@ -47,27 +47,32 @@ extern "C"
  */
 enum
 {
-    errorCode_OK = 0, 	// No Error, Pass
-    errorCode_LogFatalReturn = 1,	// Should only be used in return statements immediately after LOG_FATAL.
-                                    //    Currently, a TRACE_FATAL statement never returns, but this is used
-                                    // 	  in the event some type of recovery is put in place in the future.
-    errorCode_PointerIsNullptr = 2,	// Only should be used after LOG_FATAL nullptr check
-    errorCode_reserved2 = 3,	// to be used later for commonly used return values
-    errorCode_reserved3 = 4,
-    errorCode_reserved4 = 5,
-    errorCode_reserved5 = 6,
-    errorCode_IllegalCommandState = 7,
+    errorCode_OK                                    = 0,    // No Error, Pass
+    errorCode_LogFatalReturn                        = 1,    // Should only be used in return statements immediately after LOG_FATAL.
+                                                            //    Currently, a TRACE_FATAL statement never returns, but this is used
+                                                            //    in the event some type of recovery is put in place in the future.
+    errorCode_PointerIsNullptr                      = 2,    // Only should be used after LOG_FATAL nullptr check
+    errorCode_reserved2                             = 3,    // to be used later for commonly used return values
+    errorCode_reserved3                             = 4,
+    errorCode_reserved4                             = 5,
+    errorCode_reserved5                             = 6,
+    errorCode_IllegalCommandState                   = 7,
     errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues = 8,
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand = 9,
-    errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch = 11,
-    errorCode_debugPortErrorCodeNone = 12,
-    errorCode_debugPortErrorCodeParity = 13,
-    errorCode_debugPortErrorCodeNoise = 14,
-    errorCode_debugPortErrorCodeFrame = 15,
-    errorCode_debugPortErrorCodeOverrun = 16,
-    errorCode_debugPortErrorCodeUnknown = 17,
-    errorCode_RequestedCefProxyCommandNotAllocatable = 18,
-    errorCode_BufferValidBytesExceedsBufferSize = 19,
+    errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch = 10,
+    errorCode_debugPortErrorCodeNone                = 11,
+    errorCode_debugPortErrorCodeParity              = 12,
+    errorCode_debugPortErrorCodeNoise               = 13,
+    errorCode_debugPortErrorCodeFrame               = 14,
+    errorCode_debugPortErrorCodeOverrun             = 15,
+    errorCode_debugPortErrorCodeUnknown             = 16,
+    errorCode_RequestedCefProxyCommandNotAllocatable = 17,
+    errorCode_BufferValidBytesExceedsBufferSize     = 18,
+    errorCode_UnableToCreateLoggingSpace            = 19,
+    errorCode_LoggingCalledRecursively              = 20,
+    errorCode_TraceFatalEncountered                 = 21,
+
+
 
     errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
 };
@@ -261,7 +266,7 @@ typedef enum logType
     logTypeFatal        = 4
 } logType_t;
 
-
+/**
  * Logging Structures.  For now, a display string is passed that python uses to display the variables.
  * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
  */

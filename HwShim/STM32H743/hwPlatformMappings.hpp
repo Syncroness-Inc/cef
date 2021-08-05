@@ -53,6 +53,11 @@ extern "C" {
 #define STATIC_ASSERT(COND,MSG) static_assert((COND), #MSG);
 
 
+// Each IDE may use a different flag to indicate a release or debug build
+#ifdef DEBUG
+  #define DEBUG_BUILD
+#endif
+
 
 /* End of c/c++ guard */
 #ifdef __cplusplus

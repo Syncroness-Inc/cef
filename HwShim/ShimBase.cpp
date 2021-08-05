@@ -36,30 +36,30 @@ ShimBase& ShimBase::getInstance()
 
 void ShimBase::rxCallback(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::rxCallback() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::rxCallback() called, supposed to be implemented in derived class", 0, 0, 0);
 }
 
 void ShimBase::errorCallback(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::errorCallback() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::errorCallback() called, supposed to be implemented in derived class", 0, 0, 0);
 }
 
 void ShimBase::startInterruptSend(void*sendBuffer, int bufferSize)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptSend() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptSend() called, supposed to be implemented in derived class", 0, 0, 0);
 }
 
 void ShimBase::startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, bool (SerialPortDriverHwImpl::* callback)(void))
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptReceive() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptReceive() called, supposed to be implemented in derived class", 0, 0, 0);
 }
 
 void ShimBase::forceStopReceive(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::forceStopReveive() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::forceStopReveive() called, supposed to be implemented in derived class", 0, 0, 0);
 }
 
 void ShimBase::startErrorCallback(SerialPortDriverHwImpl* errorCallbackClass, void (SerialPortDriverHwImpl::* errorCallback)(errorCode_t error))
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startErrorCallback() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startErrorCallback() called, supposed to be implemented in derived class", 0, 0, 0);
 }

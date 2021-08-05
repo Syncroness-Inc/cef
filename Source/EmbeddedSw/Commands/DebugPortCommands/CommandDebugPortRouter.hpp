@@ -76,6 +76,17 @@ public:
     void checkinLogBufferLogging(cefLog_t *p_cefLogBuffer);
 
     /**
+     * Discards older logs to make room for newer logs.  This routine is typically called
+     * when it is detected that there is no more logs in the buffer pool for new logs.  This is
+     * likely due to the transmit port not sending data as fast as logs are being generated.  The
+     * latest logs are likely to have the more valuable data, so we discard older logs.
+     * For example, if there is no room for a log_fatal(), let alone the possible error logs leading up to the log_fatal(),
+     * then it is difficult to diagnose what is going on from the log data.
+     */
+    void discardOlderLogs();
+
+
+    /**
      * Checks out the CEF Command Buffer to receive a command.
      * 		It is assumed that upon check in of the buffer, there is a valid CEF command in the buffer
      *
@@ -125,6 +136,15 @@ public:
      * @param p_cefBuffer 	pointer to cefBuffer that was previously checked out for transmitting
      */
     void checkinCefTransmitBuffer(CefBuffer *p_cefBuffer);
+
+    /**
+     * If a fatal error occurs, then we still want to try and transmit what caused the error
+     * out of the debug port (see Logging.cpp for more discussion on this topic).  Yes, the
+     * DebugPort (or layers below) may have caused the issue; but the risk of "trying" to send
+     * some debug info out is deemed better than not having any debug information.
+     */
+    void fatalErrorHandlingLoop();
+
 
 private:
 
@@ -206,6 +226,19 @@ private:
 
     //! cefCommandPacket memory's state
     uint32_t m_cefCommandBufferState;
+
+    /**
+     * True if router is in fatal error handling mode (triggered when have a fatal error).
+     * In short, true means that only do what is necessary to transmit the log data out of the
+     * debug port in order to aid debug.  See Logging.cpp for more information on fatal log handling.
+     */
+    bool m_fatalErrorHandling;
+
+    /**
+     * True if execute is active.  This flag is used to detect if recursively calling into
+     * the execute function in a log_fatal() situation.
+     */
+    bool m_executeActive;
 };
 
 #endif  // end header guard

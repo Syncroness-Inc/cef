@@ -28,26 +28,33 @@ written permission of Syncroness.
 
 void DebugPortDriver::sendData(void* sendBuffer, int packetSize)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::sendData() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::sendData() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 }
 
 bool DebugPortDriver::startReceive(void* receiveBuffer,  int receiveSize)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::startReceive() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::startReceive() called, supposed to be implemented in derived class",
+	        0, 0, 0);
+	return false;  // needed to avoid compiler warning
 }
 
 void DebugPortDriver::stopReceive()
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::stopReceive() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::stopReceive() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 }
 
 void DebugPortDriver::setErrorCallback(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::setErrorCallback() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::setErrorCallback() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 }
 
 errorCode_t DebugPortDriver::errorCallback(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::errorCallback() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::errorCallback() called, supposed to be implemented in derived class",
+	        0, 0, 0);
+	return errorCode_LogFatalReturn;
 }
 

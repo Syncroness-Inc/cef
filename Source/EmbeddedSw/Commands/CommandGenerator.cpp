@@ -148,7 +148,8 @@ CommandBase* CommandGenerator::allocateCommand(commandOpCode_t commandOpCode, bo
 		default:
 		{
 			allocatableCommand = false;
-			LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Opcode={:d} not setup in CommandGenerator so couldn't generate a command={}", commandOpCode);
+			LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Opcode={:d} not setup in CommandGenerator so couldn't generate a command={}",
+			        commandOpCode, 0, 0);
 			break;
 		}
 	}
@@ -160,14 +161,15 @@ void CommandGenerator::freeCommand(CommandBase* p_command)
 {
 	if (p_command == nullptr)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Command Generator requested to free nullptr command!");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Command Generator requested to free nullptr command!", 0, 0, 0);
 	}
 
 	CommandPool* p_commandPool = p_command->getCommandPool();
 	if (p_commandPool == nullptr)
 	{
 		// We are being asked to return a command to a pool, but we don't know which pool the command was allocated from!
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Command Generator requested to free a command=0x{:x) with no associated command pool!", p_command);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Command Generator requested to free a command=0x{:x) with no associated command pool!",
+		        (uint64_t)p_command, 0, 0);
 	}
 
 	p_commandPool->freeCommandMemory(p_command);

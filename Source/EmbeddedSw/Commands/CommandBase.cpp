@@ -31,13 +31,15 @@ CommandBase::commandSequenceNumber_t CommandBase::m_rollingCommandSequenceNumber
 
 bool CommandBase::execute(CommandBase* p_childCommand)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class execute() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class execute() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 	return true;
 }
 
 errorCode_t CommandBase::importFromCefCommand(void* p_cefCommand)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 	return errorCode_LogFatalReturn;
 }
 
@@ -45,21 +47,24 @@ errorCode_t CommandBase::importFromCefCommandBase(cefCommandHeader_t* p_cefComma
 {
 	if (p_cefCommandHeader == nullptr)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand called with nullptr");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand called with nullptr",
+		        0, 0, 0);
 		return errorCode_PointerIsNullptr;
 	}
 
 	// Sanity Check that have the right opcode
 	if (p_cefCommandHeader->m_commandOpCode != m_commandOpCode)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand cefOpCode(0x{:X}) != expected OpCode (0x{:X})", p_cefCommandHeader->m_commandOpCode, m_commandOpCode);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand cefOpCode(0x{:X}) != expected OpCode (0x{:X})",
+		        p_cefCommandHeader->m_commandOpCode, m_commandOpCode, 0);
 		return errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand;
 	}
 
 	// Sanity Check that python utilities and embedded software are in synch
 	if (p_cefCommandHeader->m_commandNumBytes != numBytesInCefRequestCommand)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand m_commandNumBytes(0x{:X}) != expected numBytesInCefRequestCommand (0x{:X})", m_commandNumBytes, numBytesInCefRequestCommand);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand m_commandNumBytes(0x{:X}) != expected numBytesInCefRequestCommand (0x{:X})",
+		        p_cefCommandHeader->m_commandNumBytes, numBytesInCefRequestCommand, 0);
 		return errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch;
 	}
 
@@ -68,7 +73,8 @@ errorCode_t CommandBase::importFromCefCommandBase(cefCommandHeader_t* p_cefComma
 
 errorCode_t CommandBase::exportToCefCommand(void* p_cefCommand)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class exportToCefCommand() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class exportToCefCommand() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 	return errorCode_LogFatalReturn;
 }
 
@@ -76,7 +82,8 @@ errorCode_t CommandBase::exportToCefCommandBase(cefCommandHeader_t* p_cefCommand
 {
 	if (p_cefCommandHeader == nullptr)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand called with nullptr");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand called with nullptr",
+		        0, 0, 0);
 		return errorCode_PointerIsNullptr;
 	}
 
@@ -99,7 +106,8 @@ void CommandBase::validateNullChildResponse(CommandBase* p_childCommand)
 
     if (p_childCommand != nullptr)
     {
-    	LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unexpected child response received (0x{:x}, 0x(:x})", (uint64_t)p_childCommand, (uint64_t)p_expectedChildCommand);
+    	LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unexpected child response received (0x{:x}, 0x(:x})",
+    	        (uint64_t)p_childCommand, 0, 0);
     }
 }
 

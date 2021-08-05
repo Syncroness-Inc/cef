@@ -36,7 +36,8 @@ RingBufferOfVoidPointers::RingBufferOfVoidPointers(uint32_t numPointersInRingBuf
 	if (mp_ringArray == nullptr)
 	{
 		// We expect to succeed, and since this is done in the constructor, have no way to return an error
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "malloc Failed for RingBufferOfVoidPointers of m_numElements={:d}", m_numElements);
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "malloc Failed for RingBufferOfVoidPointers of m_numElements={:d}",
+		        m_numElements, 0, 0);
 	}
 }
 
@@ -117,7 +118,8 @@ bool RingBufferOfVoidPointers::removeItem(void* p_itemToRemove)
 		if (get(p_currentItem) == false)
 		{
 			// We know there is at least one item in the ring buffer, so something is seriously broken!
-			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to remove item from ring buffer when expected to find at least one item");
+			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to remove item from ring buffer when expected to find at least one item",
+			        0, 0, 0);
 		}
 
 		if (p_currentItem == p_itemToRemove)
@@ -130,7 +132,8 @@ bool RingBufferOfVoidPointers::removeItem(void* p_itemToRemove)
 		if (put(p_currentItem) == false)
 		{
 			// We just successfully removed an item from the ring buffer, so we should be able to put it back in!
-			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to add an item back into the ring buffer after just removing it!");
+			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to add an item back into the ring buffer after just removing it!",
+			        0, 0, 0);
 		}
 	}
 

@@ -28,7 +28,24 @@ extern "C" {
  *
  * Each Log has a unique moduleID to better control logging fidelity when debugging.
  * The initial release of the code will not support filtering by logging module id.
+ *
+ * Variadic functions are not used because:
+ *  1. The MicroChip compiler (at least some versions) don't support Variadic functions
+ *  2. Variadic functions in some compilers can result in code bloat
+ *  3. Variadic functions are processor architecture dependent.  For example, if the variables to be
+ *     stored are 64 bits, and if the first user variable ("var1"), and var2 is a uint32_t, then when the
+ *     unpacking of the variables are done with va_arg(ap, uint64_t) all is well on a 64 bit machine.  But,
+ *     on a 32 bit machine, both var1 and var2 are packed into 64 bits and we get the wrong value.
+ *
+ * As such, the approach of enforcing always passing 3 variables in all log statements is enforced by the
+ * method prototype.
+ *
+ *
+ * Caution:  On some 32 bit compilers, when a void* is type cast to a uint64_t, the upper bit is extended
+ * rather than zero filling.  0xF1234567 when typecast to a uint64_t, results in 0xffffffffF1234567
+ * instead of 0x00000000F1234567 as one might expect.
  */
+
 
 #include "cefMappings.hpp"
 #include "cefContract.hpp"
@@ -37,6 +54,10 @@ extern "C" {
 class Logging
 {
     public:
+        //! Constructor
+        Logging() :
+            m_loggingInProgress(false)
+            { }
 
         typedef enum logModuleId
         {
@@ -44,6 +65,15 @@ class Logging
 			LogModuleIdCefDebugCommands,
 
         } logModuleId_t;
+
+
+        /**
+         *  Obtain a reference to the Logging Singleton.
+         *
+         *  @return a reference to the Logging Singleton
+         */
+        static Logging& instance();
+
 
         /**
          * Adds a logging message to the logging queue
@@ -54,51 +84,28 @@ class Logging
          * @param message       pointer to a string that describes the console message for this log
          * @param fileName      The name of the file that generated this log
          * @param lineNum       The line number in the file this log came from
-         * @param Var1, Var2, Var3  Up to 3 variables that go with this log
+         * @param var1          1st user variable in log statement
+         * @param var2          2nd user variable in log statement
+         * @param var3          3rd user variable in log statement
          */
-        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum);
-        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum,
-                        uint64_t var1);
-        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum,
-                        uint64_t var1, uint64_t var2);
-        void logMessage(logType_t logType, logModuleId_t logModuleId, char* message, char* fileName, uint32_t lineNum,
+        void logMessage(logType_t logType, logModuleId_t logModuleId, const char* message, const char* fileName, uint32_t lineNum,
                         uint64_t var1, uint64_t var2, uint64_t var3);
+
+        /**
+         * After a log fatal message has been posted, this routine is responsible for
+         * additional fatal log processing
+         */
+        void postHandlingOfFatalError();
+
+    private:
+        //! Flag that is true when logging is in progress (used to detect recursive logging call)
+        bool m_loggingInProgress;
+
+        //! rolling line Sequence Number
+        static uint16_t m_logSequenceNumber;
+        STATIC_ASSERT(sizeof(m_logSequenceNumber) == sizeof(cefLog_t::m_logSequenceNumber),\
+                        LOG_CONTRACT_SEQUENCE_NUMBER_SIZE_DOES_NOT_MATCH_CONTRACT);
 };
-
-
-// Don't use the LOG_MESSAGE macro directly, use one of the macros below
-#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__) \
-            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber);
-
-
-#if 0
-#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__, Var1) \
-            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber, Var1);
-
-#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__, Var1, Var2) \
-            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber, Var1, Var2);
-#define LOG_MESSAGE(logType, logModuleId, msg, __FILE__,__LINE__, Var1, Var2, Var3) \
-            Logging::instance().logMessage(logType, logModuleId, msg, fileName, LineNumber, Var1, Var2, Var3);
-#endif
-
-
-//@todo implement LOG_MESSAGE in packet format...leaving spaceflight code to show what did in past
-// for now, doing nothing...
-#ifdef __SIMULATOR__
-#define LOG_MESSAGE(level, logModuleId, msg, ...) \
-	/* For now, printf, in future, route tracing through system messages to GSW to display */ \
-	//printf("[%s] logModuleId %d %s:%d " msg "\n", level, logModuleId, __FILE__,__LINE__, ##__VA_ARGS__);
-
-#else
-#if 0
-#define LOG_MESSAGE(level, logModuleId, msg, ...) \
-	/* For now, printf, in future, route tracing through system messages to GSW to display */ \
-    //xil_printf("[%s] logModuleId %d %s:%d " msg "\n", level, logModuleId, __FILE__,__LINE__, ##__VA_ARGS__);
-#endif
-#endif
-
-
-
 
 
 /**
@@ -122,50 +129,34 @@ class Logging
   LOG_FATAL is intended to be called when a catastrophic event has occurred and if execution of
       the code is allowed to continue, unexpected results could occur. As such the the minimal
       failure analysis is printed out and the system and execution is halted (likely a reset occurs).
-
 */
 
-#if 0
+//! We only want the filename, and not the complete path name so it doesn't take so many characters to transmit
+#define __JUST_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
 #ifdef DEBUG_BUILD
-    LOG_DEBUG(logModuleId, msg)                     LOG_MESSAGE(logTypeDebug, logModuleId, msg)
-
-
-    LOG_DEBUG(logModuleId, msg, Var1)               LOG_MESSAGE(logTypeDebug, logModuleId, Var1)
-    LOG_DEBUG(logModuleId, msg, Var1, Var2)         LOG_MESSAGE(logTypeDebug, logModuleId, Var1, Var2)
-    LOG_DEBUG(logModuleId, msg, Var1, Var2, Var3)   LOG_MESSAGE(logTypeDebug, logModuleId, Var1, Var2, Var3)
+#define LOG_DEBUG(logModuleId, msg, var1, var2, var3) \
+    Logging::instance().logMessage(logTypeDebug, logModuleId, msg, __JUST_FILENAME__, __LINE__, var1, var2, var3);
 #else
     // Compile out debug log statements for non-debug builds
     #define LOG_DEBUG(msg, ...)
 #endif
 
 
+#define LOG_INFO(logModuleId, msg, var1, var2, var3) \
+    Logging::instance().logMessage(logTypeInfo, logModuleId, msg, __JUST_FILENAME__, __LINE__, var1, var2, var3);
 
-#define LOG_INFO(logModuleId, msg, ...) LOG_MESSAGE("INFO", logModuleId, msg, ##__VA_ARGS__)
+#define LOG_ERROR(logModuleId, msg, var1, var2, var3) \
+    Logging::instance().logMessage(logTypeError, logModuleId, msg, __JUST_FILENAME__, __LINE__, var1, var2, var3);
 
-#define LOG_ERROR(logModuleId, msg, ...) LOG_MESSAGE("ERROR", logModuleId, msg, ##__VA_ARGS__)
+#define LOG_WARNING(logModuleId, msg, var1, var2, var3) \
+    Logging::instance().logMessage(logTypeWarning, logModuleId, msg, __JUST_FILENAME__, __LINE__, var1, var2, var3);
 
-#define LOG_WARNING(logModuleId, msg, ...) LOG_MESSAGE("WARNING", logModuleId, msg, ##__VA_ARGS__)
-
-#define LOG_FATAL(logModuleId, msg, ...) \
+#define LOG_FATAL(logModuleId, msg, var1, var2, var3) \
     /* First log the fact that something went badly */ \
-    LOG_MESSAGE("ERROR", logModuleId, msg, ##__VA_ARGS__) \
-    /* For now, assert.  On real hardware, we may do something else */ \
-     while(1)
-#if 0
-	//!@todo Implement RUNTIME_ASSERT in cefMappings.h  ... will need to add continuation to line above
-	RUNTIME_ASSERT(false);
-#endif
-#endif
-
-#define LOG_INFO(logModuleId, msg, ...)
-
-#define LOG_ERROR(logModuleId, msg, ...)
-
-#define LOG_WARNING(logModuleId, msg, ...)
-
-#define LOG_FATAL(logModuleId, msg, ...)
-
-
+    Logging::instance().logMessage(logTypeFatal, logModuleId, msg, __JUST_FILENAME__, __LINE__, var1, var2, var3); \
+    /* do post handling of logging the fatal error (no return from this function) */ \
+    Logging::instance().postHandlingOfFatalError();
 
 
 /* End of c/c++ guard */

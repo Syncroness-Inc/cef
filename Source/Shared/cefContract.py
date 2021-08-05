@@ -49,14 +49,18 @@ class errorCode(Enum):
     errorCode_IllegalCommandState                                               = 7
     errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues                      = 8
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand                  = 9
-    errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch           = 11
-    errorCode_debugPortErrorCodeNone                  			   = 12
-    errorCode_debugPortErrorCodeParity 	   				   = 13
-    errorCode_debugPortErrorCodeNoise						   = 14
-    errorCode_debugPortErrorCodeFrame						   = 15
-    errorCode_debugPortErrorCodeOverrun					   = 16
-    errorCode_debugPortErrorCodeUnknown					   = 17
-    errorCode_RequestedCefProxyCommandNotAllocatable                            = 18,
+    errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch           = 10
+    errorCode_debugPortErrorCodeNone                  			   				= 11
+    errorCode_debugPortErrorCodeParity 	   				   						= 12
+    errorCode_debugPortErrorCodeNoise						   					= 13
+    errorCode_debugPortErrorCodeFrame						   					= 14
+    errorCode_debugPortErrorCodeOverrun					   						= 15
+    errorCode_debugPortErrorCodeUnknown					                        = 16
+    errorCode_RequestedCefProxyCommandNotAllocatable                            = 17
+    errorCode_BufferValidBytesExceedsBufferSize     							= 18
+    errorCode_UnableToCreateLoggingSpace										= 19
+    errorCode_LoggingCalledRecursively              							= 20
+    errorCode_TraceFatalEncountered											    = 21
 	    
     errorCode_NumApplicationErrorCodes                                          = auto()
 
