@@ -110,7 +110,7 @@ uint16_t DebugPortTransportLayer::receivePacketHeader() //receive = request
 		{
 			//Checksum header does not match
 			//TODO stop reset 
-			LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Header Checksum does not match.");
+			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Header Checksum does not match.");
 			return debugPortRecvBadChecksom;
 		}
 		//Get/Set packet size (header + packet)
@@ -135,13 +135,14 @@ void DebugPortTransportLayer::transmitStateMachine(void) //transmit = cefRespons
 		//When buffer is ready generate packet header 
 		m_receivePacketLength = DEBUG_PORT_MAX_PACKET_SIZE_BYTES;
 		m_transmitState = debugPortXmitGeneratePacketHeader;
+		break;
 	case debugPortXmitGeneratePacketHeader:
 		generatePacketHeader();
 		m_transmitState = debugPortXmitReadyToSend;
 		break;
 	case debugPortXmitReadyToSend:
-		//
-		m_myDebugPortDriver.sendData((uint8_t*)mp_xmitBuffer, sizeof(mp_xmitBuffer));
+		cefCompleteResponse_t* myResponseBuffer = (cefCompleteResponse_t*)mp_xmitBuffer;
+		m_myDebugPortDriver.sendData((uint8_t*)mp_xmitBuffer, sizeof(&myResponseBuffer));
 		m_transmitState = debugPortXmitSendingPacket;
 		break;	
 	case debugPortXmitSendingPacket:
@@ -149,16 +150,18 @@ void DebugPortTransportLayer::transmitStateMachine(void) //transmit = cefRespons
 		if(m_myDebugPortDriver.getSendInProgress())
 		{
 			//Sending not finished leave state machine
+			//TODO make a timeout if it takes to long
 			break;
 		}
 		//sending finished
 		m_transmitState = debugPortXmitFinishedSendingPacket;
+		break;
 	case debugPortXmitFinishedSendingPacket:
 		returnSendBuffer(mp_xmitBuffer);
 		m_transmitState = debugPortXmitWaitingForBuffer;
 		break;	
 	default:
-	LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Transmit State Machien in unknown state.");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Transmit State Machien in unknown state.");
 		break;
 	}
 }
@@ -184,6 +187,7 @@ void DebugPortTransportLayer::receiveStateMachine(void)
 			break;
 		}
 		m_receiveState = debugPortRecvFinishedRecv;
+		break;
 	case debugPortRecvFinishedRecv:
 	{
 		//ensure checksum matches
@@ -208,8 +212,9 @@ void DebugPortTransportLayer::receiveStateMachine(void)
 	case debugPortRecvBadChecksom:
 		returnSendBuffer(mp_receiveBuffer);
 		m_receiveState= debugPortRecvWaitForBuffer;
+		break;
 	default:
-		LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Receive State Machien in unknown state.");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Receive State Machien in unknown state.");
 		break;
 	}
 }
