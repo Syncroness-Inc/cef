@@ -125,44 +125,56 @@ void DebugPortTransportLayer::transmitStateMachine(void) //transmit = cefRespons
 {
 	switch (m_transmitState)
 	{
-	case debugPortXmitWaitingForBuffer:
-		mp_xmitBuffer = getSendBuffer();
-		if(mp_xmitBuffer == nullptr)
-		{
-			//If buffer is not ready leave state machine don't block
-			break;
-		}
-		//When buffer is ready generate packet header 
-		m_receivePacketLength = DEBUG_PORT_MAX_PACKET_SIZE_BYTES;
-		m_transmitState = debugPortXmitGeneratePacketHeader;
-		break;
-	case debugPortXmitGeneratePacketHeader:
-		generatePacketHeader();
-		m_transmitState = debugPortXmitReadyToSend;
-		break;
-	case debugPortXmitReadyToSend:
-		cefCompleteResponse_t* myResponseBuffer = (cefCompleteResponse_t*)mp_xmitBuffer;
-		m_myDebugPortDriver.sendData((uint8_t*)mp_xmitBuffer, sizeof(&myResponseBuffer));
-		m_transmitState = debugPortXmitSendingPacket;
-		break;	
-	case debugPortXmitSendingPacket:
-		//check if sending is finished
-		if(m_myDebugPortDriver.getSendInProgress())
-		{
-			//Sending not finished leave state machine
-			//TODO make a timeout if it takes to long
-			break;
-		}
-		//sending finished
-		m_transmitState = debugPortXmitFinishedSendingPacket;
-		break;
+        case debugPortXmitWaitingForBuffer:
+        {
+            mp_xmitBuffer = getSendBuffer();
+            if(mp_xmitBuffer == nullptr)
+            {
+                //If buffer is not ready leave state machine don't block
+                break;
+            }
+            //When buffer is ready generate packet header
+            m_receivePacketLength = DEBUG_PORT_MAX_PACKET_SIZE_BYTES;
+            m_transmitState = debugPortXmitGeneratePacketHeader;
+            break;
+        }
+        case debugPortXmitGeneratePacketHeader:
+        {
+            generatePacketHeader();
+            m_transmitState = debugPortXmitReadyToSend;
+            break;
+        }
+        case debugPortXmitReadyToSend:
+        {
+            cefCompleteResponse_t* myResponseBuffer = (cefCompleteResponse_t*)mp_xmitBuffer;
+            m_myDebugPortDriver.sendData((uint8_t*)mp_xmitBuffer, sizeof(&myResponseBuffer));
+            m_transmitState = debugPortXmitSendingPacket;
+            break;
+        }
+        case debugPortXmitSendingPacket:
+        {
+            //check if sending is finished
+            if(m_myDebugPortDriver.getSendInProgress())
+            {
+                //Sending not finished leave state machine
+                //TODO make a timeout if it takes to long
+                break;
+            }
+            //sending finished
+            m_transmitState = debugPortXmitFinishedSendingPacket;
+            break;
+        }
 	case debugPortXmitFinishedSendingPacket:
-		returnSendBuffer(mp_xmitBuffer);
-		m_transmitState = debugPortXmitWaitingForBuffer;
-		break;	
+        {
+            returnSendBuffer(mp_xmitBuffer);
+            m_transmitState = debugPortXmitWaitingForBuffer;
+            break;
+        }
 	default:
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Transmit State Machien in unknown state.");
-		break;
+        {
+            LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Transmit State Machien in unknown state.");
+            break;
+        }
 	}
 }
 
@@ -170,49 +182,57 @@ void DebugPortTransportLayer::receiveStateMachine(void)
 {
 	switch (m_receiveState)
 	{
-	case debugPortRecvWaitForBuffer:
-		mp_receiveBuffer = getReceiveBuffer();
-		if(mp_receiveBuffer != nullptr)
-		{
-			m_myDebugPortDriver.startReceive(mp_receiveBuffer);
-			m_receiveState = debugPortRecvWaitForPacketHeader;
-		}
-		break;
-	case debugPortRecvWaitForPacketHeader:
-		m_receiveState = receivePacketHeader();
-		break;
-	case debugPortRecvWaitForCefPacket:
-		if(m_myDebugPortDriver.getCurrentBytesReceived() < m_receivePacketLength)
-		{
-			break;
-		}
-		m_receiveState = debugPortRecvFinishedRecv;
-		break;
-	case debugPortRecvFinishedRecv:
-	{
-		//ensure checksum matches
-		cefCompleteRequest_t* myReceiveBuffer = (cefCompleteRequest_t*)mp_receiveBuffer;
-		uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->pingResponse, myReceiveBuffer->headerResponse.m_packetPayloadChecksum);
-		if(headerCheck != myReceiveBuffer->headerResponse.m_packetPayloadChecksum)
-		{
-			m_receiveState= debugPortRecvBadChecksom;
-			//TODO tell router data no good
-			LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer debug packet checksum does not match.");
-			break;
-		}
-		//DELETE THIS IS TEST CODE (this is to help moc the router)
-		else
-		{
-			m_copy = true;
-		}
-		returnReceiveBuffer(mp_receiveBuffer);
-		m_receiveState = debugPortRecvWaitForBuffer;
-		break;		
-	}
-	case debugPortRecvBadChecksom:
-		returnSendBuffer(mp_receiveBuffer);
-		m_receiveState= debugPortRecvWaitForBuffer;
-		break;
+        case debugPortRecvWaitForBuffer:
+        {
+            mp_receiveBuffer = getReceiveBuffer();
+            if(mp_receiveBuffer != nullptr)
+            {
+                m_myDebugPortDriver.startReceive(mp_receiveBuffer);
+                m_receiveState = debugPortRecvWaitForPacketHeader;
+            }
+            break;
+        }
+        case debugPortRecvWaitForPacketHeader:
+        {
+            m_receiveState = receivePacketHeader();
+            break;
+        }
+        case debugPortRecvWaitForCefPacket:
+        {
+            if(m_myDebugPortDriver.getCurrentBytesReceived() < m_receivePacketLength)
+            {
+                break;
+            }
+            m_receiveState = debugPortRecvFinishedRecv;
+            break;
+        }
+        case debugPortRecvFinishedRecv:
+        {
+            //ensure checksum matches
+            cefCompleteRequest_t* myReceiveBuffer = (cefCompleteRequest_t*)mp_receiveBuffer;
+            uint32_t headerCheck = calculateChecksum(&myReceiveBuffer->pingResponse, myReceiveBuffer->headerResponse.m_packetPayloadChecksum);
+            if(headerCheck != myReceiveBuffer->headerResponse.m_packetPayloadChecksum)
+            {
+                m_receiveState= debugPortRecvBadChecksom;
+                //TODO tell router data no good
+                LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer debug packet checksum does not match.");
+                break;
+            }
+            //DELETE THIS IS TEST CODE (this is to help moc the router)
+            else
+            {
+                m_copy = true;
+            }
+            returnReceiveBuffer(mp_receiveBuffer);
+            m_receiveState = debugPortRecvWaitForBuffer;
+            break;
+        }
+        case debugPortRecvBadChecksom:
+        {
+            returnSendBuffer(mp_receiveBuffer);
+            m_receiveState= debugPortRecvWaitForBuffer;
+            break;
+        }
 	default:
 		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "DebugTransportLayer Receive State Machien in unknown state.");
 		break;
