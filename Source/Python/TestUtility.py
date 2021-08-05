@@ -26,11 +26,17 @@ class Base:
     def __init__(self, interface):
         self.__router = Router(interface)
 
-    def send(self, command):
-        self.__router.send(command)
-        #TODO: raise exception if send fails
+    def execute(self, command):
+        """
+        Send a command and wait for a response
+        @param command: command to be issued to the target
+        @return: False if a command times out or gives a faulty response, else True
+        """
+        try:
+            self.__router.send(command)
+        except:
+            print("Error occurred on send")
 
-    def receive(self):
         while self.__router.commandResponsePending and not self.__router.timeoutOccurred:
             pass
         if self.__router.timeoutOccurred:
@@ -51,11 +57,7 @@ class Diag(Base):
 
     def ping(self, var1=0, var2=0, var3=0):
         ping = CommandPing()
-
-        #TODO: combine these into a single execute()
-        self.send(ping)
-        result = self.receive()
-
+        result = self.execute(ping)
 
         if result:
             print("Ping Success!")

@@ -34,7 +34,7 @@ class Router:
     are continuously read from the transport layer queue with a separate forever loop on its own
     thread.
     """
-    def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN, responseTimeout=5, sendTimeout=5):
+    def __init__(self, debugPortInterface: DebugPortDriver, endianness=Transport.BIG_ENDIAN, responseTimeoutInSeconds=5, sendTimeoutInSeconds=5):
         self.__endianness = endianness
         self.__transport = Transport(debugPortInterface, endianness=self.__endianness)
         self.__packetReadThread = Thread(target=self._readPackets)
@@ -42,8 +42,8 @@ class Router:
         self.__lastSentCommand = None
         self.__lastSendTime = None
         self.commandResponsePending = False
-        self.responseTimeout = responseTimeout # in seconds
-        self.sendTimeout = sendTimeout # in seconds
+        self.responseTimeoutInSeconds = responseTimeoutInSeconds
+        self.sendTimeoutInSeconds = sendTimeoutInSeconds
         self.timeoutOccurred = False
         self.commandSuccess = False
 
@@ -75,7 +75,7 @@ class Router:
             # non-blocking and allows for timeout checking
             sendThread = Thread(target=self._send, args=(command,))
             sendThread.start()
-            sendThread.join(timeout=self.sendTimeout)
+            sendThread.join(timeout=self.sendTimeoutInSeconds)
             if sendThread.isAlive():
                 self.commandResponsePending = False
                 self.timeoutOccurred = True
@@ -95,7 +95,7 @@ class Router:
         while(True):
             # check for timeout on the current request/response transaction
             currentTime = time.time()
-            if self.commandResponsePending and not self.timeoutOccurred and abs(currentTime - self.__lastSendTime) > self.responseTimeout:
+            if self.commandResponsePending and not self.timeoutOccurred and abs(currentTime - self.__lastSendTime) > self.responseTimeoutInSeconds:
                 self.commandResponsePending = False
                 self.timeoutOccurred = True
                 print("Timeout occurred on command response (receive)")
