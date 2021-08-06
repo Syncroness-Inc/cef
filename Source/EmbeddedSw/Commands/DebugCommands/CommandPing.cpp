@@ -22,11 +22,12 @@ written permission of Syncroness.
  * See notes in CommandPing.h for the use model of the ping command
  */
 
-bool CommandPing::execute(void* p_childCommand)
+bool CommandPing::execute(CommandBase* p_childCommand)
 {
     bool commandDone = false;
     bool shouldYield = false;
-    (void) p_childCommand;   // avoids compiler warning of unused variable since a Ping command doesn't have a child command
+
+    validateNullChildResponse(p_childCommand);
 
     while (shouldYield == false)
     {
@@ -75,7 +76,7 @@ bool CommandPing::execute(void* p_childCommand)
             default:
             {
                 // If we get here, we've lost our mind.
-                LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unhandled command state %d", m_commandState);
+                LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unhandled command state {:d}", m_commandState);
                 shouldYield = true;
                 commandDone = true;
                 break;
