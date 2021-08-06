@@ -25,6 +25,16 @@ void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 	ShimBase::getInstance().startInterruptSend(sendBuffer, packetSize);
 }
 
+int SerialPortDriverHwImpl::getCurrentBytesReceived(void)
+{
+	return m_currentBufferOffset;
+}
+
+bool SerialPortDriverHwImpl::getSendInProgress(void)
+{
+	ShimBase::getInstance().getSendInProgress();
+}
+
 bool SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
 {
 	m_receiveBufferSize = receiveSize;
@@ -66,8 +76,22 @@ void SerialPortDriverHwImpl::stopReceive()
 
 bool SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 {
-	//See if receive has finnished 
-	if(m_currentBufferOffset >= (m_receiveBufferSize - 1) && m_currentBufferOffset < DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
+	//Handle incoming byte
+	//Check framing signature
+	if(m_currentBufferOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
+	{
+		/**Check framing signature can return incroment if the byte matches the framing signature
+		 * Or it can return "0" if the framing signature is not correct and the buffer offset needs to be 
+		 * set back to starting point.*/
+		m_currentBufferOffset = FramingSignatureVerify::checkFramingSignatureByte(mp_receiveBuffer, m_currentBufferOffset);
+	}
+	else //If past framing signature increment offset
+	{
+		m_currentBufferOffset++;
+	}
+
+	//Check to see if receive is finished
+	if(m_currentBufferOffset >= m_receiveBufferSize  && m_currentBufferOffset < DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
 	{
 		/**Router/TransportLayer job to know packet has been received
 		 * Stop receiving data till startReceive is invoked again
@@ -88,18 +112,6 @@ bool SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 	}
 
 	//Receive has not finished
-	//Check framing signature
-	if(m_currentBufferOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
-	{
-		/**Check framing signature can return incroment if the byte matches the framing signature
-		 * Or it can return "0" if the framing signature is not correct and the buffer offset needs to be 
-		 * set back to starting point.*/
-		m_currentBufferOffset = FramingSignatureVerify::checkFramingSignatureByte(mp_receiveBuffer, m_currentBufferOffset);
-	}
-	else //If past framing signature increment offset
-	{
-		m_currentBufferOffset++;
-	}
 	//Set up receive next byte
 	return armReceiveNextByte();
 }

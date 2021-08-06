@@ -26,6 +26,8 @@ uint8_t FramingSignatureVerify::getDefinedFramingSignatureByte(uint8_t byteOffse
 	//regardless of endianness. Will refactor is time permits or a project runs into a problem 
 	if(byteOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
 	{
+		/**CHRIS - JOHN - I think if we get ride of this byte swap for endinaness and Chris sends his data without doing any change of 
+		 * endianess everything will end up working correct - That would be the first thing I would test at least*/
 		return *((uint8_t *)&framingSignature + (sizeof(framingSignature) - 1) - byteOffset);
 	}
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.",
