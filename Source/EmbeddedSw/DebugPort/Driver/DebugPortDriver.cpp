@@ -31,9 +31,24 @@ void DebugPortDriver::sendData(void* sendBuffer, int packetSize)
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::sendData() called, supposed to be implemented in derived class");
 }
 
+bool DebugPortDriver::getSendInProgress(void)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::getSendBusy() called, supposed to be implemented in derived class");
+}
+
 bool DebugPortDriver::startReceive(void* receiveBuffer,  int receiveSize)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::startReceive() called, supposed to be implemented in derived class");
+}
+
+int DebugPortDriver::getCurrentBytesReceived(void)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::getCurrentBytesReceived() called, supposed to be implemented in derived class");
+}
+
+void DebugPortDriver::editReceiveSize(int newReceiveSize)
+{
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::editReceiveSize() called, supposed to be implemented in derived class");
 }
 
 void DebugPortDriver::stopReceive()
