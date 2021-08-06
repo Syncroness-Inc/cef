@@ -18,6 +18,7 @@
 
 #include "CommandDebugPortRouter.hpp"
 #include "Logging.hpp"
+#include "AppMain.hpp"
 
 /**
  * Implementation of CommandDebugPortRouterRouter Methods
@@ -176,7 +177,7 @@ CefBuffer* CommandDebugPortRouter::checkoutCefCommandReceiveBuffer()
     return &m_cefCommandBuffer;
 }
 
-void CommandDebugPortRouter::checkinCefCommandReceiveBuffer(CefBuffer *p_cefBuffer)
+void CommandDebugPortRouter::checkinCefCommandReceiveBuffer(CefBuffer *p_cefBuffer, errorCode_t cefCommandFetchStatus)
 {
     // Sanity Check:  Confirm the memory was checked out appropriately in the first place
     if (m_cefCommandBufferState != cefCommandBufferState_receivingCommand)
@@ -200,9 +201,20 @@ void CommandDebugPortRouter::checkinCefCommandReceiveBuffer(CefBuffer *p_cefBuff
                 m_cefCommandBuffer.getNumberOfValidBytes(), m_cefCommandBuffer.getMaxBufferSizeInBytes(), 0);
     }
 
-    // This is a valid return, so change the state of the CEF Command Buffer
-    // By design, the buffer should only be returned with a CEF Receive Command
-    m_cefCommandBufferState = cefCommandBufferState_commandReceived;
+    // If we didn't successfully fetch a command, then the only choice we have is to try again
+    if (cefCommandFetchStatus != errorCode_OK)
+    {
+        AppMain::instance().setSystemErrorCode(cefCommandFetchStatus);
+        LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Failed to fetch CEF command.  Status = {%d}",
+                cefCommandFetchStatus, 0, 0);
+        m_cefCommandBufferState = cefCommandBufferState_bufferAvailable;
+    }
+    else
+    {
+        // This is a valid CEF Command, so change the state of the CEF Command Buffer
+        // By design, the buffer should only be returned with a CEF Receive Command
+        m_cefCommandBufferState = cefCommandBufferState_commandReceived;
+    }
 }
 
 CefBuffer* CommandDebugPortRouter::checkoutCefCommandProxyProcessingBuffer()

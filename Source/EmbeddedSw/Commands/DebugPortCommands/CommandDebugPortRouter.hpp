@@ -97,10 +97,12 @@ public:
     /**
      * Returns CEF Command Buffer with a valid CEF command
      * 		It is a fatal error to return anything other the the CEF command buffer
+     * 		If a valid command is not returned from the transport layer, we start over.
      *
      * @param p_cefBuffer 	pointer to CEF command buffer
+     * @param cefCommandFetchStatus   errorCode_OK if got a valid command, error code otherwise
      */
-    void checkinCefCommandReceiveBuffer(CefBuffer *p_cefBuffer);
+    void checkinCefCommandReceiveBuffer(CefBuffer *p_cefBuffer, errorCode_t cefCommandFetchStatus);
 
     /**
      *  Gets a buffer containing the CEF command to be processed.  It is assumed the buffer contains a cef command request.

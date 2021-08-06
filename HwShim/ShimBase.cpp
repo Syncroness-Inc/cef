@@ -36,7 +36,9 @@ ShimBase& ShimBase::getInstance()
 
 bool ShimBase::getSendInProgress(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::getSendInProgress() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::getSendInProgress() called, supposed to be implemented in derived class",
+	        0, 0, 0);
+	return false;
 }
 
 void ShimBase::rxCallback(void)
@@ -46,7 +48,8 @@ void ShimBase::rxCallback(void)
 
 void ShimBase::txCallback(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::txCallback() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::txCallback() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 }
 
 void ShimBase::errorCallback(void)
@@ -56,7 +59,9 @@ void ShimBase::errorCallback(void)
 
 bool ShimBase::startInterruptSend(void*sendBuffer, int bufferSize)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptSend() called, supposed to be implemented in derived class", 0, 0, 0);
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class ShimBase::startInterruptSend() called, supposed to be implemented in derived class",
+	        0, 0, 0);
+	return false;
 }
 
 void ShimBase::startInterruptReceive(void* receiveByte, SerialPortDriverHwImpl* callbackClass, bool (SerialPortDriverHwImpl::* callback)(void))

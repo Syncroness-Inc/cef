@@ -144,18 +144,21 @@ private:
 
    //!State machine current transmit state 
    debugPortTransmitStates_t  m_transmitState;
+
    //!State machine current receive state 
    debugPortReceiveStates_t   m_receiveState;
+
    //! Instance of debug port driver
    SerialPortDriverHwImpl m_myDebugPortDriver;
+
    //!Pointer to transmit buffer (nullptr when router has not given mem buffer)
    void* mp_xmitBuffer;
+
    //!Pointer to receive buffer (nullptr when router has not given mem buffer)
    void* mp_receiveBuffer;
+
    //!Number of bytes of receive packet (debug port packet header & debug packet)
    uint8_t m_receivePacketLength;
-   
-
 };
 
 #endif  // end header guard

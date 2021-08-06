@@ -26,7 +26,7 @@ written permission of Syncroness.
 #include "Logging.hpp"
 
 
-void DebugPortDriver::sendData(void* sendBuffer, int packetSize)
+void DebugPortDriver::sendData(void* sendBuffer, uint32_t packetSize)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::sendData() called, supposed to be implemented in derived class",
 	        0, 0, 0);
@@ -34,24 +34,29 @@ void DebugPortDriver::sendData(void* sendBuffer, int packetSize)
 
 bool DebugPortDriver::getSendInProgress(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::getSendBusy() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::getSendBusy() called, supposed to be implemented in derived class",
+	        0, 0, 0);
+	return false;
 }
 
-bool DebugPortDriver::startReceive(void* receiveBuffer,  int receiveSize)
+bool DebugPortDriver::startReceive(void* receiveBuffer, uint32_t receiveSize)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::startReceive() called, supposed to be implemented in derived class",
 	        0, 0, 0);
 	return false;  // needed to avoid compiler warning
 }
 
-int DebugPortDriver::getCurrentBytesReceived(void)
+uint32_t DebugPortDriver::getCurrentBytesReceived(void)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::getCurrentBytesReceived() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::getCurrentBytesReceived() called, supposed to be implemented in derived class",
+	        0, 0, 0);
+	return 0;
 }
 
-void DebugPortDriver::editReceiveSize(int newReceiveSize)
+void DebugPortDriver::editReceiveSize(uint32_t newReceiveSize)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::editReceiveSize() called, supposed to be implemented in derived class");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::editReceiveSize() called, supposed to be implemented in derived class",
+	        0, 0, 0);
 }
 
 void DebugPortDriver::stopReceive()

@@ -151,7 +151,7 @@ typedef uint16_t commandOpCode_t;
  * - command response
  * - logging data
  */
-enum
+enum debugPacketDataType_t : uint16_t
 {
     debugPacketType_commandRequest = 0,
     debugPacketType_commandResponse = 1,
@@ -160,7 +160,6 @@ enum
     // Must be last entry
     debugPacketType_invalid = 0xffff
 };
-typedef uint8_t debugPacketDataType_t;
 
 /**
  * CEF Command Header

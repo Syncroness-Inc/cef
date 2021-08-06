@@ -36,7 +36,7 @@ public:
     * @param sendBuffer - Pointer to start of buffer to send
     * @param packetSize - Number of Bytes to send
     */
-   virtual void sendData(void* sendBuffer, int packetSize);
+   virtual void sendData(void* sendBuffer, uint32_t packetSize);
 
    /**
     * Returns Status on if Send is in progress
@@ -54,14 +54,14 @@ public:
     * 
     * @return returns true if all buffers/offsets are valid to be able to arm receive data
     */
-   virtual bool startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
+   virtual bool startReceive(void* receiveBuffer,  uint32_t receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
 
    /**
     * Returns the current number of bytes that have been received durring current send.
     * 
     * @return integer value of number of bytes currently received
     */
-   virtual int getCurrentBytesReceived(void);
+   virtual uint32_t getCurrentBytesReceived(void);
 
    /**
     * Changes the number of bytes receive is expecting for packet to be finished.  The number of bytes received will
@@ -73,7 +73,7 @@ public:
     * 
     * @param newReceiveSize - new expected bytes to receive in packet
     */
-   virtual void editReceiveSize(int newReceiveSize);
+   virtual void editReceiveSize(uint32_t newReceiveSize);
 
    /**
     * Stops receiving data. This will instantly stop the receive of data even in the middle of a packet.
