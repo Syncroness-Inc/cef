@@ -76,7 +76,8 @@ bool CommandCefCommandProxy::execute(CommandBase *p_childCommand)
             mp_cefCommandHeader = (cefCommandHeader_t*) mp_cefBuffer->getBufferStartAddress();
             if (mp_cefCommandHeader == nullptr)
             {
-                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Programming Error:  Passed nullptr for Cef Command");
+                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Programming Error:  Passed nullptr for Cef Command",
+                        0, 0, 0);
             }
 
             // We have a CEF command to work on; process it
@@ -197,7 +198,7 @@ bool CommandCefCommandProxy::execute(CommandBase *p_childCommand)
         case commandStateReportError:
         {
             LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "CEF Command Handling Failed.  Status={:d}, OpCode={:d}",
-                    m_commandState, mp_cefCommand->m_cefCommandHeader.m_commandOpCode);
+                    m_commandState, mp_cefCommandHeader->m_commandOpCode, 0);
 
             // Report the error back to proxy command generator
             mp_cefCommandHeader->m_commandErrorCode = status;
@@ -216,7 +217,7 @@ bool CommandCefCommandProxy::execute(CommandBase *p_childCommand)
         {
             // If we get here, we've lost our mind.
             LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "CommandCefCommandProxy Unhandled command state {:d}",
-                    m_commandState);
+                    m_commandState, 0, 0);
             shouldYield = true;
             commandDone = true;
             break;

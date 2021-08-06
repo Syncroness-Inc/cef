@@ -239,6 +239,29 @@ static void johnTesting()
     // and it should return a response to be transmitted to the CommandDebugPortRouter (look at singleton to see buffer state)
 #endif
 
+    /*********** Logging Test **********/
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "This is a super long string that should get chopped off before it gets sent off to python and python should null terminate this string so it doesn't run to long.  We need to confirm this works.", 1, 2, 3);
+
+    LOG_WARNING(Logging::LogModuleIdCefInfrastructure, "Test2", 2, 5, 6);
+    LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "", 3, 5, 6);
+    LOG_DEBUG(Logging::LogModuleIdCefInfrastructure, "Test4", 4, 5, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test5", 5, 5, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test6", 6, 5, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test7", 7, 5, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test8", 8, 5, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test9", 9, 5, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test10", 10, 0, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test11", 11, 0, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test12", 12, 0, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test13", 13, 0, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test14", 14, 5, 6);
+    LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test15", 15, 5, 6);
+
+#if 1
+    LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Test16", 15, 5, 6);
+#endif
+
+
 }
 
 void AppMain::initialize()
@@ -282,5 +305,5 @@ void AppMain::run()
 	}
 
 	// We never should reach this point of the code!
-    LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unexpectedly exited AppMain infinite while loop!");
+    LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unexpectedly exited AppMain infinite while loop!", 0, 0, 0);
 }

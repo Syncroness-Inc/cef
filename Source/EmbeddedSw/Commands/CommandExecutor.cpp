@@ -120,7 +120,8 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
                     {
                         // We just removed this command from the queue, so we should be able to add it back in!
                         // Plus, the queue should be sized big enough to accommodate all possible instantiated commands.
-                        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unable to add command to command executor queue");
+                        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unable to add command to command executor queue",
+                                0, 0, 0);
                         allDone = true;
                         break;                        
                     }
@@ -160,7 +161,8 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
                     	 * If nothing else, the child command
                     	 * relies on the parent command to free it.
                     	 */
-                        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Parent command not on execution queue 0x{:x}", mp_commandToExecute);
+                        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Parent command not on execution queue 0x{:x}",
+                                (uint64_t)mp_commandToExecute, 0, 0);
                     }
                     m_commandState = commandStateExecuteCommand;
                     break;
@@ -177,7 +179,7 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
             default:
             {
                 // If we get here, we've lost our mind.
-                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unhandled command state {:d}", m_commandState);
+                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unhandled command state {:d}", m_commandState, 0, 0);
                 allDone = true;
                 break;
             }
@@ -198,6 +200,6 @@ void CommandExecutor::addCommandToQueue(CommandBase* p_command)
     bool successfullyAdded = m_executeCommandsQueue.put(p_command);
     if (successfullyAdded == false)
     {
-        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unable to add command to command executor queue");
+        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Unable to add command to command executor queue", 0, 0, 0);
     }
 }

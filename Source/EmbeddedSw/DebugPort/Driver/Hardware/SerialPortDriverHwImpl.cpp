@@ -25,17 +25,17 @@ void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 	ShimBase::getInstance().startInterruptSend(sendBuffer, packetSize);
 }
 
-int SerialPortDriverHwImpl::getCurrentBytesReceived(void)
+uint32_t SerialPortDriverHwImpl::getCurrentBytesReceived(void)
 {
 	return m_currentBufferOffset;
 }
 
 bool SerialPortDriverHwImpl::getSendInProgress(void)
 {
-	ShimBase::getInstance().getSendInProgress();
+	return ShimBase::getInstance().getSendInProgress();
 }
 
-bool SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
+bool SerialPortDriverHwImpl::startReceive(void* receiveBuffer, uint32_t receiveSize)
 {
 	m_receiveBufferSize = receiveSize;
 	mp_receiveBuffer = receiveBuffer;
@@ -46,12 +46,13 @@ bool SerialPortDriverHwImpl::startReceive(void* receiveBuffer,  int receiveSize)
 	}
 	else
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Start debug receive as null buffer or overrun max buffer size.");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Start debug receive as null buffer or overrun max buffer size.",
+		        0, 0, 0);
 		return false;
 	}
 }
 
-void SerialPortDriverHwImpl::editReceiveSize(int newReceiveSize)
+void SerialPortDriverHwImpl::editReceiveSize(uint32_t newReceiveSize)
 {
 	if(m_currentBufferOffset >= newReceiveSize)
 	{
@@ -90,7 +91,7 @@ bool SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 	}
 
 	//Check to see if receive is finished
-	if(m_currentBufferOffset >= m_receiveBufferSize  && m_currentBufferOffset < DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
+	if((m_currentBufferOffset >= m_receiveBufferSize)  && (m_currentBufferOffset < DEBUG_PORT_MAX_PACKET_SIZE_BYTES))
 	{
 		/**Router/TransportLayer job to know packet has been received
 		 * Stop receiving data till startReceive is invoked again
@@ -105,7 +106,8 @@ bool SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 		/**Router/TransportLayer job to know packet has been received
 		 * Stop receiving data till startReceive is invoked again
 		 * Current buffer overran allocated buffer*/
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Received bytes exceeded expected and ALSO overrun buffer.");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Received bytes exceeded expected and ALSO overrun buffer.",
+		        0, 0, 0);
 		return false;
 	}
 
@@ -134,6 +136,7 @@ void SerialPortDriverHwImpl::setErrorCallback(void)
 
 void SerialPortDriverHwImpl::errorCallback(errorCode_t error)
 {
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Implement in CmdDebugPort");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Implement in CmdDebugPort",
+	        0, 0, 0);
 }
 

@@ -19,7 +19,7 @@ written permission of Syncroness.
 
 
 #include "cefMappings.hpp"
-
+#include "cefContract.hpp"
 
 
 class AppMain
@@ -28,7 +28,8 @@ class AppMain
 		/**
 		 * Constructor
 		 */
-		AppMain()
+		AppMain() :
+		    m_firstSystemErrorCode(errorCode_OK)
 			{ }
 
 		/**
@@ -47,6 +48,30 @@ class AppMain
 		 */
 		void runAppMain_noReturn();
 
+		/**
+		 * Sets the first system error code that occurs in the system.  If all is well in the system,
+		 * this value should be set to errorCode_OK.  Otherwise, it is the first error code that
+		 * will cause the system to degrade in performance/capability.
+		 *
+		 * @param systemErrorCode   system error code
+		 */
+		void setSystemErrorCode(errorCode_t systemErrorCode)
+		{
+		    if (m_firstSystemErrorCode == errorCode_OK)
+		    {
+		        m_firstSystemErrorCode = systemErrorCode;
+		    }
+		}
+
+		/**
+		 * Returns the first system error code that was reported
+		 *
+		 * @return the first system error code that was reported
+		 */
+		errorCode_t GetSystemErrorCode()
+		{
+		    return m_firstSystemErrorCode;
+		}
 
 	private:
 		/**
@@ -60,6 +85,15 @@ class AppMain
 		 * There is no return from this function
 		 */
 		void run();
+
+
+		/**
+		 * If something "terrible" happens with the system that causes the system to "shutdown"
+		 * or continue in a reduced capacity state, the first error that causes this state
+		 * is stored in this variable.  There will likely be a cascade of errors, but
+		 * this error code can at least give a starting point what caused the issue.
+		 */
+		errorCode_t m_firstSystemErrorCode;
 
 };
 

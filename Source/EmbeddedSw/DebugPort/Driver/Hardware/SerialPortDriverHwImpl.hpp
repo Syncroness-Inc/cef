@@ -45,12 +45,12 @@ public:
    /**
     * See base class for method documentation
     */
-   bool startReceive(void* receiveBuffer,  int receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
+   bool startReceive(void* receiveBuffer,  uint32_t receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
 
    /**
     * See base class for method documentation
     */
-   int getCurrentBytesReceived(void);
+   uint32_t getCurrentBytesReceived(void);
 
    /**
     * See base class for method documentation
@@ -60,7 +60,7 @@ public:
    /**
     * See base class for method documentation
     */
-   void editReceiveSize(int newReceiveSize);
+   void editReceiveSize(uint32_t newReceiveSize);
    
    /**
     * See base class for method documentation
@@ -89,7 +89,7 @@ public:
    void setErrorCallback(void);
 
    /**
-    * Callback function for sending or receiveing error
+    * Callback function for sending or receiving error
     * 
     * @param error - current error
     */
@@ -106,9 +106,12 @@ private:
    bool armReceiveNextByte();
 
    //! Number of bytes to receive
-   int m_receiveBufferSize;
+   uint32_t m_receiveBufferSize;
+
    //! Current offset of the receive buffer
-   int m_currentBufferOffset;
+
+   uint32_t m_currentBufferOffset;
+
    //! Pointer to receive buffer
    void* mp_receiveBuffer;
 

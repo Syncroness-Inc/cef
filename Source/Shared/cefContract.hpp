@@ -47,34 +47,38 @@ extern "C"
  */
 enum
 {
-    errorCode_OK = 0, 	// No Error, Pass
-    errorCode_LogFatalReturn = 1,	// Should only be used in return statements immediately after LOG_FATAL.
-                                    //    Currently, a TRACE_FATAL statement never returns, but this is used
-                                    // 	  in the event some type of recovery is put in place in the future.
-    errorCode_PointerIsNullptr = 2,	// Only should be used after LOG_FATAL nullptr check
-    errorCode_reserved2 = 3,	// to be used later for commonly used return values
-    errorCode_reserved3 = 4,
-    errorCode_reserved4 = 5,
-    errorCode_reserved5 = 6,
-    errorCode_IllegalCommandState = 7,
+    errorCode_OK                                    = 0,    // No Error, Pass
+    errorCode_LogFatalReturn                        = 1,    // Should only be used in return statements immediately after LOG_FATAL.
+                                                            //    Currently, a TRACE_FATAL statement never returns, but this is used
+                                                            //    in the event some type of recovery is put in place in the future.
+    errorCode_PointerIsNullptr                      = 2,    // Only should be used after LOG_FATAL nullptr check
+    errorCode_reserved2                             = 3,    // to be used later for commonly used return values
+    errorCode_reserved3                             = 4,
+    errorCode_reserved4                             = 5,
+    errorCode_reserved5                             = 6,
+    errorCode_IllegalCommandState                   = 7,
     errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues = 8,
     errorCode_CmdBaseImportCefCommandOpCodeDoesNotMatchCommand = 9,
-    errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch = 11,
-    errorCode_debugPortErrorCodeNone = 12,
-    errorCode_debugPortErrorCodeParity = 13,
-    errorCode_debugPortErrorCodeNoise = 14,
-    errorCode_debugPortErrorCodeFrame = 15,
-    errorCode_debugPortErrorCodeOverrun = 16,
-    errorCode_debugPortErrorCodeUnknown = 17,
-    errorCode_RequestedCefProxyCommandNotAllocatable = 18,
-    errorCode_BufferValidBytesExceedsBufferSize = 19,
+    errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch = 10,
+    errorCode_debugPortErrorCodeNone                = 11,
+    errorCode_debugPortErrorCodeParity              = 12,
+    errorCode_debugPortErrorCodeNoise               = 13,
+    errorCode_debugPortErrorCodeFrame               = 14,
+    errorCode_debugPortErrorCodeOverrun             = 15,
+    errorCode_debugPortErrorCodeUnknown             = 16,
+    errorCode_RequestedCefProxyCommandNotAllocatable = 17,
+    errorCode_BufferValidBytesExceedsBufferSize     = 18,
+    errorCode_UnableToCreateLoggingSpace            = 19,
+    errorCode_LoggingCalledRecursively              = 20,
+    errorCode_TraceFatalEncountered                 = 21,
+
+
 
     errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
 };
 
 // Application error code type must fit in 16 bits
-STATIC_ASSERT((errorCode_NumApplicationErrorCodes < UINT16_MAX), error_codes_must_fit_in_16_bits)
-;
+STATIC_ASSERT((errorCode_NumApplicationErrorCodes < UINT16_MAX), error_codes_must_fit_in_16_bits);
 typedef uint16_t errorCode_t;
 
 /*********************************************************************************************************************/
@@ -101,8 +105,7 @@ enum
 };
 
 // Command type must fit in 16 bits
-STATIC_ASSERT((maxCommandOpCodeNumber < UINT16_MAX), command_type_must_fit_in_16_bits)
-;
+STATIC_ASSERT((maxCommandOpCodeNumber < UINT16_MAX), command_type_must_fit_in_16_bits);
 typedef uint16_t commandOpCode_t;
 
 /*********************************************************************************************************************/
@@ -148,7 +151,7 @@ typedef uint16_t commandOpCode_t;
  * - command response
  * - logging data
  */
-enum
+enum debugPacketDataType_t : uint16_t
 {
     debugPacketType_commandRequest = 0,
     debugPacketType_commandResponse = 1,
@@ -157,7 +160,6 @@ enum
     // Must be last entry
     debugPacketType_invalid = 0xffff
 };
-typedef uint8_t debugPacketDataType_t;
 
 /**
  * CEF Command Header
@@ -254,6 +256,18 @@ typedef struct
 /*********************************************************************************************************************/
 
 /**
+ * Logging types
+ */
+typedef enum logType
+{
+    logTypeDebug        = 0,
+    logTypeInfo         = 1,
+    logTypeWarning      = 2,
+    logTypeError        = 3,
+    logTypeFatal        = 4
+} logType_t;
+
+/**
  * Logging Structures.  For now, a display string is passed that python uses to display the variables.
  * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
  */
@@ -290,6 +304,7 @@ typedef struct
     uint8_t m_logType;               // 64 bit aligned
 
 } cefLog_t;
+
 
 /*********************************************************************************************************************/
 /******  Debug Port constants that rely on previously defined structures                                        ******/

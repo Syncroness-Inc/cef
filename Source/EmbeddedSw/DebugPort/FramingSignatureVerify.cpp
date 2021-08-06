@@ -30,7 +30,8 @@ uint8_t FramingSignatureVerify::getDefinedFramingSignatureByte(uint8_t byteOffse
 		 * endianess everything will end up working correct - That would be the first thing I would test at least*/
 		return *((uint8_t *)&framingSignature + (sizeof(framingSignature) - 1) - byteOffset);
 	}
-	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.");
+	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.",
+	        0, 0, 0);
     return 0;  //0 is not in the framing signature
 }
 
@@ -39,7 +40,8 @@ uint8_t FramingSignatureVerify::checkFramingSignatureByte(void* receiveBuffer, u
 		//Don't allow it to compare offset that does not contain the framing signature
 		if(byteOffset >= sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
 		{
-			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.");
+			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.",
+			        0, 0, 0);
 			return 0;
 		}
 		//UART last byte received

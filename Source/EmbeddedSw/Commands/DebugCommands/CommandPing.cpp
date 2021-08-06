@@ -36,7 +36,8 @@ bool CommandPing::execute(CommandBase* p_childCommand)
             case commandStateCommandEntry:
             {
             	// Print out an info statement as it helps indicate to console we are "connected"
-                LOG_INFO(Logging::LogModuleIdCefDebugCommands, "Ping!  m_testValue = 0x{:X}, m_offsetToAddToResponse = 0x{:X}", m_testValue, m_offsetToAddToResponse);
+                LOG_INFO(Logging::LogModuleIdCefDebugCommands, "Ping!  m_testValue = 0x{:X}, m_offsetToAddToResponse = 0x{:X}",
+                        m_request.m_testValue, m_request.m_offsetToAddToResponse, 0);
                 m_commandState = commandStateCheckRequest;
                 break;
             }
@@ -76,7 +77,8 @@ bool CommandPing::execute(CommandBase* p_childCommand)
             default:
             {
                 // If we get here, we've lost our mind.
-                LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unhandled command state {:d}", m_commandState);
+                LOG_FATAL(Logging::LogModuleIdCefDebugCommands, "Unhandled command state {:d}",
+                        m_commandState, 0, 0);
                 shouldYield = true;
                 commandDone = true;
                 break;
@@ -95,7 +97,7 @@ errorCode_t CommandPing::importFromCefCommand(void* p_cefCommand)
 
 	if (p_cefCommand == nullptr)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "p_cefCommand is a nullptr");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "p_cefCommand is a nullptr", 0, 0, 0);
 		return errorCode_PointerIsNullptr;
 	}
 
@@ -123,7 +125,7 @@ errorCode_t CommandPing::exportToCefCommand(void* p_cefCommand)
 
 	if (p_cefCommand == nullptr)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "exportToCefCommand called with nullptr");
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "exportToCefCommand called with nullptr", 0, 0, 0);
 		return errorCode_PointerIsNullptr;
 	}
 

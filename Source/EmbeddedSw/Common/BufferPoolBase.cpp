@@ -38,7 +38,7 @@ BufferPoolBase::BufferPoolBase(uint32_t bufferPoolId, uint32_t maxBufferSizeInBy
     {
         LOG_FATAL(Logging::LogModuleIdCefInfrastructure,
                 "Failed to allocate buffer memory pool. MaxBufferSize={}, m_maxBufferSizeInBytes={:d}, BufferPoolId={:d}",
-                m_maxBufferSize, m_numBuffers, m_bufferPoolId);
+                m_maxBufferSizeInBytes, m_numBuffers, m_bufferPoolId);
     }
     mp_memoryPoolEnd = &mp_memoryPoolStart[totalNumBytesNeeded - 1];
 
@@ -50,8 +50,8 @@ BufferPoolBase::BufferPoolBase(uint32_t bufferPoolId, uint32_t maxBufferSizeInBy
         if (putResult == false)
         {
             // the pool was sized to accept all the buffer memory, so this should work
-            LOG_FATAL(Logging::LogModuleIdCefInfrastructure,
-                    "Failed to put into buffer memory pool during constructor, BufferPoolId={:d}", m_bufferPoolId);
+            LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to put into buffer memory pool during constructor, BufferPoolId={:d}",
+                    m_bufferPoolId, 0, 0);
         }
     }
 }
@@ -61,7 +61,8 @@ void* BufferPoolBase::allocate(uint32_t bufferSizeInBytes)
     // Sanity check that not trying to allocate a buffer bigger than this pool is sized for
     if (bufferSizeInBytes > m_maxBufferSizeInBytes)
     {
-        LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Request for buffer of {:d} bytes from a buffer pool whose max size is {:d} bytes.  bufferPoolId={:d}", bufferSizeInBytes, m_maxBufferSizeInBytes, m_bufferPoolId);
+        LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Request for buffer of {:d} bytes from a buffer pool whose max size is {:d} bytes.  bufferPoolId={:d}",
+                bufferSizeInBytes, m_maxBufferSizeInBytes, m_bufferPoolId);
         return nullptr;
     }
 
@@ -82,10 +83,11 @@ void BufferPoolBase::free(void *p_bufferMemory)
     if ((p_bufferMemory < mp_memoryPoolStart) || (p_bufferMemory > mp_memoryPoolEnd))
     {
         // attempting to return memory to the pool that is out of range
-        LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Attempting to return out of range memory to pool.  bufferPoolId={d}", bufferPoolId);
+        LOG_ERROR(Logging::LogModuleIdCefInfrastructure, "Attempting to return out of range memory to pool.  bufferPoolId={d}",
+                m_bufferPoolId, 0, 0);
         LOG_FATAL(Logging::LogModuleIdCefInfrastructure,
                 "Attempting to return out of range memory to pool. address=0x{:x}, minAddress=0x{:x}, maxAddress=0x{:x}",
-                p_bufferMemory, mp_memoryPoolStart, mp_memoryPoolEnd);
+                (uint64_t)p_bufferMemory, (uint64_t) mp_memoryPoolStart, (uint64_t)mp_memoryPoolEnd);
 
     }
 
@@ -93,7 +95,8 @@ void BufferPoolBase::free(void *p_bufferMemory)
     if (putResult == false)
     {
         // we are returning memory to a pool it was allocated from, so there should be room!
-        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to put into buffer memory pool id = {:d} on free", m_memoryPoolId);
+        LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to put into buffer memory pool id = {:d} on free",
+                m_bufferPoolId, 0, 0);
     }
 }
 
