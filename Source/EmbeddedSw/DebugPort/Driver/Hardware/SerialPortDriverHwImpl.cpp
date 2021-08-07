@@ -121,13 +121,8 @@ bool SerialPortDriverHwImpl::armReceiveNextByte()
 	if(mp_receiveBuffer != nullptr && m_currentBufferOffset < m_receiveBufferSize)
 	{
 	    uint8_t* p_receiveMemoryAddress = (uint8_t*) mp_receiveBuffer + m_currentBufferOffset;
-#if 1
 		ShimBase::getInstance().startInterruptReceive(p_receiveMemoryAddress,
 		        this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
-#else
-        ShimBase::getInstance().startInterruptReceive((mp_receiveBuffer + m_currentBufferOffset),
-                this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
-#endif
 		return true;
 	}
 	return false;
