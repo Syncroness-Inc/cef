@@ -71,7 +71,9 @@ enum
     errorCode_UnableToCreateLoggingSpace            = 19,
     errorCode_LoggingCalledRecursively              = 20,
     errorCode_TraceFatalEncountered                 = 21,
-
+    errorCode_debugPortTransportPacketHeaderChecksumMismatch = 22,
+    errorCode_debugPortTransportPayloadChecksumMismatch = 23,
+    errorCode_debugPortTransportBufferNotBigEnoughForPayload = 24,
 
 
     errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
@@ -151,14 +153,14 @@ typedef uint16_t commandOpCode_t;
  * - command response
  * - logging data
  */
-enum debugPacketDataType_t : uint16_t
+enum debugPacketDataType_t : uint8_t
 {
     debugPacketType_commandRequest = 0,
     debugPacketType_commandResponse = 1,
     debugPacketType_loggingData = 2,
 
     // Must be last entry
-    debugPacketType_invalid = 0xffff
+    debugPacketType_invalid = 0xff
 };
 
 /**
@@ -211,6 +213,11 @@ typedef struct
     uint8_t m_reserve;					    //48 bit aligned
     uint16_t m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
+
+STATIC_ASSERT(sizeof(cefCommandDebugPortHeader_t::m_packetType) == sizeof(debugPacketDataType_t), packet_type_error_codes_not_setup_correctly);
+
+
+
 
 /**
  * CommandPing
@@ -315,11 +322,13 @@ typedef struct
  * In other words, the total number of bytes the application layer would request the
  * transport layer to received/send.
  * This number does NOT include Transport layer headers
+ * Caution:  DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND is used to size memory buffers, so be careful to not
+ * make it too big...or to small or we won't be able to allocate commands.
  */
 #define DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND (sizeof(cefCommandHeader_t) + 512)
 #define DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG     (sizeof(cefLog_t))
 #define MAX_LOCAL(A,B)  (A > B ? A : B)
-#define DEBUG_PORT_MAX_APPLICATION_PAYLOAD         MAX_LOCAL(DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND, DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG)
+#define DEBUG_PORT_MAX_APPLICATION_PAYLOAD  MAX_LOCAL(DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND, DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG)
 
 /**
  * Debug Port Packet Size

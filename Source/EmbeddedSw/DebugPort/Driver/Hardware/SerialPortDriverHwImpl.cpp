@@ -40,7 +40,7 @@ bool SerialPortDriverHwImpl::startReceive(void* receiveBuffer, uint32_t receiveS
 	m_receiveBufferSize = receiveSize;
 	mp_receiveBuffer = receiveBuffer;
 	m_currentBufferOffset = 0;
-	if(mp_receiveBuffer != nullptr && m_currentBufferOffset < DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
+	if((mp_receiveBuffer != nullptr) && (m_currentBufferOffset < m_receiveBufferSize))
 	{
 		return armReceiveNextByte();
 	}
@@ -54,19 +54,18 @@ bool SerialPortDriverHwImpl::startReceive(void* receiveBuffer, uint32_t receiveS
 
 void SerialPortDriverHwImpl::editReceiveSize(uint32_t newReceiveSize)
 {
+    /**
+     * It is the responsibility of the calling routine to ensure that
+     * that mp_receiveBuffer + newReceiveSize does not overflow as the
+     * the SerialPortDriverHwImpl does not have the knowledge to make
+     * this decision.
+     */
+    m_receiveBufferSize = newReceiveSize;
+
 	if(m_currentBufferOffset >= newReceiveSize)
 	{
 		stopReceive();
 	}
-	else if(newReceiveSize >= DEBUG_PORT_MAX_PACKET_SIZE_BYTES)
-	{
-		m_receiveBufferSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES;
-	}
-	else
-	{
-		m_receiveBufferSize = newReceiveSize;
-	}
-
 }
 
 void SerialPortDriverHwImpl::stopReceive()
@@ -76,54 +75,59 @@ void SerialPortDriverHwImpl::stopReceive()
 
 bool SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 {
-	//Handle incoming byte
-	//Check framing signature
+	/**
+	 * Keep looking for the framing signature and resetting where add to
+	 * buffer until the beginning of the buffer contains a complete framing
+	 * signature.
+	 * After a framing signature is found, continue to add data to the buffer until
+	 * run out of buffer space
+	 */
+
 	if(m_currentBufferOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
 	{
-		/**Check framing signature can return incroment if the byte matches the framing signature
+		/**Check framing signature can return increment if the byte matches the framing signature
 		 * Or it can return "0" if the framing signature is not correct and the buffer offset needs to be 
 		 * set back to starting point.*/
 		m_currentBufferOffset = FramingSignatureVerify::checkFramingSignatureByte(mp_receiveBuffer, m_currentBufferOffset);
 	}
-	else //If past framing signature increment offset
+	else // If past framing signature, increment offset for the next buffer receive point
 	{
 		m_currentBufferOffset++;
 	}
 
-	//Check to see if receive is finished
-	if((m_currentBufferOffset >= m_receiveBufferSize)  && (m_currentBufferOffset < DEBUG_PORT_MAX_PACKET_SIZE_BYTES))
+	//Check to see if receive is finished/ buffer is full
+	if(m_currentBufferOffset >= m_receiveBufferSize)
 	{
-		/**Router/TransportLayer job to know packet has been received
-		 * Stop receiving data till startReceive is invoked again
-		 * buffer offset is not expected to be greater then expected receive buffer but this will fail silently because 
-		 * it memory is allocated for DEBUG_PORT_MAX_PACKET_SIZE_BYTES before overruning the buffer
-		 * packet size is not known till packet header is unwrapped.  If this takes longer then receiving the 
-		 * entire packet we could go above expected size*/
-		return false;
-	}
-	else if(m_currentBufferOffset >= DEBUG_PORT_MAX_PACKET_SIZE_BYTES) //current buffer 0-527, MAX_BUFFER 528 (= will overrun)
-	{
-		/**Router/TransportLayer job to know packet has been received
-		 * Stop receiving data till startReceive is invoked again
-		 * Current buffer overran allocated buffer*/
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Received bytes exceeded expected and ALSO overrun buffer.",
-		        0, 0, 0);
+		/**Router/TransportLayer job to know when a complete packet has been received.
+		 * Stop receiving data till startReceive is invoked again.
+		 *
+		 * It is the responsibility of the transport layer to make sure the buffer
+		 * is big enough to receive a complete packet.  The transport layer should start
+		 * out with a buffer big enough for the largest expected packet size.
+		 * */
 		return false;
 	}
 
-	//Receive has not finished
+	//Receive has not finished/still room left in the buffer
 	//Set up receive next byte
 	return armReceiveNextByte();
 }
 
 bool SerialPortDriverHwImpl::armReceiveNextByte()
 {
-	/**Error should be taken care of when receiveNextByte is called this is a last min check so
-	 * we do not write over memory.
-	 * All Fatal errors are handled in function that calls*/
+	/**Error should be handled by the higher level routine that calls receiveNextByte.
+	 * We do a final check to make sure we are not over-writing memory here.
+	 */
 	if(mp_receiveBuffer != nullptr && m_currentBufferOffset < m_receiveBufferSize)
 	{
-		ShimBase::getInstance().startInterruptReceive((mp_receiveBuffer + m_currentBufferOffset), this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
+	    uint8_t* p_receiveMemoryAddress = (uint8_t*) mp_receiveBuffer + m_currentBufferOffset;
+#if 1
+		ShimBase::getInstance().startInterruptReceive(p_receiveMemoryAddress,
+		        this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
+#else
+        ShimBase::getInstance().startInterruptReceive((mp_receiveBuffer + m_currentBufferOffset),
+                this, &SerialPortDriverHwImpl::receivedByteDriverHwCallback);
+#endif
 		return true;
 	}
 	return false;

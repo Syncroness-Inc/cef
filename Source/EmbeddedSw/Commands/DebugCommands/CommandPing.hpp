@@ -41,7 +41,7 @@ class CommandPing : public CommandBase
 
 		//! See base class for method description
 		bool execute(CommandBase* p_parentCommand);
-        errorCode_t importFromCefCommand(void* p_cefCommand);
+        errorCode_t importFromCefCommand(void* p_cefCommand, uint32_t actualNumBytesReceived);
         errorCode_t exportToCefCommand(void* p_cefCommand);
 
 		class CommandPingRequest

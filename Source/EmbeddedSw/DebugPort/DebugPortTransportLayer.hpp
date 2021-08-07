@@ -18,90 +18,72 @@ written permission of Syncroness.
 #define __DEBUG_PORT_TRANSPORT_LAYER_H
 #include "cefContract.hpp"
 #include "SerialPortDriverHwImpl.hpp"
+#include "CefBuffer.hpp"
 
 /**
  * DebugPortTransportLayer runs a state machine for the Transmit and Receive process
- * All buffer memory comes from the router layer and all send/receive is done in the Port Driver
+ *
  * Transport layer keeps track on where the in the send/receive process it is and also
- * is in charge of constructing and destructing the cefCommandDebugPortHeader_t
+ * is in charge of constructing the cefCommandDebugPortHeader_t on receive, and
+ * validating cefCommandDebugPortHeader_t on transmit.
+ *
+ * On the first implementation, the receive data needs to be in contiguous memory.  As such
+ * the receive data is copied into the the buffer passed from the Application layer.  Eventually
+ * the code should be re-factored to work with two buffers...one for the payload header, and
+ * one for the payload data (what comes from the applicaton layer/DebugPortRouter)
  */
+
+
+/**
+ * Only one DebugPortDriver should be instantiated.
+ * Currently there is only one type of driver, but eventually there could be multiple
+ * physical interfaces (serial port, ethernet, simulator...)
+ *
+ * For now, we just have the serial port
+ */
+
+typedef SerialPortDriverHwImpl MyDebugPortDriver;
+
+
 
 class DebugPortTransportLayer {
 public:
-   //**************************test code delete ***************************
-   typedef struct
-   {
-      cefCommandDebugPortHeader_t headerResponse;
-      cefCommandPingResponse_t   pingResponse;
-      
-   } cefCompleteResponse_t;
-   typedef struct
-   {
-      cefCommandDebugPortHeader_t headerResponse;
-      cefCommandPingRequest_t   pingResponse;
-      
-   } cefCompleteRequest_t;
-   bool m_sendBufferAvailable;
-   bool m_receiveBufferAvailable;
-   bool m_copy;
-   void* getSendBuffer();
-   void returnSendBuffer(void*);
-   void* getReceiveBuffer();
-   void returnReceiveBuffer(void*);
-   void* mp_myRequest;
-   void* mp_myResponse;
-   cefCompleteResponse_t m_myResponse;
-   cefCompleteRequest_t m_myRequest;
-   //*************************************************************************
-
-
 	//! Constructor.
 	DebugPortTransportLayer():
-   m_sendBufferAvailable(false),                         //test delete
-   m_receiveBufferAvailable(true),                       //test delete
-   m_copy(false),                                        //test delete
-   mp_myRequest(&m_myRequest),                           //test delete
-   mp_myResponse(nullptr),                               //test delete
-   m_transmitState(debugPortXmitWaitingForBuffer),
-   m_receiveState(debugPortRecvWaitForBuffer),
-   mp_xmitBuffer(nullptr),
-   mp_receiveBuffer(nullptr),
-   m_receivePacketLength(0)
-   {}
+        m_transmitState(stateXmitWaitingForBuffer),
+        m_receiveState(stateXmitWaitingForBuffer),
+        m_expectedNumBytesInReceivePacket(0),
+        myReceiveCefBuffer(&myReceiveBuffer[0], NUM_ELEMENTS(myReceiveBuffer)),
+        mp_commandReceiveCefBuffer(nullptr),
+        m_receiveErrorStatus(errorCode_OK),
+        mp_transmitPayload(nullptr),
+        m_transmitDebugDataType(debugPacketType_invalid)
+        { }
 
    /**
-    * State machine for transmit a packet.  Will go throught debugPortTransmitStates_t. 
-    * 
-    * debugPortXmitWaitingForBuffer          - Waiting for memory buffer from Router to start Transmit
-    * debugPortXmitGeneratePacketHeader      - Adds the debug Port Packet header onto the packet
-    * debugPortXmitReadyToSend               - Packet header and packet is ready to be sent/starts the send
-    * debugPortXmitSendingPacket             - Checks to see if transmit has finished
-    * debugPortXmitFinishedSendingPacket     - Packet finished return memory buffer to router 
+    * State machine to transmit a packet.
     */
    void transmitStateMachine(void);
 
    /**
-    * State machine for Receive packet.  Will go throught debugPortReceiveStates_t
-    * 
-    * debugPortRecvWaitForBuffer          - Waiting for memory buffer from router to start receive
-    * debugPortRecvWaitForPacketHeader    - Waiting for all bytes of debug port packet header
-    *                                        - Checks packet header checksum
-    * debugPortRecvWaitForCefPacket       - Waiting for all bytes of debug port packet
-    * debugPortRecvFinishedRecv           - Checks packet checksum & returns the memory buffer
-    * debugPortRecvBadChecksom            - Returns the memory buffer 
+    * State machine to receive packet.
     */
    void receiveStateMachine(void);
+
+
 private:
    /**
     * Transmit States Machine - See transmitStateMachine()
     */
       enum
       {
-         debugPortXmitWaitingForBuffer          = 0,
-         debugPortXmitGeneratePacketHeader         ,
-         debugPortXmitReadyToSend                  ,
-         debugPortXmitSendingPacket                ,
-         debugPortXmitFinishedSendingPacket        ,
+         stateXmitWaitingForBuffer          = 0,
+         stateXmitGeneratePacketHeader      = 1,
+         stateXmitStartHeaderTransmit       = 2,
+         stateXmitWaitForHeaderToTransmit   = 3,
+         stateXmitStartPayloadTransmit      = 4,
+         stateXmitWaitForPayloadToTransmit  = 5,
+         stateXmitFinishedSendingPacket     = 6,
       };
       typedef uint16_t debugPortTransmitStates_t;
 
@@ -110,16 +92,16 @@ private:
     */
       enum 
       {
-         debugPortRecvWaitForBuffer             = 0,
-         debugPortRecvWaitForPacketHeader          ,
-         debugPortRecvWaitForCefPacket             ,
-         debugPortRecvFinishedRecv                 ,
-         debugPortRecvBadChecksom                  ,
+         stateRecvWaitForBuffer             = 0,
+         stateRecvWaitForPacketHeader       = 1,
+         stateRecvWaitForCefPacket          = 2,
+         stateRecvFinishedRecv              = 3,
+         stateReceiveFinished               = 4,
       };
       typedef uint16_t debugPortReceiveStates_t;
 
    /**
-    * Generates the cefCommandDebugPortHeader_t for the packet
+    * Generates the cefCommandDebugPortHeader_t for the packet to transmit
     */
    void generatePacketHeader(void);
 
@@ -127,38 +109,53 @@ private:
     * Waiting on packet header.  Checks to see if complete packet header has been received and checksum matches
     * 
     * @return debugPortReceiveStates_t - Returns the receive state
-    *                                      -  debugPortRecvWaitForPacketHeader - all packet header bytes have not been received
-    *                                      -  debugPortRecvBadChecksom - missmatch checksum
-    *                                      -  debugPortRecvWaitForCefPacket - packet header received and packet header checksum matches 
     */
    uint16_t receivePacketHeader(void);
 
    /**
-    * Calculates the checksom of a struct
+    * Calculates the byte checksum of a byte array
+    *
+    * @param p_byteArray   void pointer to start of byte array to calculate checksum for
+    * @param numBytes      number of bytes in the byte array
     * 
-    * @param myStruct - void pointer to start of struct to calculate checksun for
-    * @param structSize - number of bytes of the struct (or that you want the checksum calculated for)
-    * @return uint32_t - checksum
+    * @return uint32_t  checksum
     */
-   uint32_t calculateChecksum(void* myStruct,  uint structSize);
+   uint32_t calculateChecksum(void* p_byteArray, uint32_t numBytes);
 
-   //!State machine current transmit state 
+   //! Transmit state machine state
    debugPortTransmitStates_t  m_transmitState;
 
-   //!State machine current receive state 
+   //! Receive state machine statee
    debugPortReceiveStates_t   m_receiveState;
 
    //! Instance of debug port driver
-   SerialPortDriverHwImpl m_myDebugPortDriver;
+   MyDebugPortDriver m_myDebugPortDriver;
 
-   //!Pointer to transmit buffer (nullptr when router has not given mem buffer)
-   void* mp_xmitBuffer;
+   //! Number of bytes currently expected in receive packet (debug port packet header & debug packet)
+   uint32_t m_expectedNumBytesInReceivePacket;
 
-   //!Pointer to receive buffer (nullptr when router has not given mem buffer)
-   void* mp_receiveBuffer;
+   //! Local memory to receive data into
+   uint8_t myReceiveBuffer[DEBUG_PORT_MAX_PACKET_SIZE_BYTES];
 
-   //!Number of bytes of receive packet (debug port packet header & debug packet)
-   uint8_t m_receivePacketLength;
+   //! CefBuffer object used internally that is setup during the constructor so
+   //! it is guaranteed to be a non-null memory.  Contains memory for both header and payload.
+   CefBuffer myReceiveCefBuffer;
+
+   //! Pointer to the Command Receive CEF Buffer (nullptr when the router doesn't want to be
+   //! trying to receive a command.)
+   CefBuffer* mp_commandReceiveCefBuffer;
+
+   //! Receive error status
+   errorCode_t m_receiveErrorStatus;
+
+   //! Buffer with the transmit payload (does not include Transport Header)
+   CefBuffer* mp_transmitPayload;
+
+   //! What type of packet we are currently transmitting
+   debugPacketDataType_t m_transmitDebugDataType;
+
+   //! Packet Header for Transmit (re-built for each transmit sequence)
+   cefCommandDebugPortHeader_t m_transmitPacketHeader;
 };
 
 #endif  // end header guard

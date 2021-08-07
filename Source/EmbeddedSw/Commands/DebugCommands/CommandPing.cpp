@@ -90,7 +90,7 @@ bool CommandPing::execute(CommandBase* p_childCommand)
 }
 
 
-errorCode_t CommandPing::importFromCefCommand(void* p_cefCommand)
+errorCode_t CommandPing::importFromCefCommand(void* p_cefCommand, uint32_t actualNumBytesReceived)
 {
 	// Help avoid cut/paste errors by only having one place the actual command type is defined for the import function
 	typedef cefCommandPingRequest_t cefCommand_t;
@@ -104,7 +104,7 @@ errorCode_t CommandPing::importFromCefCommand(void* p_cefCommand)
 	cefCommand_t* p_cef = (cefCommand_t*)p_cefCommand;
 
 	// From the CEF Command's header parameters, update Command Base parameters
-	importFromCefCommandBase(&(p_cef->m_header), (uint32_t)sizeof(cefCommand_t));
+	importFromCefCommandBase(&(p_cef->m_header), (uint32_t)sizeof(cefCommand_t), actualNumBytesReceived);
 
 	// Update all the Ping request parameters from the CEF Command request parameters
 	m_request.m_testValue = p_cef->m_testValue;

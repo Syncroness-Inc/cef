@@ -61,6 +61,11 @@ class errorCode(Enum):
     errorCode_UnableToCreateLoggingSpace										= 19
     errorCode_LoggingCalledRecursively              							= 20
     errorCode_TraceFatalEncountered											    = 21
+    errorCode_debugPortTransportPacketHeaderChecksumMismatch 					= 22
+    errorCode_debugPortTransportPayloadChecksumMismatch 						= 23
+	errorCode_debugPortTransportBufferNotBigEnoughForPayload 					= 24,
+	
+	    
 	    
     errorCode_NumApplicationErrorCodes                                          = auto()
 
@@ -129,7 +134,8 @@ class debugPacketDataType(Enum):
     debugPacketType_commandResponse                         = 1
     debugPacketType_loggingData                             = 2
 
-    debugPacketType_invalid                                 = 0xffff
+    debugPacketType_invalid                                 = 0xff
+
 
 class cefCommandHeader(ctypes.Structure):
     """

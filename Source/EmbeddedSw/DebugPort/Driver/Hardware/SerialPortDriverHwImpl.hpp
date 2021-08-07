@@ -45,7 +45,7 @@ public:
    /**
     * See base class for method documentation
     */
-   bool startReceive(void* receiveBuffer,  uint32_t receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
+   bool startReceive(void* receiveBuffer, uint32_t receiveSize);
 
    /**
     * See base class for method documentation
