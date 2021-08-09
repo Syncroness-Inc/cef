@@ -32,6 +32,7 @@
 #include "BufferPoolBase.hpp"
 #include "cefContract.hpp"
 #include "CefBuffer.hpp"
+#include "DebugPortTransportLayer.hpp"
 
 class CommandDebugPortRouter: public CommandBase
 {
@@ -239,6 +240,9 @@ private:
      * the execute function in a log_fatal() situation.
      */
     bool m_executeActive;
+
+    //! Debug Port Transport Layer Object to be used by the Router
+    DebugPortTransportLayer m_debugTransportLayer;
 };
 
 #endif  // end header guard

@@ -88,10 +88,10 @@ bool CommandDebugPortRouter::execute(CommandBase *p_childCommand)
             // Only execute the receive if not in fatal handling mode
             if (m_fatalErrorHandling == false)
             {
-                //@todo add in receive transport call
+                m_debugTransportLayer.receiveStateMachine();
             }
 
-            //@todo add in transmit transport call
+            m_debugTransportLayer.transmitStateMachine();
 
             // Finished with transport functions; exit, and try transport functions again next time
             shouldYield = true;

@@ -29,6 +29,7 @@ AppMain& AppMain::instance()
 	return appMainSingleton;
 }
 
+#if 0
 // These include files are just needed for testing.
 #include "main.h"
 #include "SerialPortDriverHwImpl.hpp"
@@ -39,7 +40,6 @@ uint8_t testSend[23] = {'U','A','R','T',' ','S','t','a','r','t',' ','S','u','c',
 DebugPortTransportLayer myTransport;
 static void tonyTesting(void)
 {
-
 	//debugPortDriver.startReceive(&receiveBuffer);
 	//extern UART_HandleTypeDef huart3;
 	//HAL_UART_Transmit_IT(&huart3, (uint8_t *)testSend, sizeof(testSend));
@@ -47,8 +47,14 @@ static void tonyTesting(void)
 	myTransport.transmitStateMachine();
 	myTransport.receiveStateMachine();
 
+}
+#else
+static void tonyTesting(void)
+{
 
 }
+#endif
+
 
 
 // These includes are needed just for the test code
