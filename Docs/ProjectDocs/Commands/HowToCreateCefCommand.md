@@ -54,7 +54,7 @@ The Ping command implements additional features that are optional.
            self.request.m_header = self.header
    ```
 
-   Other sections of the Ping code are optional.  Typically, there will be a request and response field for most commands.  The request and response fields can either be filled out by the object itself, or the the fields can be setup within the command's wrapper function in `TestUtility.py`
+   Other sections of the Ping code are optional.  Typically, there will be a request and response field for most commands.  The request and response fields can either be filled out by the object itself, or the the fields can be setup within the command's wrapper function in `TestUtility.py`.   `validateResponseBody()` is called by the Python Utilities infrastructure to automatically validate custom checks the user wants all instantiations of the CEF command to check.
 2. In `TestUtility.py` a test command like `def ping(self, printResults=True):` must be implemented.  This allows the command to be executed from the python command line, or embedded in other Python Utilities methods.  Typically the response fields are used to build a dictionary that is returned and used by python calling routines.
 
 ## Embedded Software
