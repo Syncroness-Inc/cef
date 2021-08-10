@@ -20,7 +20,6 @@ from os.path import dirname, abspath
 import ctypes
 import copy
 from threading import Thread
-from pprint import pprint
 
 sys.path.append(dirname(dirname(abspath(__file__))))
 from Shared import cefContract
@@ -60,13 +59,6 @@ class Transport:
         # print("CHECKSUM: {}".format(byteSum)) # uncomment for debug
         return byteSum
 
-    @staticmethod
-    def framingSignatureToBytes():
-        """
-        Returns CEF Framing Signature
-        """
-        return cefContract.debugPacketFramingSignature
-
     def getNextPacket(self):
         """
         Accessor for received packets
@@ -96,9 +88,8 @@ class Transport:
         6. Put packet in the receiving queue
         """
 
-        # retrieve the framing signature from the CEF contract and convert to an 
-        # iterable for byte-by-byte incoming detection
-        framingSignature = self.framingSignatureToBytes()
+        # retrieve the framing signature from the CEF contract which is byte by byte iterable
+        framingSignature = cefContract.debugPacketFramingSignature
 
         # start the loop
         while(True):
