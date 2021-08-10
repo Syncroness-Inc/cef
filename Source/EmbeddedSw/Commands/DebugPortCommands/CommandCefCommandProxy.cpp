@@ -111,7 +111,8 @@ bool CommandCefCommandProxy::execute(CommandBase *p_childCommand)
             mp_childCommand->setParentCommand(this);
 
             // We have a command, now import the data to the command
-            status = mp_childCommand->importFromCefCommand(mp_cefCommandHeader);
+            status = mp_childCommand->importFromCefCommand(mp_cefCommandHeader,
+                                                           mp_cefBuffer->getNumberOfValidBytes());
 
             if (status != errorCode_OK)
             {

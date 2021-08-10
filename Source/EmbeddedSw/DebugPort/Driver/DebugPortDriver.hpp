@@ -54,7 +54,7 @@ public:
     * 
     * @return returns true if all buffers/offsets are valid to be able to arm receive data
     */
-   virtual bool startReceive(void* receiveBuffer,  uint32_t receiveSize = DEBUG_PORT_MAX_PACKET_SIZE_BYTES);
+   virtual bool startReceive(void* receiveBuffer, uint32_t receiveSize);
 
    /**
     * Returns the current number of bytes that have been received durring current send.

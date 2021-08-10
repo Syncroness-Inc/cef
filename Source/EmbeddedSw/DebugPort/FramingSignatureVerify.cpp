@@ -21,14 +21,9 @@ written permission of Syncroness.
 
 uint8_t FramingSignatureVerify::getDefinedFramingSignatureByte(uint8_t byteOffset)
 {
-	uint32_t framingSignature = DEBUG_PACKET_UINT32_FRAMING_SIGNATURE;
-	//WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
-	//regardless of endianness. Will refactor is time permits or a project runs into a problem 
-	if(byteOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
+	if(byteOffset < numElementsInDebugPacketFramingSignature)
 	{
-		/**CHRIS - JOHN - I think if we get ride of this byte swap for endinaness and Chris sends his data without doing any change of 
-		 * endianess everything will end up working correct - That would be the first thing I would test at least*/
-		return *((uint8_t *)&framingSignature + (sizeof(framingSignature) - 1) - byteOffset);
+		return debugPacketFramingSignature[byteOffset];
 	}
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.",
 	        0, 0, 0);
@@ -38,10 +33,10 @@ uint8_t FramingSignatureVerify::getDefinedFramingSignatureByte(uint8_t byteOffse
 uint8_t FramingSignatureVerify::checkFramingSignatureByte(void* receiveBuffer, uint8_t byteOffset)
 {
 		//Don't allow it to compare offset that does not contain the framing signature
-		if(byteOffset >= sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
+		if(byteOffset >= numElementsInDebugPacketFramingSignature)
 		{
-			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame.",
-			        0, 0, 0);
+			LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Checking for framing signature outside of expected signature frame. {:d}, {:d}",
+			        byteOffset, 0, 0);
 			return 0;
 		}
 		//UART last byte received

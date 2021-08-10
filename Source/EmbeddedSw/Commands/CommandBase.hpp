@@ -70,20 +70,26 @@ class CommandBase
          * Imports data from a CEF Command into this object.
          *
          * @param	p_cefCommand				 pointer to CEF command to import
+         * @param   actualNumBytesReceived       number of valid bytes in received in the CEF Command
+         *                                          This is an additional sanity check that all is in synch
          *
          * @return errorCode_OK if successfully imported the data; error code otherwise
          */
-        virtual errorCode_t importFromCefCommand(void* p_cefCommand);
+        virtual errorCode_t importFromCefCommand(void* p_cefCommand, uint32_t actualNumBytesReceived);
 
         /**
          * Imports common data from a CEF Command Header structure into the base class member variables.
          *
          * @param	p_cefCommandHeader			 pointer to CEF command header
          * @param   numBytesInCefRequestCommand  number of bytes in a CEF Request command ("sizeof" command)
+         * @param   actualNumBytesReceived       number of valid bytes in received in the CEF Command
+         *                                          This is an additional sanity check that all is in synch
          *
          * @return errorCode_OK if successfully imported the data; error code otherwise
          */
-        errorCode_t importFromCefCommandBase(cefCommandHeader_t* p_cefCommandHeader, uint32_t numBytesInCefRequestCommand);
+        errorCode_t importFromCefCommandBase(cefCommandHeader_t* p_cefCommandHeader,
+                                             uint32_t numBytesInCefRequestCommand,
+                                             uint32_t actualNumBytesReceived);
 
 
         /**

@@ -71,7 +71,9 @@ enum
     errorCode_UnableToCreateLoggingSpace            = 19,
     errorCode_LoggingCalledRecursively              = 20,
     errorCode_TraceFatalEncountered                 = 21,
-
+    errorCode_debugPortTransportPacketHeaderChecksumMismatch = 22,
+    errorCode_debugPortTransportPayloadChecksumMismatch = 23,
+    errorCode_debugPortTransportBufferNotBigEnoughForPayload = 24,
 
 
     errorCode_NumApplicationErrorCodes, // Must be last entry for error checking
@@ -139,11 +141,12 @@ typedef uint16_t commandOpCode_t;
  * Debug Port Framing Signature
  * *This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
  * *Every Byte MUST be unique
- * 
- * WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
- * regardless of endianness. Will refactor is time permits or a project runs into a problem 
+ * *The framing signature is specified as a byte array to make the signature endianess agnostic
+ *
  */
-#define DEBUG_PACKET_UINT32_FRAMING_SIGNATURE 0x43454653
+static const uint8_t debugPacketFramingSignature[] = {0x43, 0x45, 0x46, 0x53};
+static const uint32_t numElementsInDebugPacketFramingSignature = NUM_ELEMENTS(debugPacketFramingSignature);
+
 
 /**
  *  Debug Port Packet Data Type - the debug port expect the following types of packets
@@ -151,14 +154,14 @@ typedef uint16_t commandOpCode_t;
  * - command response
  * - logging data
  */
-enum debugPacketDataType_t : uint16_t
+enum debugPacketDataType_t : uint8_t
 {
     debugPacketType_commandRequest = 0,
     debugPacketType_commandResponse = 1,
     debugPacketType_loggingData = 2,
 
     // Must be last entry
-    debugPacketType_invalid = 0xffff
+    debugPacketType_invalid = 0xff
 };
 
 /**
@@ -202,7 +205,7 @@ typedef struct
  */
 typedef struct
 {
-    uint32_t m_framingSignature;			//32 bit aligned
+    uint8_t m_framingSignature[numElementsInDebugPacketFramingSignature];	//32 bit aligned (checked in static assert below)
     uint32_t m_packetPayloadChecksum;	    //Checksum over the payload only, 64 bit aligned
     uint32_t m_payloadSize;				    //Payload size in bytes, 32 bit aligned
 
@@ -211,6 +214,10 @@ typedef struct
     uint8_t m_reserve;					    //48 bit aligned
     uint16_t m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
+
+STATIC_ASSERT(numElementsInDebugPacketFramingSignature == sizeof(uint32_t), framing_signature_needs_to_be_32_bits);
+STATIC_ASSERT(sizeof(cefCommandDebugPortHeader_t::m_packetType) == sizeof(debugPacketDataType_t), packet_type_error_codes_not_setup_correctly);
+
 
 /**
  * CommandPing
@@ -315,11 +322,13 @@ typedef struct
  * In other words, the total number of bytes the application layer would request the
  * transport layer to received/send.
  * This number does NOT include Transport layer headers
+ * Caution:  DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND is used to size memory buffers, so be careful to not
+ * make it too big...or to small or we won't be able to allocate commands.
  */
 #define DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND (sizeof(cefCommandHeader_t) + 512)
 #define DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG     (sizeof(cefLog_t))
 #define MAX_LOCAL(A,B)  (A > B ? A : B)
-#define DEBUG_PORT_MAX_APPLICATION_PAYLOAD         MAX_LOCAL(DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND, DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG)
+#define DEBUG_PORT_MAX_APPLICATION_PAYLOAD  MAX_LOCAL(DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND, DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG)
 
 /**
  * Debug Port Packet Size

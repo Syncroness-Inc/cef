@@ -36,14 +36,16 @@ bool CommandBase::execute(CommandBase* p_childCommand)
 	return true;
 }
 
-errorCode_t CommandBase::importFromCefCommand(void* p_cefCommand)
+errorCode_t CommandBase::importFromCefCommand(void* p_cefCommand, uint32_t actualNumBytesReceived)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand() called, supposed to be implemented in derived class",
 	        0, 0, 0);
 	return errorCode_LogFatalReturn;
 }
 
-errorCode_t CommandBase::importFromCefCommandBase(cefCommandHeader_t* p_cefCommandHeader, uint32_t numBytesInCefRequestCommand)
+errorCode_t CommandBase::importFromCefCommandBase(cefCommandHeader_t* p_cefCommandHeader,
+                                                  uint32_t numBytesInCefRequestCommand,
+                                                  uint32_t actualNumBytesReceived)
 {
 	if (p_cefCommandHeader == nullptr)
 	{
@@ -63,9 +65,18 @@ errorCode_t CommandBase::importFromCefCommandBase(cefCommandHeader_t* p_cefComma
 	// Sanity Check that python utilities and embedded software are in synch
 	if (p_cefCommandHeader->m_commandNumBytes != numBytesInCefRequestCommand)
 	{
-		LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class importFromCefCommand m_commandNumBytes(0x{:X}) != expected numBytesInCefRequestCommand (0x{:X})",
+		LOG_FATAL(Logging::LogModuleIdCefInfrastructure,
+		        "Base class importFromCefCommand m_commandNumBytes({:d}) != expected numBytesInCefRequestCommand ({:d})",
 		        p_cefCommandHeader->m_commandNumBytes, numBytesInCefRequestCommand, 0);
 		return errorCode_CmdBaseImportCefCommandNumBytesInCefRequestDoesNotMatch;
+	}
+
+	// How many bytes did we actually receive for this command?
+	if (actualNumBytesReceived != numBytesInCefRequestCommand)
+	{
+        LOG_FATAL(Logging::LogModuleIdCefInfrastructure,
+                "Base class importFromCefCommand actualNumBytesReceived({:d}) != expected numBytesInCefRequestCommand ({%d})",
+                actualNumBytesReceived, numBytesInCefRequestCommand, 0);
 	}
 
 	return errorCode_OK;
