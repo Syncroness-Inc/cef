@@ -141,11 +141,12 @@ typedef uint16_t commandOpCode_t;
  * Debug Port Framing Signature
  * *This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
  * *Every Byte MUST be unique
- * 
- * WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
- * regardless of endianness. Will refactor is time permits or a project runs into a problem 
+ * *The framing signature is specified as a byte array to make the signature endianess agnostic
+ *
  */
-#define DEBUG_PACKET_UINT32_FRAMING_SIGNATURE 0x43454653
+static const uint8_t debugPacketFramingSignature[] = {0x43, 0x45, 0x46, 0x53};
+static const uint32_t numElementsInDebugPacketFramingSignature = NUM_ELEMENTS(debugPacketFramingSignature);
+
 
 /**
  *  Debug Port Packet Data Type - the debug port expect the following types of packets
@@ -204,7 +205,7 @@ typedef struct
  */
 typedef struct
 {
-    uint32_t m_framingSignature;			//32 bit aligned
+    uint8_t m_framingSignature[numElementsInDebugPacketFramingSignature];	//32 bit aligned (checked in static assert below)
     uint32_t m_packetPayloadChecksum;	    //Checksum over the payload only, 64 bit aligned
     uint32_t m_payloadSize;				    //Payload size in bytes, 32 bit aligned
 
@@ -214,9 +215,8 @@ typedef struct
     uint16_t m_packetHeaderChecksum;		//checksum over the header only, 64 bit aligned
 } cefCommandDebugPortHeader_t;
 
+STATIC_ASSERT(numElementsInDebugPacketFramingSignature == sizeof(uint32_t), framing_signature_needs_to_be_32_bits);
 STATIC_ASSERT(sizeof(cefCommandDebugPortHeader_t::m_packetType) == sizeof(debugPacketDataType_t), packet_type_error_codes_not_setup_correctly);
-
-
 
 
 /**

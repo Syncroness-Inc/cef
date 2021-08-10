@@ -245,6 +245,7 @@ static void johnTesting()
     // and it should return a response to be transmitted to the CommandDebugPortRouter (look at singleton to see buffer state)
 #endif
 
+#if 0
     /*********** Logging Test **********/
     LOG_INFO(Logging::LogModuleIdCefInfrastructure, "This is a super long string that should get chopped off before it gets sent off to python and python should null terminate this string so it doesn't run to long.  We need to confirm this works.", 1, 2, 3);
 
@@ -262,8 +263,9 @@ static void johnTesting()
     LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test13", 13, 0, 6);
     LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test14", 14, 5, 6);
     LOG_INFO(Logging::LogModuleIdCefInfrastructure, "Test15", 15, 5, 6);
+#endif
 
-#if 1
+#if 0
     LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Test16", 15, 5, 6);
 #endif
 

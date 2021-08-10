@@ -26,6 +26,11 @@ import ctypes
 from enum import Enum, auto
 
 
+# NOTE: Choose one of the following and comment out the other depending on
+# your target's architecture
+#structureEndiannessType = ctypes.BigEndianStructure
+structureEndiannessType = ctypes.LittleEndianStructure
+
 #####################################################################################################################
 ######  ERROR CODES                                                                                            ######
 #####################################################################################################################
@@ -63,9 +68,7 @@ class errorCode(Enum):
     errorCode_TraceFatalEncountered											    = 21
     errorCode_debugPortTransportPacketHeaderChecksumMismatch 					= 22
     errorCode_debugPortTransportPayloadChecksumMismatch 						= 23
-	errorCode_debugPortTransportBufferNotBigEnoughForPayload 					= 24,
-	
-	    
+    errorCode_debugPortTransportBufferNotBigEnoughForPayload 					= 24
 	    
     errorCode_NumApplicationErrorCodes                                          = auto()
 
@@ -116,11 +119,10 @@ See the importFromCefCommand() and exportToCefCommand() functions for each comma
 Debug Port Framing Signature
   * This is the 32 bit framing signature to send debug packets to/from CEF and Python Utilities
   * Every Byte MUST be unique
-
-  WARNING - this returns expected Big-endianness.  Jira card in backlog to make this work
-  regardless of endianness. Will refactor is time permits or a project runs into a problem 
+  * The framing signature is specified as a byte array to make the signature endianess agnostic
 """
-DEBUG_PACKET_UINT32_FRAMING_SIGNATURE = 0x43454653
+debugPacketFramingSignature = [0x43, 0x45, 0x46, 0x53];
+numElementsInDebugPacketFramingSignature = len(debugPacketFramingSignature);
 
 
 class debugPacketDataType(Enum):
@@ -137,7 +139,7 @@ class debugPacketDataType(Enum):
     debugPacketType_invalid                                 = 0xff
 
 
-class cefCommandHeader(ctypes.Structure):
+class cefCommandHeader(structureEndiannessType):
     """
     CEF Command Header
     Each Request and Receive command has a common header associated with it.
@@ -164,7 +166,7 @@ class cefCommandHeader(ctypes.Structure):
     ]
 
 
-class cefCommandDebugPortHeader(ctypes.Structure):
+class cefCommandDebugPortHeader(structureEndiannessType):
     """
     CEF Command Debug Port Header
     Each Command Request, Command Response, and Logging Packet has a common debug header associated with it.
@@ -172,7 +174,7 @@ class cefCommandDebugPortHeader(ctypes.Structure):
     this header rely on it ending on a 64 bit alignment.
     """
     _fields_ = [
-        ('m_framingSignature', ctypes.c_uint32),
+        ('m_framingSignature', ctypes.c_uint8 * numElementsInDebugPacketFramingSignature),
         ('m_packetPayloadChecksum', ctypes.c_uint32),
         ('m_payloadSize', ctypes.c_uint32),
 
@@ -193,7 +195,7 @@ CMD_PING_UINT32_REQUEST_EXPECTED_VALUE  = 0x208461A3
 CMD_PING_UINT64_REQUEST_EXPECTED_VALUE  = 0x936217995202A373
 
 
-class cefCommandPingRequest(ctypes.Structure):
+class cefCommandPingRequest(structureEndiannessType):
     """
     CommandPing
         See command implementation files for variable documentation
@@ -215,7 +217,7 @@ class cefCommandPingRequest(ctypes.Structure):
     ]
 
 
-class cefCommandPingResponse(ctypes.Structure):
+class cefCommandPingResponse(structureEndiannessType):
     """
     CommandPing
         See command implementation files for variable documentation
@@ -235,10 +237,6 @@ class cefCommandPingResponse(ctypes.Structure):
         ('m_uint64Value', ctypes.c_uint64)
     ]
     
-    
-
-
-  
 
 #####################################################################################################################
 ######  LOGGING                                                                                                ######
@@ -248,23 +246,23 @@ class cefCommandPingResponse(ctypes.Structure):
 LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
 LOGGING_ASCII_FILENAME_NUM_CHARACTERS = 40
 
-class cefLog(ctypes.Structure):
+class cefLog(structureEndiannessType):
     """
-        Logging Structure (passes a string (rather than a string hash) in log packet
+    Logging Structure (passes a string (rather than a string hash) in log packet
     """
     _fields_ = [
         ('m_header', cefCommandHeader),    
     
-        (m_logVariable1, ctypes.c_uint64),
-        (m_logVariable2, ctypes.c_uint64),
-        (m_logVariable3, ctypes.c_uint64),
-        (m_timeStamp, ctypes.c_uint64),
-        (m_logString, ctypes.c_char * LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS)
-        (m_fileName, ctypes.c_char * LOGGING_ASCII_FILENAME_NUM_CHARACTERS)
-        (m_fileLineNumber, ctypes.c_uint32),
-        (m_logSequenceNumber, ctypes.c_uint16),
-        (m_moduleId, ctypes.c_uint8),
-        (m_logType, ctypes.c_uint8),    
+        ('m_logVariable1', ctypes.c_uint64),
+        ('m_logVariable2', ctypes.c_uint64),
+        ('m_logVariable3', ctypes.c_uint64),
+        ('m_timeStamp', ctypes.c_uint64),
+        ('m_logString', ctypes.c_char * LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS),
+        ('m_fileName', ctypes.c_char * LOGGING_ASCII_FILENAME_NUM_CHARACTERS),
+        ('m_fileLineNumber', ctypes.c_uint32),
+        ('m_logSequenceNumber', ctypes.c_uint16),
+        ('m_moduleId', ctypes.c_uint8),
+        ('m_logType', ctypes.c_uint8),    
     ]
  
  
@@ -275,10 +273,10 @@ class cefLog(ctypes.Structure):
  
  
 """
-	 * Maximum number of bytes in the application layer payload.
-	 * In other words, the total number of bytes the application layer would request the
-	 * transport layer to received/send.
-	 * This number does NOT include Transport layer headers
+Maximum number of bytes in the application layer payload.
+In other words, the total number of bytes the application layer would request the
+transport layer to received/send.
+This number does NOT include Transport layer headers.
 """
 DEBUG_PORT_MAX_APPLICATION_PAYLOAD_COMMAND = ctypes.sizeof(cefCommandHeader) + 512
 DEBUG_PORT_MAX_APPLICATION_PAYLOAD_LOG = ctypes.sizeof(cefLog)

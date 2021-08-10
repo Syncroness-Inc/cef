@@ -83,7 +83,7 @@ bool SerialPortDriverHwImpl::receivedByteDriverHwCallback()
 	 * run out of buffer space
 	 */
 
-	if(m_currentBufferOffset < sizeof(DEBUG_PACKET_UINT32_FRAMING_SIGNATURE))
+	if(m_currentBufferOffset < numElementsInDebugPacketFramingSignature)
 	{
 		/**Check framing signature can return increment if the byte matches the framing signature
 		 * Or it can return "0" if the framing signature is not correct and the buffer offset needs to be 

@@ -366,6 +366,9 @@ void CommandDebugPortRouter::checkinCefTransmitBuffer(CefBuffer *p_cefBuffer)
         cefLog_t *p_cefLog = (cefLog_t*) p_cefBuffer->getBufferStartAddress();
         checkinLogTransmitBuffer(p_cefLog);
     }
+
+    // Mark that done/checked in the transmit buffer
+    mp_cefBufferTransmit = nullptr;
 }
 
 void CommandDebugPortRouter::discardOlderLogs()

@@ -39,7 +39,10 @@ void DebugPortTransportLayer::generatePacketHeader()
     void* p_payload = mp_transmitPayload->getBufferStartAddress();
 
 	// GENERATE HEADER
-    m_transmitPacketHeader.m_framingSignature = DEBUG_PACKET_UINT32_FRAMING_SIGNATURE;
+    for (uint32_t i = 0 ; i < numElementsInDebugPacketFramingSignature; ++i)
+    {
+        m_transmitPacketHeader.m_framingSignature[i] = debugPacketFramingSignature[i];
+    }
 
     m_transmitPacketHeader.m_packetPayloadChecksum = calculateChecksum(p_payload, numBytesInPayload);
 
@@ -54,7 +57,7 @@ void DebugPortTransportLayer::generatePacketHeader()
     m_transmitPacketHeader.m_packetHeaderChecksum = 0;
 
 	//Calculate checksum
-    m_transmitPacketHeader.m_packetHeaderChecksum = calculateChecksum(p_payload, numBytesInPayload);
+    m_transmitPacketHeader.m_packetHeaderChecksum = calculateChecksum(&m_transmitPacketHeader, sizeof(m_transmitPacketHeader));
 }
 
 uint16_t DebugPortTransportLayer::receivePacketHeader() //receive = request

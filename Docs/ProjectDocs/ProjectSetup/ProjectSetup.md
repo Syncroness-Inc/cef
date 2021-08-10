@@ -12,7 +12,7 @@ When creating a new project, choose a new STM32 Project from the File->New menu.
 
 **NOTE: After the project has been created, rename the Core->Src->main.c to main.cpp.**
 
-The MCU can now be customized with the Device Configurator within the IDE and the corresponding initialization code auto-generated. 
+The MCU can now be customized with the Device Configurator within the IDE and the corresponding initialization code auto-generated.
 
 **NOTE: If you re-configure the device the IDE will put the auto-generated code in a new main.c file. You will have to reconcile this with your existing main.cpp file.**
 
@@ -24,10 +24,24 @@ From File->New select New C/C++ Project, which will bring up a target selection 
 
 After project creation the MCU's pins, peripherals, and clocks can be customized within the IDE and corresponding code auto-generated.
 
+## Python Utility setup
+
+The cefContract.py file has a type selection at the top that determines the endianness of the ctype structures. Choose the appropriate type that matches your target's architecture and leave the other commented out.
+
+### Python Initial Setup
+
+Run the following commands at the Linux prompt from the Source/Python directory:
+
+`sudo apt install python3-pip`
+
+`pip3 install .`
+
 ---
+
 # Normal Syncroness project development - integrating CEF into a project
 
 CEF is not used on its own, instead being pulled in to embedded projects as a module or library. For normal project work, simply clone the CEF repository locally and copy the resulting directory into your project's directory tree:
+
 ```
 git clone http://bitbucket.syncroness.com:7990/scm/cef/cef.git
 ```
@@ -36,7 +50,7 @@ git clone http://bitbucket.syncroness.com:7990/scm/cef/cef.git
 
 For actual CEF development, a target platform is desired for debug and test purposes - for this, the CEF repository is added to a parent repository as a submodule where CEF development can continue within an embedded context.
 
-If you are setting up a new project from scratch the following commands will add CEF as a submodule and switch to a branch for further development. The commands should be executed from a top-level directory in the new project's repository/folder so that the submodule is added at an appropriate position in the directory tree. 
+If you are setting up a new project from scratch the following commands will add CEF as a submodule and switch to a branch for further development. The commands should be executed from a top-level directory in the new project's repository/folder so that the submodule is added at an appropriate position in the directory tree.
 
 ```
 git submodule add cef http://bitbucket.syncroness.com:7990/scm/cef/cef.git Cef
@@ -50,6 +64,7 @@ git checkout  <cef_development_branch_name>
 **Note: When creating branches in Jira, it is useful to create two branches (one for CEF and one for the target/Stm32/Nxp) and modify the branch name as an indication (example: feature/CEF-1-CEFSTM32-featuredescription and feature/CEF-1-CEFSw-featuredescription)**
 
 If you are starting from an existing platform, the above steps should already have been performed and CEF is already set up as a submodule - you can confirm this by examining the presence and content of the '.gitmodules' file in the project, which should include a reference to the CEF repository. The following command will clone the project repository and the included CEF submodule:
+
 ```
 git clone --recurse-submodules <container_repository_url> # Example: git clone --recure-submodules http://bitbucket.syncrones.com:7990/scm/cef/cefstm32.git
 cd path/to/container

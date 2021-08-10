@@ -20,17 +20,11 @@ from os.path import dirname, abspath
 import ctypes
 import copy
 from threading import Thread
+from pprint import pprint
 
 sys.path.append(dirname(dirname(abspath(__file__))))
 from Shared import cefContract
 from DebugPortDriver import DebugPortDriver
-
-
-#TODO: replace with CEF Contract values once defined
-PACKET_TYPE_COMMAND_REQUEST = 0
-PACKET_TYPE_COMMAND_RESPONSE = 1
-PACKET_TYPE_LOG_ASCII = 2
-PACKET_TYPE_LOG_BINARY = 3
 
 
 class Transport:
@@ -41,13 +35,10 @@ class Transport:
     Framed packets are placed in a queue for the application to retrieve from.
     """
 
-    BIG_ENDIAN = 'big'
-    LITTLE_ENDIAN = 'little'
-
     PAYLOAD_HEADER_SIZE_BYTES = ctypes.sizeof(cefContract.cefCommandDebugPortHeader())
     PAYLOAD_MAX_SIZE_BYTES = cefContract.DEBUG_PORT_MAX_PACKET_SIZE_BYTES - PAYLOAD_HEADER_SIZE_BYTES
 
-    def __init__(self, debugPortInterface: DebugPortDriver, endianness=BIG_ENDIAN):
+    def __init__(self, debugPortInterface: DebugPortDriver, endianness):
         self.__debugPort = debugPortInterface
         self.__endianness = endianness
         self.__readThread = Thread(target=self._readLoop)
@@ -70,25 +61,11 @@ class Transport:
         return byteSum
 
     @staticmethod
-    def framingSignatureToBytes(endianness=BIG_ENDIAN):
+    def framingSignatureToBytes():
         """
-        Helper method to translate the CEF Framing Signature from a 32-bit hex value
-        to an iterable list of integers
-        @param endianness: the byte order to apply during conversion
+        Returns CEF Framing Signature
         """
-        signature = []
-        #TODO: make this size-agnostic instead of 32-bit?
-        if endianness == Transport.LITTLE_ENDIAN:
-            signature.append(cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0x000000FF)
-            signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0x0000FF00) >> 8)
-            signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0x00FF0000) >> 16)
-            signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE & 0xFF000000) >> 24)
-        else:
-            signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 24) & 0xFF)
-            signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 16) & 0xFF)
-            signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 8) & 0xFF)
-            signature.append((cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE >> 0) & 0xFF)
-        return signature
+        return cefContract.debugPacketFramingSignature
 
     def getNextPacket(self):
         """
@@ -121,7 +98,7 @@ class Transport:
 
         # retrieve the framing signature from the CEF contract and convert to an 
         # iterable for byte-by-byte incoming detection
-        framingSignature = self.framingSignatureToBytes(self.__endianness)
+        framingSignature = self.framingSignatureToBytes()
 
         # start the loop
         while(True):
@@ -154,11 +131,16 @@ class Transport:
             # populate header fields from the buffer
             for f in packetHeader._fields_:
                 numBytes = ctypes.sizeof(f[1])
-                n = int.from_bytes(b''.join(self.__readBuffer[0:numBytes]), self.__endianness)
-                setattr(packetHeader, f[0], n)
+                if f[0] == 'm_framingSignature' :
+                	for k in range (cefContract.numElementsInDebugPacketFramingSignature):
+                		packetHeader.m_framingSignature[k] = int.from_bytes(self.__readBuffer[k], self.__endianness)
+                else:               
+                	n = int.from_bytes(b''.join(self.__readBuffer[0:numBytes]), self.__endianness)
+                	setattr(packetHeader, f[0], n)
+                	
                 for b in range(numBytes):
                     self.__readBuffer.pop(0) # remove the consumed bytes
-
+			                     			
             # 3. validate received header against received checksum
             headerCopy = copy.deepcopy(packetHeader)
             headerCopy.m_packetHeaderChecksum = 0
@@ -194,10 +176,10 @@ class Transport:
 
         if packetHeader is None:
             packetHeader = cefContract.cefCommandDebugPortHeader()
-            packetHeader.m_framingSignature = cefContract.DEBUG_PACKET_UINT32_FRAMING_SIGNATURE
+            packetHeader.m_framingSignature = (ctypes.c_uint8 * len(cefContract.debugPacketFramingSignature))(*cefContract.debugPacketFramingSignature)
             packetHeader.m_packetPayloadChecksum = self.calculateChecksum(payload)
             packetHeader.m_payloadSize = len(payload)
-            packetHeader.m_packetType = PACKET_TYPE_COMMAND_REQUEST # Outgoing packets are always this type
+            packetHeader.m_packetType = cefContract.debugPacketDataType.debugPacketType_commandRequest.value # Outgoing packets are always this type
             packetHeader.m_reserve = 0
             tmpChecksum = self.calculateChecksum(bytes(packetHeader))
             packetHeader.m_packetHeaderChecksum = tmpChecksum
@@ -216,7 +198,7 @@ class Transport:
 
         # populate the fields
         ctypes.memmove(packetPayload.bytes, payload, packetHeader.m_payloadSize)
+        
         packet.header = packetHeader
         packet.payload = packetPayload
         return packet
-
