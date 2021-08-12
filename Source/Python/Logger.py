@@ -33,39 +33,66 @@ class Logger:
     and stores the entry to disk.
     """
 
+    CEF_LOG_FILENAME = "cefLog.log"
+
     def __init__(self):
+        # logging.basicConfig(filename=self.CEF_LOG_FILENAME, encoding='utf-8', level=logging.DEBUG)
+        logging.basicConfig(filename=self.CEF_LOG_FILENAME, format='%(levelname)s, %(message)s', level=logging.DEBUG)
         self.sequenceNumber = 0
         self.fieldPattern = "{:X}"
 
     def validateResponseHeader(self, responseHeader: cefContract.cefCommandHeader):
         # confirm message size
         expectedSize = ctypes.sizeof(cefContract.cefLog)
-
+        if responseHeader.m_commandNumBytes != expectedSize:
+            print("Log Response invalid number of bytes - receivd: {}, expected: {}".format(responseHeader.m_commandNumBytes, expectedSize))
+            return False
         # log messages should only use the OK error code
         if responseHeader.m_commandErrorCode != cefContract.errorCode.errorCode_OK.value:
             print("Log Response Error Code: {}".format(responseHeader.m_commandErrorCode))
             return False
 
     def processLogMessage(self, log: cefContract.cefLog):
+        #TODO sequence number incrementing and validation
+
         # check the log string for expected number of variables
         logString = bytes.decode(log.m_logString)
         numLeftBraces = logString.count("{")
         numRightBraces = logString.count("}")
-
-        # check for a malformed string (missing variable braces)
-        malformed = numLeftBraces != numRightBraces
-
-        # save off the variables for easier iterating
-        logVars = [log.m_logVariable1, log.m_logVariable2, log.m_logVariable3]
         
-        # combine message string with attached variables
+        # check for missing variable braces and insert variables into the string
+        malformed = numLeftBraces != numRightBraces
+        #TODO should this be smarter and auto-detect the number of variable fields in the structure?
+        logVars = [log.m_logVariable1, log.m_logVariable2, log.m_logVariable3] # for easier iterating
         if not malformed:
             for n in range(numLeftBraces):
                 logString = logString.replace(self.fieldPattern, f'{logVars[n]:X}', 1)
-        print(logString)
 
-        # INFO  SEQNUM  TIMESTAMP  STRING  FILE:LINE   ID  TYPE  RAW
-        # write to the log file
+        #TODO timestamp conversion? i.e. uint64 to a decimal
+
+        # prepare the full log entry
+        rawData = str(bytes(log))
+        fileAndLine = bytes.decode(log.m_fileName) + ":" + str(log.m_fileLineNumber)
+        #TODO do we want headers, either at the top of the file or as field names in the log entry?
+        logEntry = ", ".join([str(log.m_logSequenceNumber),\
+                              str(log.m_timeStamp),\
+                              logString,\
+                              fileAndLine,\
+                              str(log.m_moduleId),\
+                              rawData])
+
+        # write to file
+        if log.m_logType == cefContract.logType.logTypeDebug.value:
+            logging.debug(logEntry)
+        elif log.m_logType == cefContract.logType.logTypeInfo.value:
+            logging.info(logEntry)
+        elif log.m_logType == cefContract.logType.logTypeWarning.value:
+            logging.warning(logEntry)
+        elif log.m_logType == cefContract.logType.logTypeError.value:
+            logging.error(logEntry)
+        elif log.m_logType == cefContract.logType.logTypeFatal.value:
+            logging.fatal(logEntry)
+
 
 if __name__ == '__main__':
     message = cefContract.cefLog()
@@ -73,12 +100,12 @@ if __name__ == '__main__':
     message.m_logVariable2 = 200
     message.m_logVariable3 = 300
     message.m_timeStamp = 12345
-    message.m_logString = b"Test String, var1 = 0x{:X}, var2 = 0x{:X}"
-    message.m_fileName = b"Module.cpp"
+    message.m_logString = b"Test String var1 = 0x{:X} var2 = 0x{:X}"
+    message.m_fileName = b"mysourcefile.cpp"
     message.m_fileLineNumber = 400
     message.m_logSequenceNumber = 0
     message.m_moduleId = 1 # debug commands
-    message.m_logType = 1 # info
+    message.m_logType = 4 # info
 
     logger = Logger()
     logger.processLogMessage(message)

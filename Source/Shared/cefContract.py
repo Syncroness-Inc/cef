@@ -242,6 +242,17 @@ class cefCommandPingResponse(structureEndiannessType):
 ######  LOGGING                                                                                                ######
 #####################################################################################################################
 
+###### Logging types
+class logType(Enum):
+    """
+    Logging levels (note, 'FATAL' is mapped to 'CRITICAL' in python)
+    """
+    logTypeDebug                            = 0
+    logTypeInfo                             = 1
+    logTypeWarning                          = 2
+    logTypeError                            = 3
+    logTypeFatal                            = 4
+
 ######  Logging Constants
 LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
 LOGGING_ASCII_FILENAME_NUM_CHARACTERS = 40
