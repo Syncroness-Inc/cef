@@ -162,8 +162,7 @@ class Router:
             #print("{}: {}".format(f[0], hex(getattr(commandResponse, f[0])))) # uncomment for debug
 
         # 4. process the extracted log
-        if not self.__logger.processLog(logResponseBody):
-            return False
+        self.__logger.processLog(logResponseBody)
 
         return True
 

@@ -36,12 +36,19 @@ class Logger:
     CEF_LOG_FILENAME = "cefLog.log"
 
     def __init__(self):
-        # logging.basicConfig(filename=self.CEF_LOG_FILENAME, encoding='utf-8', level=logging.DEBUG)
+        # default append and log all levels/types
         logging.basicConfig(filename=self.CEF_LOG_FILENAME, format='%(levelname)s, %(message)s', level=logging.DEBUG)
         self.sequenceNumber = 0
-        self.fieldPattern = "{:X}"
+        self.fieldPattern = "{:X}" # this should match what is supplied for a string in the embedded source
 
     def validateResponseHeader(self, responseHeader: cefContract.cefCommandHeader):
+        """
+        Header field value checking. Verify that the received size matches the expected structure
+        and confirm the error code field was not erroneously populated. Log sequence numbers are 
+        packaged in the actual body and validated during log entry processing instead of here.
+        @param responseHeader: the log header obeying the structure defined in cefContract
+        @return boolean: False if either check fails, else True
+        """
         # confirm message size
         expectedSize = ctypes.sizeof(cefContract.cefLog)
         if responseHeader.m_commandNumBytes != expectedSize:
@@ -53,27 +60,35 @@ class Logger:
             return False
 
     def processLogMessage(self, log: cefContract.cefLog):
-        #TODO sequence number incrementing and validation
+        """
+        Prepare the log message content before writing to file.
+        1. Check the received Log Sequence Number against the local running count
+        2. Check the Log String for proper formatting and if so, populate it with the enclosed log variables
+            (else, simply print the received string as-is)
+        3. Concatenate all the received data for the log into a writable entry
+        4. Write the entry to the log file with appropriate level
+        5. Increment the local sequence number for the next log
+        """
 
-        # check the log string for expected number of variables
+        # 1. check log sequence number
+        if log.m_logSequenceNumber != self.sequenceNumber:
+            print("Log Sequence Number error - received: {}, current: {}".format(log.m_logSequenceNumber, self.sequenceNumber))
+
+        # 2. check the log string for expected number of variables
         logString = bytes.decode(log.m_logString)
         numLeftBraces = logString.count("{")
         numRightBraces = logString.count("}")
+        malformed = numLeftBraces != numRightBraces # check for a complete string
         
-        # check for missing variable braces and insert variables into the string
-        malformed = numLeftBraces != numRightBraces
-        #TODO should this be smarter and auto-detect the number of variable fields in the structure?
+        # 2. insert variables into the string 
         logVars = [log.m_logVariable1, log.m_logVariable2, log.m_logVariable3] # for easier iterating
         if not malformed:
             for n in range(numLeftBraces):
                 logString = logString.replace(self.fieldPattern, f'{logVars[n]:X}', 1)
 
-        #TODO timestamp conversion? i.e. uint64 to a decimal
-
-        # prepare the full log entry
-        rawData = str(bytes(log))
+        # 3. prepare the full log entry
+        rawData = str(bytes(log)) # for extra debug, the full byte-dump of the log at the end of the entry
         fileAndLine = bytes.decode(log.m_fileName) + ":" + str(log.m_fileLineNumber)
-        #TODO do we want headers, either at the top of the file or as field names in the log entry?
         logEntry = ", ".join([str(log.m_logSequenceNumber),\
                               str(log.m_timeStamp),\
                               logString,\
@@ -81,7 +96,7 @@ class Logger:
                               str(log.m_moduleId),\
                               rawData])
 
-        # write to file
+        # 4. write to file
         if log.m_logType == cefContract.logType.logTypeDebug.value:
             logging.debug(logEntry)
         elif log.m_logType == cefContract.logType.logTypeInfo.value:
@@ -91,7 +106,10 @@ class Logger:
         elif log.m_logType == cefContract.logType.logTypeError.value:
             logging.error(logEntry)
         elif log.m_logType == cefContract.logType.logTypeFatal.value:
-            logging.fatal(logEntry)
+            logging.fatal(logEntry) # 'CRITICAL' in python
+
+        # 5. update sequence number
+        self.sequenceNumber += 1
 
 
 if __name__ == '__main__':
