@@ -36,7 +36,7 @@ class Logger:
     CEF_LOG_FILENAME = "cefLog.log"
 
     def __init__(self):
-        # default append and log all levels/types
+        # default append to file, log all levels
         logging.basicConfig(filename=self.CEF_LOG_FILENAME, format='%(levelname)s, %(message)s', level=logging.DEBUG)
         self.sequenceNumber = 0
         self.fieldPattern = "{:X}" # this should match what is supplied for a string in the embedded source
@@ -68,6 +68,7 @@ class Logger:
         3. Concatenate all the received data for the log into a writable entry
         4. Write the entry to the log file with appropriate level
         5. Increment the local sequence number for the next log
+        @param log: received log message obeying the structure in cefContract
         """
 
         # 1. check log sequence number
