@@ -27,6 +27,7 @@ from DebugPortDriver import DebugPortDriver
 from Transport import Transport
 from Commands.CommandBase import *
 from Common import CefCommonDefines
+from Logger import Logger
 
 class Router:
     """
@@ -41,6 +42,7 @@ class Router:
             self.__endianness = CefCommonDefines.BIG_ENDIAN
             
         self.__transport = Transport(debugPortInterface, self.__endianness)
+        self.__logger = Logger()
         self.__packetReadThread = Thread(target=self._readPackets)
         self.__sequenceNumber = 0
         self.__lastSentCommand = None
@@ -115,13 +117,59 @@ class Router:
                     self.commandSuccess = self._handleCommandResponse(packet)
                     self.commandResponsePending = False
                 elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingData.value:
-                    raise Exception("Log packet handling not implemented")
+                    self._handleLog(packet)
                 else:
                     raise Exception("Unknown packet type")
 
+    def _handleLog(self, packet):
+        """
+        The main message-extraction logic for incoming log packets:
+        1. Extract the response (packet payload) from the packet
+        2. Extract the log's header and validate
+        3. Extract the log's main content
+        4. Hand off to Logging object for final processing (file I/O, parsing, etc.)
+        @param packet: the full response packet received from the transport layer
+        @return: False if any of the response fails to validate, else True
+        """
+
+        # 1. extract payload from packet
+        payload = list(bytes(packet.payload.bytes))
+
+        # 2. extract and populate the log response header
+        responseHeader = cefContract.cefCommandHeader()
+        for f in responseHeader._fields_:
+            numBytes = ctypes.sizeof(f[1])
+            n = int.from_bytes(payload[0:numBytes], self.__endianness)
+            setattr(responseHeader, f[0], n)
+            for b in range(numBytes):
+                payload.pop(0) # remove the consumed bytes
+            #print("{}: {}".format(f[0], hex(getattr(commandResponseHeader, f[0])))) # uncomment for debug
+
+        # 2. validate header
+        if not self.__logger.validateResponseHeader(responseHeader):
+            return False
+
+        # 3. extract and populate log response body
+        logResponseBody = cefContract.cefLog()
+        for f in logResponseBody._fields_:
+            if f[0] == 'm_header':
+                continue # skip the header since we've already consumed those bytes above
+            numBytes = ctypes.sizeof(f[1])
+            n = int.from_bytes(payload[0:numBytes], self.__endianness)
+            setattr(logResponseBody, f[0], n)
+            for b in range(numBytes):
+                payload.pop(0) # remove the consumed bytes
+            #print("{}: {}".format(f[0], hex(getattr(commandResponse, f[0])))) # uncomment for debug
+
+        # 4. process the extracted log
+        if not self.__logger.processLog(logResponseBody):
+            return False
+
+        return True
+
     def _handleCommandResponse(self, packet):
         """
-        The main validation logic for incoming command responses:
+        The main message-extraction logic for incoming command response packets:
         1. Extract the response (packet payload) from the packet
         2. Check its length against the expected length (according to the contract)
         3. Extract the command's header and validate (proper sequence number and opCode, no error codes)
