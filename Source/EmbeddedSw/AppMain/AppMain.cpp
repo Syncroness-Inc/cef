@@ -86,7 +86,7 @@ static void johnTesting()
     cefCommandPingRequest.m_uint32Value = 0x40000000;
     cefCommandPingRequest.m_uint64Value = 0x5000000000000000;
 
-    testPing.importFromCefCommand(&cefCommandPingRequest);
+    testPing.importFromCefCommand(&cefCommandPingRequest, cefCommandPingRequest.m_header.m_commandNumBytes);
 
     testPing.execute(nullptr);
 

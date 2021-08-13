@@ -35,7 +35,7 @@ bool CommandPing::execute(CommandBase* p_childCommand)
         {
             case commandStateCommandEntry:
             {
-#if 0 //@todo removing so logs not interminged with commands during command debug...add back in once have log support in python
+#if 1 //@todo removing so logs not interminged with commands during command debug...add back in once have log support in python
             	// Print out an info statement as it helps indicate to console we are "connected"
                 LOG_INFO(Logging::LogModuleIdCefDebugCommands, "Ping!  m_testValue = 0x{:X}, m_offsetToAddToResponse = 0x{:X}",
                         m_request.m_testValue, m_request.m_offsetToAddToResponse, 0);
@@ -55,7 +55,8 @@ bool CommandPing::execute(CommandBase* p_childCommand)
 				}
 
 				// Error or not, go ahead and generate the response fields
-				m_commandState = commandStateGenerateResponse;
+				m_commandState = commandStateCheckRequest;
+				shouldYield = true;
                 break;
             }
             case commandStateGenerateResponse:
