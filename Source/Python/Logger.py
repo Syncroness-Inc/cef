@@ -34,17 +34,30 @@ class Logger:
     """
 
     CEF_LOG_FILENAME = "cefLog.log"
+    HEADER_STRING = "Level,SeqNum,LogString,Filename:LineNum,RawData\n"
 
     def __init__(self):
         # default append to file, log all levels
+        self._firstTimeFileWrite()
         logging.basicConfig(filename=self.CEF_LOG_FILENAME, format='%(levelname)s, %(message)s', level=logging.DEBUG)
-        
+        self._printBreak() # add a discontinuity between startups
         self.printVarsInHex = True
         self.sequenceNumber = 0
         self.droppedLogs = 0
-        self.fieldPattern = "{:X}" # this should match what is supplied for a string in the embedded source
+        self.fieldPattern = "{:X}" # this pattern should match what is used in the embedded sw for log strings with vars
 
-    def printBreak(self):
+    def _firstTimeFileWrite(self):
+        """
+        If the log file is being newly created, add a header line with log entry field names
+        """
+        try:
+            f = open(self.CEF_LOG_FILENAME, 'x')
+            f.write(self.HEADER_STRING)
+            f.close()
+        except:
+            pass
+
+    def _printBreak(self):
         """
         Add a discontinuity line to the log
         """
@@ -85,7 +98,7 @@ class Logger:
         # 1. check log sequence number
         if log.m_logSequenceNumber != self.sequenceNumber:
             self.droppedLogs += 1
-            self.printBreak() # print a discontinuity to the log fto visualize a sequence number gap
+            self._printBreak() # print a discontinuity to the log fto visualize a sequence number gap
             print("Log Sequence Number error - received: {}, current: {}".format(log.m_logSequenceNumber, self.sequenceNumber))
 
         # 2. check the log string for expected number of variables
@@ -106,6 +119,8 @@ class Logger:
         # 3. prepare the full log entry
         rawData = str(bytes(log)) # for extra debug, the full byte-dump of the log at the end of the entry
         fileAndLine = bytes.decode(log.m_fileName) + ":" + str(log.m_fileLineNumber)
+        
+        # edits here should be accompanied by edits to the HEADER_STRING at the top of the class
         logEntry = ", ".join([str(log.m_logSequenceNumber),\
                               str(log.m_timeStamp),\
                               logString,\
