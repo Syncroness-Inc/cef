@@ -38,8 +38,19 @@ class Logger:
     def __init__(self):
         # default append to file, log all levels
         logging.basicConfig(filename=self.CEF_LOG_FILENAME, format='%(levelname)s, %(message)s', level=logging.DEBUG)
+        
+        self.printVarsInHex = True
         self.sequenceNumber = 0
+        self.droppedLogs = 0
         self.fieldPattern = "{:X}" # this should match what is supplied for a string in the embedded source
+
+    def printBreak(self):
+        """
+        Add a discontinuity line to the log
+        """
+        f = open(self.CEF_LOG_FILENAME, 'a')
+        f.write('---------------------------------------------------------------------------------------------\n')
+        f.close()
 
     def validateResponseHeader(self, responseHeader: cefContract.cefCommandHeader):
         """
@@ -73,6 +84,8 @@ class Logger:
 
         # 1. check log sequence number
         if log.m_logSequenceNumber != self.sequenceNumber:
+            self.droppedLogs += 1
+            self.printBreak() # print a discontinuity to the log fto visualize a sequence number gap
             print("Log Sequence Number error - received: {}, current: {}".format(log.m_logSequenceNumber, self.sequenceNumber))
 
         # 2. check the log string for expected number of variables
@@ -85,7 +98,10 @@ class Logger:
         logVars = [log.m_logVariable1, log.m_logVariable2, log.m_logVariable3] # for easier iterating
         if not malformed:
             for n in range(numLeftBraces):
-                logString = logString.replace(self.fieldPattern, f'{logVars[n]:X}', 1)
+                if self.printVarsInHex:
+                    logString = logString.replace(self.fieldPattern, f'{logVars[n]:X}', 1)
+                else:
+                    logString = logString.replace(self.fieldPattern, str(logVars[n]), 1)
 
         # 3. prepare the full log entry
         rawData = str(bytes(log)) # for extra debug, the full byte-dump of the log at the end of the entry
@@ -120,11 +136,13 @@ if __name__ == '__main__':
     message.m_logVariable3 = 300
     message.m_timeStamp = 12345
     message.m_logString = b"Test String var1 = 0x{:X} var2 = 0x{:X}"
+    # message.m_logString = b"Test String"
     message.m_fileName = b"mysourcefile.cpp"
     message.m_fileLineNumber = 400
     message.m_logSequenceNumber = 0
     message.m_moduleId = 1 # debug commands
-    message.m_logType = 4 # info
+    message.m_logType = 1 # info
 
     logger = Logger()
+    # logger.printBreak()
     logger.processLogMessage(message)
