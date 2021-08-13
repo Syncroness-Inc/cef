@@ -138,10 +138,19 @@ bool CommandCefCommandProxy::execute(CommandBase *p_childCommand)
              * It may take many loops through the CommandExecutor before we have a
              * child response.  So need to just keeping waiting until we do have a child response.
              */
-            if (mp_childCommand == nullptr)
+            if (p_childCommand == nullptr)
             {
                 shouldYield = true;
                 break;
+            }
+
+            /**
+             * Sanity check if the reply is what we are expecting.
+             */
+            if (p_childCommand != mp_childCommand)
+            {
+                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "CommandCefCommandProxy unexpected child response=0x{:x}, expected=0x{:x}",
+                        (uint64_t)p_childCommand, (uint64_t)mp_childCommand, 0);
             }
 
             // We have a child response...process it by exporting the data to the Cef command

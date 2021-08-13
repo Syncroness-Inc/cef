@@ -54,9 +54,20 @@ bool CommandPing::execute(CommandBase* p_childCommand)
 					m_commandErrorCode = errorCode_CmdPingReceiveValuesDoNotMatchExpectedValues;
 				}
 
+#if 1
 				// Error or not, go ahead and generate the response fields
-				m_commandState = commandStateCheckRequest;
-				shouldYield = true;
+				m_commandState = commandStateGenerateResponse;
+#else
+				if (m_request.m_testValue < 10)
+				{
+				    ++m_request.m_testValue;
+				    shouldYield = true;
+				    break;
+				}
+				m_commandState = commandStateGenerateResponse;;
+#endif
+
+
                 break;
             }
             case commandStateGenerateResponse:

@@ -116,8 +116,11 @@ class Router:
                 if packetType == cefContract.debugPacketDataType.debugPacketType_commandResponse.value:
                     self.commandSuccess = self._handleCommandResponse(packet)
                     self.commandResponsePending = False
+                    print("Got a command response")
                 elif packetType == cefContract.debugPacketDataType.debugPacketType_loggingData.value:
+                    print("Got a log packet")
                     self._handleLog(packet)
+
                 else:
                     raise Exception("Unknown packet type")
 

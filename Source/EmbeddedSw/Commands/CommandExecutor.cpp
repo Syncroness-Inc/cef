@@ -136,11 +136,16 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
                  * If it is a child command then the parent is responsible
                  * for releasing the command.  The parent command must be the next command to execute.
                  */
-                mp_childCommand = mp_commandToExecute->getParentCommand();
-                if (mp_childCommand != nullptr)
+                CommandBase* p_parentCommand = mp_commandToExecute->getParentCommand();
+
+                if (p_parentCommand != nullptr)
                 {
-                    // setup so next command to execute is the parent command
-                    mp_commandToExecute = mp_commandToExecute->getParentCommand();
+                    /**
+                     * The next command we want to execute is the parent command.
+                     * The current command is the child response to the parent command
+                     */
+                    mp_childCommand = mp_commandToExecute;
+                    mp_commandToExecute = p_parentCommand;
 
                     /**
                      * The parent command is already in m_executeCommandsQueue.
@@ -173,6 +178,7 @@ uint32_t CommandExecutor::executeCommands(uint32_t numCommandsAllowedToExecute)
                  * It is not a child command, so we need to release/free the command.
                  */
                 CommandGenerator::instance().freeCommand(mp_commandToExecute);
+                mp_childCommand = nullptr;
 				m_commandState = commandStateGetNextCommand;
                 break;
             }
