@@ -40,7 +40,8 @@ class Transport:
     def __init__(self, debugPortInterface: DebugPortDriver, endianness):
         self.__debugPort = debugPortInterface
         self.__endianness = endianness
-        self.__readThread = Thread(target=self._readLoop)
+        #self.__readThread = Thread(target=self._readLoop)
+        self.__readThread = Thread(target=self._readLoop1)
         self.__readBuffer = []
         self.__packetQueue = []
 
@@ -76,6 +77,11 @@ class Transport:
         """
         packet = self._buildPacket(payload)
         self.__debugPort.send(packet)
+
+    def _readLoop1(self):
+        while(True):
+            self.__debugPort.receive()
+
 
     def _readLoop(self):
         """
@@ -116,13 +122,13 @@ class Transport:
             for i in range(self.PAYLOAD_HEADER_SIZE_BYTES - len(framingSignature)):
                 byte = self.__debugPort.receive()
                 self.__readBuffer.append(byte)
-            # print("HEADER FOUND, LEN:{}\n{}\n".format(len(self.__readBuffer),self.__readBuffer)) # uncomment for debug
+            print("HEADER FOUND, LEN:{}\n{}\n".format(len(self.__readBuffer),self.__readBuffer)) # uncomment for debug
             packetHeader = cefContract.cefCommandDebugPortHeader()
 
             # populate header fields from the buffer
             for f in packetHeader._fields_:
                 numBytes = ctypes.sizeof(f[1])
-                if f[0] == 'm_framingSignature' :
+                if f[0] == 'm_framingSignature':
                 	for k in range (cefContract.numElementsInDebugPacketFramingSignature):
                 		packetHeader.m_framingSignature[k] = int.from_bytes(self.__readBuffer[k], self.__endianness)
                 else:               
@@ -136,12 +142,14 @@ class Transport:
             headerCopy = copy.deepcopy(packetHeader)
             headerCopy.m_packetHeaderChecksum = 0
             headerChecksum = self.calculateChecksum(bytes(headerCopy))
+            print("CHECKSUMS: CALCULATED {}    RECEIVED {}".format(headerChecksum, packetHeader.m_packetHeaderChecksum))
             if headerChecksum != packetHeader.m_packetHeaderChecksum:
                 #TODO: raise an exception here
                 print("PACKET FRAMING HEADER CHECKSUM FAILURE: {} != {}".format(headerChecksum, packetHeader.m_packetHeaderChecksum))
-
+            print("PAYLOAD SIZE {}".format(packetHeader.m_payloadSize))
             # 4. check expected payload size and receive corresponding bytes
             self.__readBuffer = []
+            print("PAYLOADSIZE: {}".format(packetHeader.m_payloadSize))
             for b in range(packetHeader.m_payloadSize):
                 self.__readBuffer.append(self.__debugPort.receive())
 
