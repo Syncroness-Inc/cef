@@ -20,9 +20,9 @@ written permission of Syncroness.
 #include "FramingSignatureVerify.hpp"
 #include "Logging.hpp"
 
-void SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
+bool SerialPortDriverHwImpl::sendData(void* sendBuffer, int packetSize)
 {
-	ShimBase::getInstance().startInterruptSend(sendBuffer, packetSize);
+	return ShimBase::getInstance().startInterruptSend(sendBuffer, packetSize);
 }
 
 uint32_t SerialPortDriverHwImpl::getCurrentBytesReceived(void)

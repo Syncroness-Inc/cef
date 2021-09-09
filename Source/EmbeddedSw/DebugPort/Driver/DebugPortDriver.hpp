@@ -35,8 +35,10 @@ public:
     * 
     * @param sendBuffer - Pointer to start of buffer to send
     * @param packetSize - Number of Bytes to send
+    *
+    * @return true if successfully setup to sendData
     */
-   virtual void sendData(void* sendBuffer, uint32_t packetSize);
+   virtual bool sendData(void* sendBuffer, uint32_t packetSize);
 
    /**
     * Returns Status on if Send is in progress

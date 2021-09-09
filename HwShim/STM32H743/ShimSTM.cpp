@@ -101,7 +101,7 @@ bool ShimSTM::getSendInProgress(void)
 {
 	//We can in the future make this more sophisticated to return more information then sending/not sending
 	extern UART_HandleTypeDef huart3;
-	if(HAL_UART_GetState(&huart3) == HAL_UART_STATE_BUSY_TX)
+	if(huart3.gState == HAL_UART_STATE_BUSY_TX)
 	{
 		return true;
 	}

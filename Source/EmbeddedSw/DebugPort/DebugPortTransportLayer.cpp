@@ -121,7 +121,20 @@ void DebugPortTransportLayer::transmitStateMachine(void) //transmit = cefRespons
 
         case stateXmitStartHeaderTransmit:
         {
-            m_myDebugPortDriver.sendData(&m_transmitPacketHeader, sizeof(m_transmitPacketHeader));
+            bool sendDataStartedSuccessfully = m_myDebugPortDriver.sendData(
+                    &m_transmitPacketHeader,
+                    sizeof(m_transmitPacketHeader));
+            if (sendDataStartedSuccessfully == false)
+            {
+                /**
+                 * We should be able to setup to send data successfully per design.
+                 * Eventually we may want to make
+                 * some time of error recovery, but for now we should deal with the error
+                 * as we likely have some type of logic error.*/
+                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to start sendData in DebugTransportLayer Transmit State Machine.",
+                        m_transmitState, 0, 0);
+            }
+
             m_transmitState = stateXmitWaitForHeaderToTransmit;
             break;
         }
@@ -142,7 +155,19 @@ void DebugPortTransportLayer::transmitStateMachine(void) //transmit = cefRespons
 
         case stateXmitStartPayloadTransmit:
         {
-            m_myDebugPortDriver.sendData(mp_transmitPayload->getBufferStartAddress(), mp_transmitPayload->getNumberOfValidBytes());
+            bool sendDataStartedSuccessfully = m_myDebugPortDriver.sendData(
+                    mp_transmitPayload->getBufferStartAddress(),
+                    mp_transmitPayload->getNumberOfValidBytes());
+            if (sendDataStartedSuccessfully == false)
+            {
+                /**
+                 * We should be able to setup to send data successfully as we just finished checking
+                 * that we were done sending the last packet.  Eventually we may want to make
+                 * some time of error recovery, but for now we should deal with the error
+                 * as we likely have some type of logic error.*/
+                LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Failed to start sendData in DebugTransportLayer Transmit State Machine.",
+                        m_transmitState, 0, 0);
+            }
             m_transmitState = stateXmitWaitForPayloadToTransmit;
             break;
         }

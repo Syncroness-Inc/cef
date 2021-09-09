@@ -26,10 +26,11 @@ written permission of Syncroness.
 #include "Logging.hpp"
 
 
-void DebugPortDriver::sendData(void* sendBuffer, uint32_t packetSize)
+bool DebugPortDriver::sendData(void* sendBuffer, uint32_t packetSize)
 {
 	LOG_FATAL(Logging::LogModuleIdCefInfrastructure, "Base class DebugPortDriver::sendData() called, supposed to be implemented in derived class",
 	        0, 0, 0);
+	return false;
 }
 
 bool DebugPortDriver::getSendInProgress(void)

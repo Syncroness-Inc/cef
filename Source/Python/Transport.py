@@ -41,6 +41,7 @@ class Transport:
         self.__debugPort = debugPortInterface
         self.__endianness = endianness
         self.__readThread = Thread(target=self._readLoop)
+        #self.__readThread = Thread(target=self._readLoop1)
         self.__readBuffer = []
         self.__packetQueue = []
 
@@ -76,6 +77,11 @@ class Transport:
         """
         packet = self._buildPacket(payload)
         self.__debugPort.send(packet)
+
+
+    def _readLoop1(self):
+        while(True):
+            self.__debugPort.receive()
 
     def _readLoop(self):
         """
@@ -116,7 +122,7 @@ class Transport:
             for i in range(self.PAYLOAD_HEADER_SIZE_BYTES - len(framingSignature)):
                 byte = self.__debugPort.receive()
                 self.__readBuffer.append(byte)
-            # print("HEADER FOUND, LEN:{}\n{}\n".format(len(self.__readBuffer),self.__readBuffer)) # uncomment for debug
+            print("HEADER FOUND, LEN:{}\n{}\n".format(len(self.__readBuffer),self.__readBuffer)) # uncomment for debug
             packetHeader = cefContract.cefCommandDebugPortHeader()
 
             # populate header fields from the buffer
@@ -139,6 +145,7 @@ class Transport:
             if headerChecksum != packetHeader.m_packetHeaderChecksum:
                 #TODO: raise an exception here
                 print("PACKET FRAMING HEADER CHECKSUM FAILURE: {} != {}".format(headerChecksum, packetHeader.m_packetHeaderChecksum))
+
 
             # 4. check expected payload size and receive corresponding bytes
             self.__readBuffer = []

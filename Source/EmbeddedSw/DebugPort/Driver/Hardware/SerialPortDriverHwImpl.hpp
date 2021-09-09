@@ -40,7 +40,7 @@ public:
    /**
     * See base class for method documentation
     */
-   void sendData(void* sendBuffer, int packetSize);
+   bool sendData(void* sendBuffer, int packetSize);
 
    /**
     * See base class for method documentation

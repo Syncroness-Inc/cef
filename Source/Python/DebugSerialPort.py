@@ -32,6 +32,7 @@ class DebugSerialPort(DebugPortDriver):
         self.__baudRate = baudRate
         self.__timeout = timeout
         self.__serialPort = None
+        self.numRecvBytes = 0
 
     @property
     def port(self):
@@ -86,4 +87,7 @@ class DebugSerialPort(DebugPortDriver):
         is the responsibility of the application to apply threading/timeout logic
         """
         readByte = self.__serialPort.read()
+        self.numRecvBytes = self.numRecvBytes + 1
+        tempByte = int.from_bytes(readByte,"big",signed=False)
+        #print("Bytes Received: {}, got byte 0x{:02x}".format(self.numRecvBytes, tempByte))
         return readByte
