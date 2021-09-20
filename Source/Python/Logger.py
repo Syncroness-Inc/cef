@@ -100,7 +100,7 @@ class Logger:
         # 1. check log sequence number
         if log.m_logSequenceNumber != self.sequenceNumber:
             self.droppedLogs += 1
-            self._printBreak("DROPPED LOG") # print a discontinuity to the log fto visualize a sequence number gap
+            self._printBreak("SEQNUM ERROR") # print a discontinuity to the log fto visualize a sequence number gap
             print("Log Sequence Number error - received: {}, current: {}".format(log.m_logSequenceNumber, self.sequenceNumber))
 
         # 2. check the log string for expected number of variables
