@@ -144,22 +144,3 @@ class Logger:
 
         # 5. update sequence number
         self.sequenceNumber += 1
-
-
-if __name__ == '__main__':
-    message = cefContract.cefLog()
-    message.m_logVariable1 = 100
-    message.m_logVariable2 = 200
-    message.m_logVariable3 = 300
-    message.m_timeStamp = 12345
-    message.m_logString = b"Test String var1 = 0x{:X} var2 = 0x{:X}"
-    # message.m_logString = b"Test String"
-    message.m_fileName = b"mysourcefile.cpp"
-    message.m_fileLineNumber = 400
-    message.m_logSequenceNumber = 0
-    message.m_moduleId = 1 # debug commands
-    message.m_logType = 1 # info
-
-    logger = Logger()
-    # logger.printBreak()
-    logger.processLogMessage(message)
