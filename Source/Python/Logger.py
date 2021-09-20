@@ -40,7 +40,7 @@ class Logger:
         # default append to file, log all levels
         self._firstTimeFileWrite()
         logging.basicConfig(filename=self.CEF_LOG_FILENAME, format='%(levelname)s, %(message)s', level=logging.DEBUG)
-        self._printBreak() # add a discontinuity between startups
+        self._printBreak("RESTART") # add a discontinuity between startups
         self.printVarsInHex = True
         self.sequenceNumber = 0
         self.droppedLogs = 0
@@ -57,12 +57,12 @@ class Logger:
         except:
             pass
 
-    def _printBreak(self):
+    def _printBreak(self, msg):
         """
         Add a discontinuity line to the log
         """
         f = open(self.CEF_LOG_FILENAME, 'a')
-        f.write('---------------------------------------------------------------------------------------------\n')
+        f.write('----------------------------------------------'+msg+'-----------------------------------------------\n')
         f.close()
 
     def validateResponseHeader(self, responseHeader: cefContract.cefCommandHeader):
@@ -83,6 +83,8 @@ class Logger:
             print("Log Response Error Code: {}".format(responseHeader.m_commandErrorCode))
             return False
 
+        return True
+
     def processLogMessage(self, log: cefContract.cefLog):
         """
         Prepare the log message content before writing to file.
@@ -98,7 +100,7 @@ class Logger:
         # 1. check log sequence number
         if log.m_logSequenceNumber != self.sequenceNumber:
             self.droppedLogs += 1
-            self._printBreak() # print a discontinuity to the log fto visualize a sequence number gap
+            self._printBreak("DROPPED LOG") # print a discontinuity to the log fto visualize a sequence number gap
             print("Log Sequence Number error - received: {}, current: {}".format(log.m_logSequenceNumber, self.sequenceNumber))
 
         # 2. check the log string for expected number of variables

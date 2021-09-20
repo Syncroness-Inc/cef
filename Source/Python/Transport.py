@@ -143,16 +143,13 @@ class Transport:
             headerCopy = copy.deepcopy(packetHeader)
             headerCopy.m_packetHeaderChecksum = 0
             headerChecksum = self.calculateChecksum(bytes(headerCopy))
-            print("CHECKSUMS: CALCULATED {}    RECEIVED {}".format(headerChecksum, packetHeader.m_packetHeaderChecksum))
+            # print("CHECKSUMS: CALCULATED {}    RECEIVED {}".format(headerChecksum, packetHeader.m_packetHeaderChecksum))
             if headerChecksum != packetHeader.m_packetHeaderChecksum:
                 #TODO: raise an exception here
                 print("PACKET FRAMING HEADER CHECKSUM FAILURE: {} != {}".format(headerChecksum, packetHeader.m_packetHeaderChecksum))
 
-            print("PAYLOAD SIZE {}".format(packetHeader.m_payloadSize))
-
             # 4. check expected payload size and receive corresponding bytes
             self.__readBuffer = []
-            print("PAYLOADSIZE: {}".format(packetHeader.m_payloadSize))
             for b in range(packetHeader.m_payloadSize):
                 self.__readBuffer.append(self.__debugPort.receive())
 

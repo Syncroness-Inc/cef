@@ -158,14 +158,20 @@ class Router:
             if f[0] == 'm_header':
                 continue # skip the header since we've already consumed those bytes above
             numBytes = ctypes.sizeof(f[1])
-            n = int.from_bytes(payload[0:numBytes], self.__endianness)
+            if not issubclass(f[1], ctypes.Array):
+                n = int.from_bytes(payload[0:numBytes], self.__endianness)
+            else:
+                l = []
+                for c in range(numBytes):
+                    l.append((payload[c]))
+                n = bytes(bytearray(l))
             setattr(logResponseBody, f[0], n)
             for b in range(numBytes):
                 payload.pop(0) # remove the consumed bytes
             #print("{}: {}".format(f[0], hex(getattr(commandResponse, f[0])))) # uncomment for debug
 
         # 4. process the extracted log
-        self.__logger.processLog(logResponseBody)
+        self.__logger.processLogMessage(logResponseBody)
 
         return True
 
