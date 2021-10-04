@@ -57,6 +57,14 @@ void Logging::logMessage(logType_t logType, logModuleId_t logModuleId, const cha
     // Mark that logging is in progress
     m_loggingInProgress = true;
 
+    /** Until we have the real time clock working, pick an arbitrary timestamp to start with.
+     *  Then increment the time stamp by a fixed amount each time so we can see that the time 
+     * is changing with each log entry in python utilities.
+     */
+    static uint64_t fakeTimestamp = (29.720638091 * (float)(LOGGING_UINT64_NSEC_TO_SECONDS));
+    //increment just a bit more than a 0.1 seconds so can always see that digit move
+    static uint64_t fakeTimestampIncrement = (0.139124163 * (float)(LOGGING_UINT64_NSEC_TO_SECONDS));
+
     // Allocate a log
     cefLog_t* p_log = CommandDebugPortRouter::instance().checkoutLogBufferLogging();
     if (p_log == nullptr)
@@ -113,7 +121,8 @@ void Logging::logMessage(logType_t logType, logModuleId_t logModuleId, const cha
     p_log->m_logSequenceNumber = m_logSequenceNumber++;
 
     //@todo once have clocks working, add time stamp here
-    p_log->m_timeStamp = 0;
+    p_log->m_timeStamp = fakeTimestamp;
+    fakeTimestamp += fakeTimestampIncrement;
 
     p_log->m_fileLineNumber = lineNum;
 

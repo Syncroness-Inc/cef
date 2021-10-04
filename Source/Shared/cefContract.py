@@ -254,6 +254,9 @@ class logType(Enum):
     logTypeFatal                            = 4
 
 ######  Logging Constants
+#Converts logging uint64_t nano second value/count into seconds
+LOGGING_UINT64_NSEC_TO_SECONDS = 1000000000
+
 LOGGING_ASCII_LOG_STRING_MAX_NUM_CHARACTERS = 128
 LOGGING_ASCII_FILENAME_NUM_CHARACTERS = 40
 

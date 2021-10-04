@@ -274,6 +274,10 @@ typedef enum logType
     logTypeFatal        = 4
 } logType_t;
 
+// Converts logging uint64_t nano second value/count into seconds
+#define LOGGING_UINT64_NSEC_TO_SECONDS 1000000000LLU
+
+
 /**
  * Logging Structures.  For now, a display string is passed that python uses to display the variables.
  * Eventually the string will be converted to a hash to save code space and to make logging packets smaller
